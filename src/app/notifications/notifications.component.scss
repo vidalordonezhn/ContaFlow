@@ -322,51 +322,59 @@
   }
 }
 
-/* Checkbox container */
-.checkbox-container {
-  display: inline-block;
+/* Status Combobox & Badge Wrapper */
+.status-select-wrapper {
   position: relative;
-  cursor: pointer;
-  user-select: none;
+  display: inline-flex;
+  align-items: center;
 
-  input {
-    position: absolute;
-    opacity: 0;
+  .status-combobox {
+    appearance: none;
+    -webkit-appearance: none;
+    padding: 0.375rem 1.75rem 0.375rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
     cursor: pointer;
-    height: 0;
-    width: 0;
+    border: 1.5px solid transparent;
+    transition: all 0.2s ease;
+    background-position: right 0.6rem center;
+    background-repeat: no-repeat;
+    background-size: 10px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23475569' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='m19 9-7 7-7-7'/%3E%3C/svg%3E");
 
-    &:checked ~ .checkmark {
-      background-color: #10b981;
-      border-color: #10b981;
-      &:after {
-        display: block;
-      }
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
     }
   }
 
-  .checkmark {
-    position: relative;
-    display: inline-block;
-    height: 18px;
-    width: 18px;
-    background-color: #ffffff;
-    border: 1.5px solid var(--border-color);
-    border-radius: 4px;
-    transition: all 0.2s ease;
+  &[data-status="Pendiente"] .status-combobox {
+    background-color: #fef3c7;
+    color: #92400e;
+    border-color: #fde68a;
+    &:hover { background-color: #fde68a; }
+  }
 
-    &:after {
-      content: "";
-      position: absolute;
-      display: none;
-      left: 5px;
-      top: 2px;
-      width: 5px;
-      height: 9px;
-      border: solid white;
-      border-width: 0 2px 2px 0;
-      transform: rotate(45deg);
-    }
+  &[data-status="Enviado"] .status-combobox {
+    background-color: #dcfce7;
+    color: #15803d;
+    border-color: #bbf7d0;
+    &:hover { background-color: #bbf7d0; }
+  }
+
+  &[data-status="Respondido"] .status-combobox {
+    background-color: #e0e7ff;
+    color: #3730a3;
+    border-color: #c7d2fe;
+    &:hover { background-color: #c7d2fe; }
+  }
+
+  &[data-status="Omitido"] .status-combobox {
+    background-color: #f1f5f9;
+    color: #64748b;
+    border-color: #e2e8f0;
+    &:hover { background-color: #e2e8f0; }
   }
 }
 

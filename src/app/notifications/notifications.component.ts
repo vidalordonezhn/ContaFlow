@@ -7,6 +7,8 @@ import { ApiPagosService, PagoResponse } from '../services/api-pagos.service';
 import { ApiConfiguracionService, ConfiguracionDespacho } from '../services/api-configuracion.service';
 import { ClientSelectorComponent } from '../shared/client-selector/client-selector.component';
 
+export type EstadoRecordatorio = 'Pendiente' | 'Enviado' | 'Respondido' | 'Omitido';
+
 export interface ManualReminder {
   id: string;
   clienteId: number;
@@ -18,7 +20,8 @@ export interface ManualReminder {
   tipo: 'SAR' | 'Cobro' | 'Declaracion' | 'Personalizado';
   mensaje: string;
   fechaCreacion: string;
-  enviado: boolean;
+  enviado?: boolean;
+  estado: EstadoRecordatorio;
 }
 
 @Component({
@@ -160,7 +163,13 @@ export class NotificationsComponent implements OnInit {
     try {
       const stored = localStorage.getItem('contaflow_manual_reminders');
       if (stored) {
-        this.manualReminders.set(JSON.parse(stored));
+        const parsed: any[] = JSON.parse(stored);
+        const normalized: ManualReminder[] = parsed.map(r => ({
+          ...r,
+          estado: (r.estado as EstadoRecordatorio) || (r.enviado ? 'Enviado' : 'Pendiente'),
+          enviado: r.estado === 'Enviado' || r.estado === 'Respondido' || !!r.enviado
+        }));
+        this.manualReminders.set(normalized);
       }
     } catch {
       this.manualReminders.set([]);
@@ -245,6 +254,7 @@ export class NotificationsComponent implements OnInit {
       tipo: this.modalTipo(),
       mensaje: this.modalMensaje(),
       fechaCreacion: new Date().toISOString(),
+      estado: 'Pendiente',
       enviado: false
     };
 
@@ -256,9 +266,9 @@ export class NotificationsComponent implements OnInit {
   }
 
   agregarDesdeSugerencia(cliente: { id: number; nombreRazonSocial: string; rtn: string; telefonoWhatsApp?: string; telefono?: string; emailPrincipal?: string; cuotaMensual?: number }, tipo: 'SAR' | 'Cobro'): void {
-    const yaExiste = this.manualReminders().some(r => r.clienteId === cliente.id && r.tipo === tipo && !r.enviado);
+    const yaExiste = this.manualReminders().some(r => r.clienteId === cliente.id && r.tipo === tipo && r.estado === 'Pendiente');
     if (yaExiste) {
-      this.showToast(`"${cliente.nombreRazonSocial}" ya está en tu lista de avisos pendientes.`);
+      this.showToast(`"${cliente.nombreRazonSocial}" ya está en tu lista como pendiente.`);
       return;
     }
 
@@ -287,6 +297,7 @@ export class NotificationsComponent implements OnInit {
       tipo: tipo,
       mensaje: template,
       fechaCreacion: new Date().toISOString(),
+      estado: 'Pendiente',
       enviado: false
     };
 
@@ -295,11 +306,16 @@ export class NotificationsComponent implements OnInit {
     this.showToast(`Se agregó a "${cliente.nombreRazonSocial}" a la lista de avisos.`);
   }
 
-  toggleEnviado(reminderId: string): void {
+  cambiarEstado(reminderId: string, nuevoEstado: EstadoRecordatorio): void {
     this.manualReminders.update(list => 
-      list.map(r => r.id === reminderId ? { ...r, enviado: !r.enviado } : r)
+      list.map(r => r.id === reminderId ? { 
+        ...r, 
+        estado: nuevoEstado, 
+        enviado: nuevoEstado === 'Enviado' || nuevoEstado === 'Respondido' 
+      } : r)
     );
     this.guardarManualRemindersEnStorage();
+    this.showToast(`Estado actualizado a: ${nuevoEstado}`);
   }
 
   eliminarRecordatorio(reminderId: string): void {
@@ -309,9 +325,9 @@ export class NotificationsComponent implements OnInit {
   }
 
   limpiarEnviados(): void {
-    this.manualReminders.update(list => list.filter(r => !r.enviado));
+    this.manualReminders.update(list => list.filter(r => r.estado === 'Pendiente'));
     this.guardarManualRemindersEnStorage();
-    this.showToast('Se limpiaron los recordatorios completados.');
+    this.showToast('Se limpiaron los recordatorios gestionados.');
   }
 
   getWhatsAppUrl(phone?: string, mensaje?: string): string {
