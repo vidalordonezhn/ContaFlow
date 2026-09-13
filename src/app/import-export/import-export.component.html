@@ -1,0 +1,255 @@
+<div class="page-container animate-fade-in">
+
+  <!-- TOAST NOTIFICATION -->
+  @if (successMsg()) {
+    <div class="toast-success">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <span>{{ successMsg() }}</span>
+    </div>
+  }
+
+  <!-- HEADER -->
+  <header class="page-header">
+    <div class="header-left">
+      <div class="header-badge bg-green-light text-green">Gestión Masiva de Datos</div>
+      <h1 class="header-title">Importación y Exportación Masiva</h1>
+      <p class="header-subtitle">Carga masiva de clientes desde Excel/CSV y descarga de respaldos en un clic</p>
+    </div>
+    <div class="header-right">
+      <button class="btn btn-secondary" (click)="descargarPlantilla()" title="Descargar plantilla de ejemplo">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Descargar Plantilla Excel</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ERROR ALERT -->
+  @if (errorMsg()) {
+    <div class="error-banner">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span>{{ errorMsg() }}</span>
+    </div>
+  }
+
+  <!-- RESULTADO DE IMPORTACIÓN PREVIA -->
+  @if (importResult(); as res) {
+    <div class="result-card">
+      <div class="result-header">
+        <div class="result-icon bg-green-light text-green">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <div>
+          <h4>Resumen de Importación Masiva</h4>
+          <p>La operación se completó en el servidor.</p>
+        </div>
+      </div>
+
+      <div class="result-stats">
+        <div class="stat-pill stat-inserted">
+          <span class="stat-num">{{ res.totalInsertados }}</span>
+          <span class="stat-lbl">Clientes Nuevos Insertados</span>
+        </div>
+        <div class="stat-pill stat-skipped">
+          <span class="stat-num">{{ res.totalOmitidosPorDuplicado }}</span>
+          <span class="stat-lbl">Omitidos por RTN Duplicado</span>
+        </div>
+        <div class="stat-pill stat-errors">
+          <span class="stat-num">{{ res.totalErrores }}</span>
+          <span class="stat-lbl">Filas con Error</span>
+        </div>
+      </div>
+
+      @if (res.mensajes.length > 0) {
+        <div class="result-messages">
+          <h5>Detalles de la importación:</h5>
+          <ul>
+            @for (m of res.mensajes; track m) {
+              <li>{{ m }}</li>
+            }
+          </ul>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- TABS CONTAINER -->
+  <div class="main-container-card">
+
+    <div class="module-tabs-nav">
+      <button class="nav-tab-btn" [class.active]="activeTab() === 'importar'" (click)="activeTab.set('importar')">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <span>📥 Importar Clientes Masivamente</span>
+      </button>
+      <button class="nav-tab-btn" [class.active]="activeTab() === 'exportar'" (click)="activeTab.set('exportar')">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>📤 Exportar Reportes y Tablas</span>
+      </button>
+    </div>
+
+    <!-- TAB 1: IMPORTAR -->
+    @if (activeTab() === 'importar') {
+      <div class="tab-content-padded">
+
+        <!-- DROP ZONE (Si no hay archivo cargado) -->
+        @if (parsedClientes().length === 0) {
+          <div 
+            class="dropzone"
+            [class.is-dragover]="isDragging()"
+            (dragover)="onDragOver($event)"
+            (dragleave)="onDragLeave($event)"
+            (drop)="onDrop($event)"
+          >
+            <div class="dropzone-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-12 h-12 text-blue"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="m9 15 3-3 3 3"/></svg>
+            </div>
+            <h3>Arrastra y suelta tu archivo Excel o CSV aquí</h3>
+            <p>Soporta archivos delimitados por comas (.csv) exportados de Excel o sistemas contables previos.</p>
+
+            <div class="dropzone-actions">
+              <label class="btn btn-primary cursor-pointer">
+                <span>Seleccionar Archivo</span>
+                <input type="file" accept=".csv, .txt, .xlsx" (change)="onFileSelected($event)" class="hidden" />
+              </label>
+              <button type="button" class="btn btn-secondary" (click)="descargarPlantilla()">
+                Descargar Formato Modelo
+              </button>
+            </div>
+          </div>
+        } @else {
+          <!-- PREVISUALIZACIÓN Y VALIDACIÓN PREVIA -->
+          <div class="preview-section">
+            <div class="preview-header">
+              <div class="file-summary">
+                <div class="file-badge">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4 text-blue"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  <span class="file-name">{{ fileName() }}</span>
+                </div>
+                <div class="preview-counters">
+                  <span class="counter-tag counter-total">Total: {{ totalFilas() }} filas</span>
+                  <span class="counter-tag counter-valid">✅ Válidos: {{ filasValidas() }}</span>
+                  @if (filasConError() > 0) {
+                    <span class="counter-tag counter-error">⚠️ Errores: {{ filasConError() }}</span>
+                  }
+                </div>
+              </div>
+
+              <div class="preview-actions">
+                <button type="button" class="btn btn-secondary" (click)="cancelarPrevisualizacion()">Cancelar</button>
+                <button type="button" class="btn btn-primary" [disabled]="filasValidas() === 0 || isImporting()" (click)="ejecutarImportacion()">
+                  @if (isImporting()) {
+                    <span class="spinner-sm"></span>
+                    <span>Importando...</span>
+                  } @else {
+                    <span>Confirmar e Importar {{ filasValidas() }} Clientes</span>
+                  }
+                </button>
+              </div>
+            </div>
+
+            <!-- TABLA DE PREVISUALIZACIÓN -->
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th style="width: 50px;">Validez</th>
+                    <th>RTN Fiscal</th>
+                    <th>Razón Social</th>
+                    <th>Nombre Comercial</th>
+                    <th>Tipo</th>
+                    <th>Rubro</th>
+                    <th>Cuota Mensual</th>
+                    <th>Día Cobro</th>
+                    <th>WhatsApp</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (c of parsedClientes(); track c.rtn; let i = $index) {
+                    <tr [class.row-invalid]="!c.valido">
+                      <td>
+                        @if (c.valido) {
+                          <span class="valid-icon" title="Fila lista para importar">✅</span>
+                        } @else {
+                          <span class="invalid-icon" [title]="c.errorMsg">❌</span>
+                        }
+                      </td>
+                      <td>
+                        <span class="font-mono text-xs" [class.text-red]="!c.valido">{{ c.rtn || 'Sin RTN' }}</span>
+                        @if (c.errorMsg) {
+                          <span class="row-error-hint">{{ c.errorMsg }}</span>
+                        }
+                      </td>
+                      <td><span class="font-bold text-sm">{{ c.nombreRazonSocial }}</span></td>
+                      <td><span class="text-xs text-muted">{{ c.nombreComercial || '-' }}</span></td>
+                      <td>
+                        <span class="type-pill" [class.type-juridica]="c.tipoPersona === 'Juridica'" [class.type-natural]="c.tipoPersona === 'Natural'">
+                          {{ c.tipoPersona }}
+                        </span>
+                      </td>
+                      <td><span class="text-xs">{{ c.rubro }}</span></td>
+                      <td><span class="font-bold text-green">L. {{ c.cuotaMensual | number:'1.2-2' }}</span></td>
+                      <td><span class="text-xs">Día {{ c.diaCobro }}</span></td>
+                      <td><span class="text-xs">{{ c.telefonoWhatsApp || '-' }}</span></td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        }
+
+      </div>
+    }
+
+    <!-- TAB 2: EXPORTAR -->
+    @if (activeTab() === 'exportar') {
+      <div class="tab-content-padded">
+        <div class="export-cards-grid">
+
+          <!-- Exportar Clientes -->
+          <div class="export-card">
+            <div class="export-icon bg-blue-light text-blue">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="export-body">
+              <h4>Directorio General de Clientes</h4>
+              <p>Descarga la lista completa de contribuyentes registrados con su RTN, datos de contacto, cuota de honorarios y estado fiscal.</p>
+              <div class="export-meta">
+                <span class="badge-fmt">Formato CSV / Excel</span>
+                <span class="badge-enc">Codificación UTF-8</span>
+              </div>
+            </div>
+            <div class="export-action">
+              <button class="btn btn-primary w-full" (click)="exportarClientes()">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span>Exportar Padrón de Clientes</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Exportar Pagos -->
+          <div class="export-card">
+            <div class="export-icon bg-green-light text-green">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/></svg>
+            </div>
+            <div class="export-body">
+              <h4>Historial Completo de Pagos y Recibos</h4>
+              <p>Descarga el registro correlativo de todos los cobros efectuados, número de recibo oficial, método de pago, referencia bancaria y usuario emisor.</p>
+              <div class="export-meta">
+                <span class="badge-fmt">Formato CSV / Excel</span>
+                <span class="badge-enc">Correlativo Digital</span>
+              </div>
+            </div>
+            <div class="export-action">
+              <button class="btn btn-primary w-full" (click)="exportarPagos()">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span>Exportar Historial de Pagos</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    }
+
+  </div>
+</div>

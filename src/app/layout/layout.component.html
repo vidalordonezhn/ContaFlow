@@ -1,0 +1,291 @@
+<div class="workspace-layout">
+  <!-- BARRA SUPERIOR HORIZONTAL (Top Navigation Bar con Pestañas estilo Windows) -->
+  <header class="workspace-topbar">
+    <!-- Izquierda: Brand / Logo de la Aplicación -->
+    <div class="topbar-left">
+      <div class="brand-badge" (click)="tabsService.selectTab('dashboard')" title="Ir al Dashboard">
+        <div class="brand-logo">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="logo-icon">
+            <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"></path>
+            <path d="M14 8H8"></path>
+            <path d="M16 12H8"></path>
+            <path d="M13 16H8"></path>
+          </svg>
+        </div>
+        <span class="brand-name">ContaFlow</span>
+      </div>
+    </div>
+
+    <!-- Centro: Tira de Pestañas Horizontales (Windows Tabs Strip) -->
+    <nav class="topbar-tabs-container">
+      <div class="tabs-scroll-wrapper">
+        @for (tab of tabsService.tabs(); track tab.id) {
+          <div 
+            class="tab-pill"
+            [class.active]="tab.id === tabsService.activeTabId()"
+            (click)="tabsService.selectTab(tab.id)"
+            [title]="tab.title"
+          >
+            <!-- Icono de la pestaña -->
+            <span class="tab-icon">
+              @switch (tab.iconPath) {
+                @case ('dashboard') {
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                }
+                @case ('people') {
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                }
+                @case ('event_note') {
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/><path d="m9 16 2 2 4-4"/></svg>
+                }
+                @case ('menu_book') {
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
+                }
+                @case ('calendar_month') {
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg>
+                }
+                @case ('receipt_long') {
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1z"></path><path d="M16 8H8"></path><path d="M16 12H8"></path><path d="M13 16H8"></path></svg>
+                }
+                @case ('description') {
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                }
+                @case ('notifications_active') {
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+                }
+                @case ('badge') {
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+                }
+                @case ('insights') {
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                }
+                @case ('import_export') {
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                }
+                @case ('settings') {
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                }
+              }
+            </span>
+
+            <!-- Título de la Pestaña -->
+            <span class="tab-title">{{ tab.shortTitle }}</span>
+
+            <!-- Botón de Cerrar Pestaña -->
+            @if (tab.closable) {
+              <button 
+                type="button" 
+                class="tab-close-btn" 
+                (click)="tabsService.closeTab(tab.id, $event)"
+                title="Cerrar pestaña"
+              >
+                ✕
+              </button>
+            }
+
+            <!-- Indicador activo -->
+            @if (tab.id === tabsService.activeTabId()) {
+              <span class="tab-active-indicator"></span>
+            }
+          </div>
+        }
+
+        <!-- Botón [+] para abrir el buscador de módulos -->
+        <button 
+          type="button" 
+          class="tab-add-btn" 
+          (click)="openCommandPalette()" 
+          title="Abrir nueva pantalla (Ctrl+K)"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Derecha: Buscador Rápido (Command Palette) + Perfil -->
+    <div class="topbar-right">
+      <button 
+        type="button" 
+        class="search-trigger-btn" 
+        (click)="openCommandPalette()"
+        title="Buscar módulo o pantalla (Ctrl+K)"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4 text-muted"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <span class="search-trigger-text">Buscar módulo...</span>
+        <kbd class="kbd-shortcut">⌘K</kbd>
+      </button>
+
+      <!-- Avatar y Dropdown de Usuario -->
+      <div class="user-menu-wrapper">
+        <button 
+          type="button" 
+          class="user-avatar-btn" 
+          (click)="toggleUserDropdown($event)"
+          title="Menú de Usuario"
+        >
+          <div class="user-avatar-circle">
+            {{ auth.currentUser()?.nombre?.substring(0, 1) || 'A' }}
+          </div>
+          <div class="user-info-brief">
+            <span class="user-name-brief">{{ auth.currentUser()?.nombre || 'Administrador' }}</span>
+            <span class="user-role-brief">{{ auth.currentUser()?.rol || 'Admin' }}</span>
+          </div>
+        </button>
+
+        @if (showUserDropdown()) {
+          <div class="user-dropdown-card animate-fade-in" (click)="$event.stopPropagation()">
+            <div class="dropdown-header">
+              <span class="dropdown-user-fullname">{{ auth.currentUser()?.nombre }}</span>
+              <span class="dropdown-user-role">&#64;{{ auth.currentUser()?.username }} • {{ auth.currentUser()?.rol }}</span>
+            </div>
+            <div class="dropdown-divider"></div>
+            <ul class="dropdown-list">
+              <li>
+                <button type="button" class="dropdown-item" (click)="tabsService.openModulo(tabsService.catalogoModulos[7]); showUserDropdown.set(false)">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <span>Configuración del Despacho</span>
+                </button>
+              </li>
+              <li>
+                <button type="button" class="dropdown-item" (click)="tabsService.openModulo(tabsService.catalogoModulos[6]); showUserDropdown.set(false)">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                  <span>Usuarios y Empleados</span>
+                </button>
+              </li>
+              <li>
+                <button type="button" class="dropdown-item dropdown-item-danger" (click)="onLogout()">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                  <span>Cerrar Sesión</span>
+                </button>
+              </li>
+            </ul>
+          </div>
+        }
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENIDO DE LA PANTALLA ACTIVA -->
+  <main class="workspace-content">
+    <router-outlet></router-outlet>
+  </main>
+
+  <!-- COMMAND PALETTE (Ctrl + K) -->
+  @if (tabsService.searchOpen()) {
+    <div class="palette-backdrop" (click)="tabsService.closeSearch()">
+      <div class="palette-modal animate-fade-in" (click)="$event.stopPropagation()">
+        
+        <div class="palette-search-header">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="palette-search-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input 
+            #searchInput
+            type="text" 
+            class="palette-search-input" 
+            placeholder="Escribe el nombre de un módulo o pantalla..." 
+            [value]="tabsService.searchQuery()"
+            (input)="onSearchInput($event)"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <button type="button" class="palette-esc-badge" (click)="tabsService.closeSearch()">ESC</button>
+        </div>
+
+        <div class="palette-results-list">
+          @for (grupo of tabsService.modulosAgrupados(); track grupo.categoria) {
+            <div class="palette-group">
+              <div class="palette-group-title">{{ grupo.categoria }}</div>
+              <div class="palette-group-items">
+                @for (modulo of grupo.items; track modulo.id) {
+                  <div 
+                    class="palette-item"
+                    [class.selected]="getGlobalIndex(modulo.id) === selectedResultIndex()"
+                    (click)="tabsService.openModulo(modulo)"
+                    (mouseenter)="selectedResultIndex.set(getGlobalIndex(modulo.id))"
+                  >
+                    <div class="palette-item-icon">
+                      @switch (modulo.iconPath) {
+                        @case ('dashboard') {
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                        }
+                        @case ('people') {
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                        }
+                        @case ('event_note') {
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/><path d="m9 16 2 2 4-4"/></svg>
+                        }
+                        @case ('menu_book') {
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
+                        }
+                        @case ('calendar_month') {
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg>
+                        }
+                        @case ('receipt_long') {
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1z"></path><path d="M16 8H8"></path><path d="M16 12H8"></path><path d="M13 16H8"></path></svg>
+                        }
+                        @case ('description') {
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        }
+                        @case ('notifications_active') {
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+                        }
+                        @case ('badge') {
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+                        }
+                        @case ('insights') {
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                        }
+                        @case ('import_export') {
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        }
+                        @case ('settings') {
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                        }
+                      }
+                    </div>
+
+                    <div class="palette-item-info">
+                      <div class="palette-item-header">
+                        <span class="palette-item-title">{{ modulo.title }}</span>
+                        @if (tabsService.isTabOpen(modulo.id)) {
+                          <span class="palette-badge-open">En pestaña</span>
+                        }
+                      </div>
+                      <span class="palette-item-desc">{{ modulo.description }}</span>
+                    </div>
+
+                    <div class="palette-item-action">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-4 h-4"><polyline points="9 10 4 15 9 20"></polyline><path d="M20 4v7a4 4 0 0 1-4 4H4"></path></svg>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          } @empty {
+            <div class="palette-empty-state">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-12 h-12 text-muted"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <h4>No se encontraron pantallas</h4>
+              <p>No hay coincidencias para "<strong>{{ tabsService.searchQuery() }}</strong>". Intenta con otro término.</p>
+            </div>
+          }
+        </div>
+
+        <footer class="palette-footer">
+          <div class="shortcut-pill">
+            <kbd class="palette-kbd">↑</kbd>
+            <kbd class="palette-kbd">↓</kbd>
+            <span>para navegar</span>
+          </div>
+          <div class="shortcut-pill">
+            <kbd class="palette-kbd">↵</kbd>
+            <span>para abrir pestaña</span>
+          </div>
+          <div class="shortcut-pill">
+            <kbd class="palette-kbd">ESC</kbd>
+            <span>para cerrar</span>
+          </div>
+        </footer>
+
+      </div>
+    </div>
+  }
+</div>

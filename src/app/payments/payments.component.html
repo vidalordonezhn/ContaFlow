@@ -1,0 +1,379 @@
+<div class="page-container animate-fade-in">
+
+  <!-- TOAST NOTIFICATION -->
+  @if (successMsg()) {
+    <div class="toast-success">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <span>{{ successMsg() }}</span>
+    </div>
+  }
+
+  <!-- HEADER -->
+  <header class="page-header">
+    <div class="header-left">
+      <div class="header-badge bg-green-light text-green">Cobranza y Comprobantes</div>
+      <h1 class="header-title">Honorarios y Recibos</h1>
+      <p class="header-subtitle">Registro de cobros mensuales y emisión de recibos digitales en PDF</p>
+    </div>
+    <div class="header-right">
+      <button class="btn btn-primary" (click)="openCreateModal()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-4 h-4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span>Registrar Pago</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- KPIS GRID -->
+  <section class="kpis-grid">
+    <!-- Total Recaudado -->
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-label">Total Recaudado</span>
+        <div class="kpi-icon-box bg-green-light text-green">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+      </div>
+      <div class="kpi-body">
+        <h3 class="kpi-value text-green">L. {{ kpiTotalRecaudado() | number:'1.2-2' }}</h3>
+        <span class="kpi-subtext text-green">Histórico de cobros realizados</span>
+      </div>
+    </div>
+
+    <!-- Pagos Registrados -->
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-label">Transacciones</span>
+        <div class="kpi-icon-box bg-blue-light text-blue">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/></svg>
+        </div>
+      </div>
+      <div class="kpi-body">
+        <h3 class="kpi-value">{{ kpiTotalPagos() }}</h3>
+        <span class="kpi-subtext text-blue">Pagos de honorarios registrados</span>
+      </div>
+    </div>
+
+    <!-- Recibos PDF Emitidos -->
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-label">Recibos PDF Emitidos</span>
+        <div class="kpi-icon-box bg-purple-light text-purple">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+      </div>
+      <div class="kpi-body">
+        <h3 class="kpi-value text-purple">{{ kpiRecibosEmitidos() }}</h3>
+        <span class="kpi-subtext text-purple">Comprobantes oficiales descargables</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- TABLE CONTAINER CARD -->
+  <div class="table-container-card">
+    
+    <!-- TABS BAR & SEARCH -->
+    <div class="filters-bar">
+      <!-- Tabs -->
+      <div class="tabs-nav">
+        <button class="tab-btn" [class.active]="activeTab() === 'todos'" (click)="activeTab.set('todos')">
+          Todos los Pagos
+        </button>
+        <button class="tab-btn" [class.active]="activeTab() === 'transferencia'" (click)="activeTab.set('transferencia')">
+          Transferencias
+        </button>
+        <button class="tab-btn" [class.active]="activeTab() === 'efectivo'" (click)="activeTab.set('efectivo')">
+          Efectivo
+        </button>
+        <button class="tab-btn" [class.active]="activeTab() === 'deposito'" (click)="activeTab.set('deposito')">
+          Depósitos
+        </button>
+      </div>
+
+      <!-- Search Input -->
+      <div class="search-box">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input 
+          type="text" 
+          placeholder="Buscar por cliente, RTN, recibo o mes..." 
+          [ngModel]="searchQuery()" 
+          (ngModelChange)="searchQuery.set($event)"
+        />
+      </div>
+    </div>
+
+    <!-- DATA TABLE -->
+    @if (isLoading()) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Cargando historial de pagos y recibos...</p>
+      </div>
+    } @else if (filteredPagos().length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-12 h-12 text-muted"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/></svg>
+        </div>
+        <h4>No hay pagos registrados</h4>
+        <p>Registra el primer pago de honorarios para generar un recibo PDF.</p>
+      </div>
+    } @else {
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Cliente / RTN</th>
+              <th>Mes Aplicado</th>
+              <th>Monto Cobrado</th>
+              <th>Método / Referencia</th>
+              <th>Fecha de Pago</th>
+              <th>N° Recibo PDF</th>
+              <th class="text-right">Comprobante</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of filteredPagos(); track p.id) {
+              <tr>
+                <!-- Cliente -->
+                <td>
+                  <div class="client-cell">
+                    <span class="client-name">{{ p.clienteNombre }}</span>
+                    <span class="client-rtn">{{ p.clienteRtn }}</span>
+                  </div>
+                </td>
+
+                <!-- Mes Aplicado -->
+                <td>
+                  <span class="mes-badge">{{ p.mesAplicado }}</span>
+                </td>
+
+                <!-- Monto -->
+                <td>
+                  <span class="pago-monto">L. {{ p.monto | number:'1.2-2' }}</span>
+                </td>
+
+                <!-- Método -->
+                <td>
+                  <div class="metodo-cell">
+                    <span class="metodo-nombre">{{ p.metodoPago }}</span>
+                    @if (p.referenciaBancaria) {
+                      <span class="metodo-ref">Ref: {{ p.referenciaBancaria }}</span>
+                    }
+                  </div>
+                </td>
+
+                <!-- Fecha -->
+                <td>
+                  <span class="pago-fecha">{{ p.fechaPago | date:'dd/MM/yyyy' }}</span>
+                </td>
+
+                <!-- Recibo N° -->
+                <td>
+                  @if (p.numeroRecibo) {
+                    <span class="recibo-num">{{ p.numeroRecibo }}</span>
+                  } @else {
+                    <span class="text-muted text-xs">Sin Recibo</span>
+                  }
+                </td>
+
+                <!-- Acciones / Visualizar / Imprimir / WhatsApp -->
+                <td class="text-right">
+                  <div class="row-actions">
+                    <!-- Botón Enviar WhatsApp de confirmación -->
+                    <button class="btn-action-wa" (click)="enviarWhatsAppPago(p)" title="Enviar confirmación y recibo por WhatsApp">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                      <span>WhatsApp</span>
+                    </button>
+
+                    @if (p.reciboId && p.numeroRecibo) {
+                      <!-- Botón Visualizar e Imprimir -->
+                      <button class="btn-action-view" (click)="abrirVisorRecibo(p)" title="Ver e Imprimir Recibo Oficial">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                        <span>Ver / Imprimir</span>
+                      </button>
+
+                      <!-- Botón Descargar -->
+                      <button class="btn-action-dl" (click)="descargarRecibo(p.reciboId, p.numeroRecibo)" title="Descargar archivo PDF">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- MODAL REGISTRAR PAGO -->
+@if (isModalOpen()) {
+  <div class="modal-backdrop" (click)="closeModal()">
+    <div class="modal-card animate-fade-in" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-box">
+          <div class="modal-icon bg-green-light text-green">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <div>
+            <h3>Registrar Pago de Honorarios</h3>
+            <p>Genera el recibo digital con numeración automática</p>
+          </div>
+        </div>
+        <button class="modal-close" (click)="closeModal()">✕</button>
+      </div>
+
+      @if (formError()) {
+        <div class="error-alert">
+          <span>{{ formError() }}</span>
+        </div>
+      }
+
+      <form (ngSubmit)="registrarPago()" class="modal-form">
+        <div class="form-grid">
+          <!-- Cliente Autocomplete Selector -->
+          <div class="form-field full-width">
+            <label>Seleccionar Cliente (Búsqueda inteligente por RTN o Nombre) *</label>
+            <app-client-selector
+              [clients]="clientes()"
+              [selectedId]="formClienteId()"
+              (clientSelected)="onClientSelected($event)"
+              (clientCleared)="onClientCleared()"
+              placeholder="Escribe el RTN, nombre o empresa del cliente..."
+            />
+          </div>
+
+          <!-- Monto -->
+          <div class="form-field">
+            <label>Monto a Pagar (L.) *</label>
+            <input type="number" [ngModel]="formMonto()" (ngModelChange)="formMonto.set($event)" name="formMonto" min="1" step="50" required />
+          </div>
+
+          <!-- Mes Aplicado (Estructurado y Seguro) -->
+          <div class="form-field">
+            <label>Mes y Año a Cobrar *</label>
+            <div class="period-selectors-row">
+              <select [ngModel]="formMes()" (ngModelChange)="formMes.set($event)" name="formMes" class="select-mes" required>
+                @for (m of mesesList; track m) {
+                  <option [value]="m">{{ m }}</option>
+                }
+              </select>
+              <select [ngModel]="formAnio()" (ngModelChange)="formAnio.set($event)" name="formAnio" class="select-anio" required>
+                @for (a of aniosList; track a) {
+                  <option [value]="a">{{ a }}</option>
+                }
+              </select>
+            </div>
+            
+            <!-- Atajos rápidos -->
+            <div class="period-shortcuts">
+              <button type="button" class="btn-shortcut" (click)="setMesRapido(0)">Mes actual</button>
+              <button type="button" class="btn-shortcut" (click)="setMesRapido(-1)">Mes anterior</button>
+            </div>
+          </div>
+
+          <!-- Alerta de Pago Duplicado en el Mismo Mes -->
+          @if (pagoDuplicado(); as pd) {
+            <div class="duplicate-warning-box full-width">
+              <div class="warning-icon">⚠️</div>
+              <div class="warning-text">
+                <strong>¡Atención! Este cliente ya tiene un pago para {{ formMesAplicado() }}</strong>
+                <p>Registrado el {{ pd.fechaPago | date:'dd/MM/yyyy' }} por L. {{ pd.monto | number:'1.2-2' }} (Recibo: {{ pd.numeroRecibo || 'Sin N°' }}).</p>
+              </div>
+            </div>
+          }
+
+          <!-- Método de Pago -->
+          <div class="form-field">
+            <label>Método de Pago *</label>
+            <select [ngModel]="formMetodoPago()" (ngModelChange)="formMetodoPago.set($event)" name="formMetodoPago">
+              <option value="Transferencia">Transferencia Bancaria</option>
+              <option value="Efectivo">Efectivo en Oficina</option>
+              <option value="Depósito">Depósito en Cuenta</option>
+              <option value="Cheque">Cheque</option>
+            </select>
+          </div>
+
+          <!-- Referencia -->
+          <div class="form-field">
+            <label>N° Referencia Bancaria / Depósito</label>
+            <input type="text" [ngModel]="formReferencia()" (ngModelChange)="formReferencia.set($event)" name="formReferencia" placeholder="Ej: BAC-TR-987123" />
+          </div>
+
+          <!-- Fecha -->
+          <div class="form-field">
+            <label>Fecha de Pago *</label>
+            <input type="date" [ngModel]="formFechaPago()" (ngModelChange)="formFechaPago.set($event)" name="formFechaPago" required />
+          </div>
+
+          <!-- Checkbox Generar Recibo -->
+          <div class="form-field checkbox-field">
+            <label class="switch-label">
+              <input type="checkbox" [checked]="formGenerarRecibo()" (change)="formGenerarRecibo.set(!formGenerarRecibo())" />
+              <span>Emitir Recibo Oficial en PDF automáticamente</span>
+            </label>
+          </div>
+
+          <!-- Observaciones -->
+          <div class="form-field full-width">
+            <label>Observaciones Adicionales</label>
+            <input type="text" [ngModel]="formObservaciones()" (ngModelChange)="formObservaciones.set($event)" name="formObservaciones" placeholder="Detalles o notas del pago" />
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Registrar y Generar Recibo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- MODAL VISOR E IMPRESIÓN DE RECIBO DIGITAL -->
+@if (previewRecibo(); as pr) {
+  <div class="modal-backdrop" (click)="cerrarVisorRecibo()">
+    <div class="modal-card modal-card-pdf animate-fade-in" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-box">
+          <div class="modal-icon bg-blue-light text-blue">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <div>
+            <h3>Recibo Digital N° {{ pr.numeroRecibo }}</h3>
+            <p>{{ pr.clienteNombre }} &bull; RTN: {{ pr.clienteRtn }} &bull; Mes: {{ pr.mesAplicado }}</p>
+          </div>
+        </div>
+
+        <div class="modal-header-actions">
+          <!-- Botón WhatsApp -->
+          @if (pr.telefonoWhatsApp) {
+            <button class="btn btn-secondary text-green font-bold text-xs" (click)="enviarWhatsAppPago(pr)" title="Enviar comprobante por WhatsApp">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              <span>Enviar WhatsApp</span>
+            </button>
+          }
+
+          <!-- Botón Imprimir -->
+          <button class="btn btn-secondary text-xs" (click)="imprimirReciboDesdeVisor()" title="Imprimir Recibo Oficial">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+            <span>Imprimir</span>
+          </button>
+
+          <!-- Botón Descargar -->
+          <button class="btn btn-primary text-xs" (click)="descargarRecibo(pr.reciboId, pr.numeroRecibo)" title="Descargar archivo PDF">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>Descargar</span>
+          </button>
+
+          <button class="modal-close" (click)="cerrarVisorRecibo()">✕</button>
+        </div>
+      </div>
+
+      <!-- Iframe para ver el PDF generado por QuestPDF -->
+      <div class="pdf-viewer-container">
+        <iframe [src]="pr.safeUrl" class="pdf-iframe" title="Visor de Recibo PDF"></iframe>
+      </div>
+    </div>
+  </div>
+}

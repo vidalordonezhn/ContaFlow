@@ -1,0 +1,127 @@
+.login-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at top right, #1e1b4b, #0f172a, #020617);
+  padding: 1.5rem;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 440px;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(16px);
+  border-radius: var(--radius-2xl);
+  padding: 2.5rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 2rem;
+
+  .brand-badge {
+    display: inline-flex;
+    padding: 0.75rem;
+    border-radius: 1.25rem;
+    background: var(--color-blue-gradient);
+    box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.4);
+    margin-bottom: 1rem;
+  }
+
+  .login-title {
+    font-size: 1.875rem;
+    letter-spacing: -0.025em;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .login-subtitle {
+    font-size: 0.9375rem;
+    color: var(--text-secondary);
+    margin-top: 0.35rem;
+  }
+}
+
+.error-alert {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  background-color: var(--color-red-light);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: var(--color-red-dark);
+  border-radius: var(--radius-lg);
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 1.5rem;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .input-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+
+      .input-icon {
+        position: absolute;
+        left: 1rem;
+        width: 1.25rem;
+        height: 1.25rem;
+        color: var(--text-muted);
+      }
+
+      input {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 2.75rem;
+        border: 1.5px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        font-size: 0.9375rem;
+        color: var(--text-primary);
+        background-color: #f8fafc;
+        transition: all 0.2s ease;
+
+        &:focus {
+          outline: none;
+          background-color: #ffffff;
+          border-color: var(--color-blue);
+          box-shadow: 0 0 0 4px var(--color-blue-light);
+        }
+      }
+    }
+  }
+
+  .btn-block {
+    width: 100%;
+    padding: 0.875rem;
+    font-size: 1rem;
+    margin-top: 0.5rem;
+  }
+}
+
+.login-footer {
+  margin-top: 2rem;
+  text-align: center;
+  p {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    margin: 0;
+  }
+}

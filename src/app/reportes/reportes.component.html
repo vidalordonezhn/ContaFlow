@@ -1,0 +1,207 @@
+<div class="page-container animate-fade-in">
+
+  <!-- HEADER -->
+  <header class="page-header">
+    <div class="header-left">
+      <div class="header-badge bg-blue-light text-blue">Análisis Financiero & Cartera</div>
+      <h1 class="header-title">Reportes y Estadísticas Financieras</h1>
+      <p class="header-subtitle">Comportamiento mensual de ingresos por honorarios, estado de cartera y cobranza</p>
+    </div>
+    <div class="header-right">
+      <button class="btn btn-secondary" (click)="cargarReporte()" title="Actualizar estadísticas">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+        <span>Actualizar</span>
+      </button>
+      <button class="btn btn-primary" (click)="imprimirReporte()" title="Imprimir o guardar reporte">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+        <span>Imprimir Reporte</span>
+      </button>
+    </div>
+  </header>
+
+  @if (isLoading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Generando métricas y análisis de cartera...</p>
+    </div>
+  } @else if (data(); as r) {
+
+    <!-- KPIS EXECUTIVE ROW -->
+    <section class="kpis-grid">
+      <!-- Facturable Mensual -->
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-label">Cartera Mensual Facturable</span>
+          <div class="kpi-icon-box bg-blue-light text-blue">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          </div>
+        </div>
+        <div class="kpi-body">
+          <h3 class="kpi-value text-blue">L. {{ r.totalFacturableMensual | number:'1.2-2' }}</h3>
+          <span class="kpi-subtext text-blue">{{ r.totalClientesActivos }} clientes activos contratados</span>
+        </div>
+      </div>
+
+      <!-- Recaudado Mes Actual -->
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-label">Cobranza del Mes Actual</span>
+          <div class="kpi-icon-box bg-green-light text-green">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+        </div>
+        <div class="kpi-body">
+          <h3 class="kpi-value text-green">L. {{ r.recaudadoMesActual | number:'1.2-2' }}</h3>
+          <span class="kpi-subtext text-green">{{ r.porcentajeCobranzaMesActual }}% efectividad de cobro</span>
+        </div>
+      </div>
+
+      <!-- Cartera Morosa / Pendiente -->
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-label">Pendiente por Cobrar (Mora)</span>
+          <div class="kpi-icon-box bg-red-light text-red">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+        </div>
+        <div class="kpi-body">
+          <h3 class="kpi-value text-red">L. {{ r.pendienteCobroMesActual | number:'1.2-2' }}</h3>
+          <span class="kpi-subtext text-red">{{ r.clientesMorososCount }} clientes con pago pendiente</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- MAIN GRAPHS SECTION -->
+    <div class="graphs-grid">
+
+      <!-- GRÁFICA: EVOLUCIÓN MENSUAL DE INGRESOS -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <h3 class="chart-title">Evolución Histórica de Ingresos (Últimos Meses)</h3>
+            <p class="chart-subtitle">Volumen total de honorarios recaudados por mes en Lempiras</p>
+          </div>
+          <span class="total-badge text-green">Total Histórico: L. {{ r.totalRecaudadoHistorico | number:'1.2-2' }}</span>
+        </div>
+
+        <div class="chart-bars-container">
+          <div class="bars-wrapper">
+            @for (mes of r.historicoIngresos; track mes.mesNombre) {
+              <div class="bar-column">
+                <div class="bar-value-label">L. {{ mes.montoTotal | number:'1.0-0' }}</div>
+                <div class="bar-track">
+                  <div 
+                    class="bar-fill" 
+                    [style.height.px]="getBarHeight(mes.montoTotal)"
+                    [title]="mes.mesNombre + ': L. ' + (mes.montoTotal | number:'1.2-2') + ' (' + mes.cantidadPagos + ' pagos)'"
+                  ></div>
+                </div>
+                <span class="bar-month-label">{{ mes.mesNombre }}</span>
+                <span class="bar-count-label">{{ mes.cantidadPagos }} pagos</span>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- ESTADO DE LA CARTERA: AL DÍA VS MOROSOS -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <h3 class="chart-title">Salud de la Cartera de Clientes</h3>
+            <p class="chart-subtitle">Proporción de clientes solventes vs morosos este mes</p>
+          </div>
+        </div>
+
+        <div class="cartera-status-box">
+          <div class="progress-bar-cartera">
+            <div class="progress-segment segment-green" [style.width.%]="r.porcentajeClientesAlDia" title="Al día"></div>
+            <div class="progress-segment segment-red" [style.width.%]="100 - r.porcentajeClientesAlDia" title="En mora"></div>
+          </div>
+
+          <div class="cartera-metrics-list">
+            <!-- Clientes al día -->
+            <div class="cartera-metric-item">
+              <div class="metric-icon-circle bg-green-light text-green">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-4 h-4"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="metric-text-box">
+                <span class="metric-name">Clientes al Día (Solventes)</span>
+                <span class="metric-desc">Honorarios del mes ya registrados</span>
+              </div>
+              <div class="metric-numbers">
+                <span class="metric-val text-green">{{ r.clientesAlDiaCount }}</span>
+                <span class="metric-pct">({{ r.porcentajeClientesAlDia }}%)</span>
+              </div>
+            </div>
+
+            <!-- Clientes morosos -->
+            <div class="cartera-metric-item">
+              <div class="metric-icon-circle bg-red-light text-red">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-4 h-4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </div>
+              <div class="metric-text-box">
+                <span class="metric-name">Clientes Morosos (Pendientes)</span>
+                <span class="metric-desc">Sin registro de pago este mes</span>
+              </div>
+              <div class="metric-numbers">
+                <span class="metric-val text-red">{{ r.clientesMorososCount }}</span>
+                <span class="metric-pct">({{ (100 - r.porcentajeClientesAlDia) | number:'1.1-1' }}%)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DISTRIBUCIÓN SECTION -->
+    <div class="distribution-grid">
+
+      <!-- DISTRIBUCIÓN POR TIPO DE PERSONA -->
+      <div class="dist-card">
+        <h4 class="dist-title">Distribución por Tipo de Persona</h4>
+        <div class="dist-items-list">
+          @for (p of r.distribucionPorTipoPersona; track p.etiqueta) {
+            <div class="dist-item">
+              <div class="dist-info">
+                <span class="dist-label">{{ p.etiqueta }}</span>
+                <span class="dist-count">{{ p.cantidadClientes }} clientes ({{ p.porcentaje }}%)</span>
+              </div>
+              <div class="dist-bar-track">
+                <div class="dist-bar-fill" [style.width.%]="p.porcentaje" [class.fill-juridica]="p.etiqueta.includes('Jurídica')" [class.fill-natural]="p.etiqueta.includes('Natural')"></div>
+              </div>
+              <div class="dist-footer">
+                <span>Cuota total:</span>
+                <span class="dist-amount">L. {{ p.totalCuotas | number:'1.2-2' }}/mes</span>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- DISTRIBUCIÓN POR RUBRO COMERCIAL -->
+      <div class="dist-card">
+        <h4 class="dist-title">Top 5 Rubros Comerciales</h4>
+        <div class="dist-items-list">
+          @for (rub of r.distribucionPorRubro; track rub.etiqueta) {
+            <div class="dist-item">
+              <div class="dist-info">
+                <span class="dist-label">{{ rub.etiqueta }}</span>
+                <span class="dist-count">{{ rub.cantidadClientes }} clientes ({{ rub.porcentaje }}% facturación)</span>
+              </div>
+              <div class="dist-bar-track">
+                <div class="dist-bar-fill fill-blue" [style.width.%]="rub.porcentaje"></div>
+              </div>
+              <div class="dist-footer">
+                <span>Aporte mensual:</span>
+                <span class="dist-amount">L. {{ rub.totalCuotas | number:'1.2-2' }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+    </div>
+
+  }
+</div>

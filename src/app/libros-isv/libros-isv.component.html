@@ -1,0 +1,622 @@
+<div class="page-container animate-fade-in">
+
+  <!-- TOAST SUCCESS -->
+  @if (successMsg()) {
+    <div class="toast-success">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <span>{{ successMsg() }}</span>
+    </div>
+  }
+
+  <!-- HEADER -->
+  <header class="page-header">
+    <div class="header-left">
+      <div class="header-badge">Tributación Hondureña SAR</div>
+      <h1 class="header-title">Libros de Compras y Ventas ISV</h1>
+      <p class="header-subtitle">Liquidación de Débito/Crédito Fiscal, Renglones Oficiales SAR-210 y Carga Masiva</p>
+    </div>
+    <div class="header-right">
+      <div class="header-nav-tabs">
+        <button class="nav-tab-btn" [class.active]="activeTab() === 'individual'" (click)="activeTab.set('individual')">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span>Cálculo Individual</span>
+        </button>
+        <button class="nav-tab-btn" [class.active]="activeTab() === 'masivo'" (click)="activeTab.set('masivo')">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span>Carga Masiva Excel</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ERROR ALERT -->
+  @if (errorMsg()) {
+    <div class="error-alert mb-4">
+      <span>{{ errorMsg() }}</span>
+    </div>
+  }
+
+  <!-- ========================================== -->
+  <!-- MODALIDAD 1: CÁLCULO INDIVIDUAL EN PANTALLA -->
+  <!-- ========================================== -->
+  @if (activeTab() === 'individual') {
+    
+    <!-- BARRA DE SELECCIÓN DE CLIENTE Y PERÍODO -->
+    <div class="filter-card">
+      <div class="filter-controls-row">
+        <!-- Selector de Cliente -->
+        <div class="filter-group client-select-group">
+          <label>Contribuyente / Cliente *</label>
+          <select [ngModel]="selectedClienteId()" (ngModelChange)="selectedClienteId.set($event); cargarPeriodo()" class="form-select">
+            @for (c of clientes(); track c.id) {
+              <option [value]="c.id">{{ c.nombreRazonSocial }} (RTN: {{ c.rtn }})</option>
+            }
+          </select>
+        </div>
+
+        <!-- Selector de Mes -->
+        <div class="filter-group">
+          <label>Mes Fiscal</label>
+          <select [ngModel]="selectedMes()" (ngModelChange)="selectedMes.set($event); cargarPeriodo()" class="form-select">
+            @for (m of mesesList; track m.num) {
+              <option [value]="m.num">{{ m.nombre }}</option>
+            }
+          </select>
+        </div>
+
+        <!-- Selector de Año -->
+        <div class="filter-group">
+          <label>Año</label>
+          <select [ngModel]="selectedAnio()" (ngModelChange)="selectedAnio.set($event); cargarPeriodo()" class="form-select">
+            @for (a of aniosList; track a) {
+              <option [value]="a">{{ a }}</option>
+            }
+          </select>
+        </div>
+
+        <!-- Botón Exportar Mes -->
+        <div class="filter-action-btn">
+          <button class="btn btn-secondary" (click)="exportarResumen()" title="Exportar resumen mensual a CSV/Excel">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>Exportar Mes</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- GRID DE 2 COLUMNAS: VENTAS VS COMPRAS -->
+    <div class="books-grid">
+      
+      <!-- COLUMNA 1: LIBRO DE VENTAS (DÉBITO FISCAL) -->
+      <div class="book-card sales-card">
+        <div class="book-card-header">
+          <div class="book-header-title">
+            <span class="book-badge bg-blue-subtle text-blue">Libro de Ventas</span>
+            <h3>Débito Fiscal (ISV Facturado)</h3>
+          </div>
+          <div class="kpi-tag text-blue font-bold">
+            Total Débito: L. {{ liveTotalDebito() | number:'1.2-2' }}
+          </div>
+        </div>
+
+        <div class="book-card-body">
+          <!-- Renglón 10: Ventas 15% -->
+          <div class="input-line">
+            <div class="input-info">
+              <span class="renglon-tag">Renglón 10</span>
+              <label>Ventas Gravadas 15% (Base)</label>
+            </div>
+            <div class="input-calc-wrap">
+              <div class="input-prefix">L.</div>
+              <input type="number" [ngModel]="formVentas15()" (ngModelChange)="formVentas15.set($event)" min="0" step="100" placeholder="0.00" class="num-input" />
+              <div class="tax-result-pill text-blue">
+                + L. {{ liveDebito15() | number:'1.2-2' }} (15%)
+              </div>
+            </div>
+          </div>
+
+          <!-- Renglón 11: Ventas 18% -->
+          <div class="input-line">
+            <div class="input-info">
+              <span class="renglon-tag">Renglón 11</span>
+              <label>Ventas Gravadas 18% (Licores/Tabaco)</label>
+            </div>
+            <div class="input-calc-wrap">
+              <div class="input-prefix">L.</div>
+              <input type="number" [ngModel]="formVentas18()" (ngModelChange)="formVentas18.set($event)" min="0" step="100" placeholder="0.00" class="num-input" />
+              <div class="tax-result-pill text-blue">
+                + L. {{ liveDebito18() | number:'1.2-2' }} (18%)
+              </div>
+            </div>
+          </div>
+
+          <!-- Renglón 12: Ventas Exentas -->
+          <div class="input-line">
+            <div class="input-info">
+              <span class="renglon-tag">Renglón 12</span>
+              <label>Ventas Exentas / Exoneradas</label>
+            </div>
+            <div class="input-calc-wrap">
+              <div class="input-prefix">L.</div>
+              <input type="number" [ngModel]="formVentasExentas()" (ngModelChange)="formVentasExentas.set($event)" min="0" step="100" placeholder="0.00" class="num-input" />
+              <div class="tax-result-pill text-muted">
+                Exento (0%)
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="book-card-footer">
+          <div class="footer-stat">
+            <span class="stat-lbl">Ventas Totales:</span>
+            <span class="stat-val font-bold">L. {{ liveTotalVentas() | number:'1.2-2' }}</span>
+          </div>
+          <div class="footer-stat highlight-blue">
+            <span class="stat-lbl">Débito Fiscal (SAR):</span>
+            <span class="stat-val font-bold text-blue">L. {{ liveTotalDebito() | number:'1.2-2' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- COLUMNA 2: LIBRO DE COMPRAS (CRÉDITO FISCAL) -->
+      <div class="book-card purchases-card">
+        <div class="book-card-header">
+          <div class="book-header-title">
+            <span class="book-badge bg-green-subtle text-green">Libro de Compras</span>
+            <h3>Crédito Fiscal (ISV Soportado)</h3>
+          </div>
+          <div class="kpi-tag text-green font-bold">
+            Total Crédito: L. {{ liveTotalCredito() | number:'1.2-2' }}
+          </div>
+        </div>
+
+        <div class="book-card-body">
+          <!-- Renglón 30: Compras 15% -->
+          <div class="input-line">
+            <div class="input-info">
+              <span class="renglon-tag">Renglón 30</span>
+              <label>Compras Locales Gravadas 15%</label>
+            </div>
+            <div class="input-calc-wrap">
+              <div class="input-prefix">L.</div>
+              <input type="number" [ngModel]="formCompras15()" (ngModelChange)="formCompras15.set($event)" min="0" step="100" placeholder="0.00" class="num-input" />
+              <div class="tax-result-pill text-green">
+                - L. {{ (formCompras15() * 0.15) | number:'1.2-2' }} (15%)
+              </div>
+            </div>
+          </div>
+
+          <!-- Renglón 31: Compras 18% -->
+          <div class="input-line">
+            <div class="input-info">
+              <span class="renglon-tag">Renglón 31</span>
+              <label>Compras Locales Gravadas 18%</label>
+            </div>
+            <div class="input-calc-wrap">
+              <div class="input-prefix">L.</div>
+              <input type="number" [ngModel]="formCompras18()" (ngModelChange)="formCompras18.set($event)" min="0" step="100" placeholder="0.00" class="num-input" />
+              <div class="tax-result-pill text-green">
+                - L. {{ liveCredito18() | number:'1.2-2' }} (18%)
+              </div>
+            </div>
+          </div>
+
+          <!-- Renglón 32: Compras Exentas -->
+          <div class="input-line">
+            <div class="input-info">
+              <span class="renglon-tag">Renglón 32</span>
+              <label>Compras Exentas / Sin Crédito</label>
+            </div>
+            <div class="input-calc-wrap">
+              <div class="input-prefix">L.</div>
+              <input type="number" [ngModel]="formComprasExentas()" (ngModelChange)="formComprasExentas.set($event)" min="0" step="100" placeholder="0.00" class="num-input" />
+              <div class="tax-result-pill text-muted">
+                Sin crédito (0%)
+              </div>
+            </div>
+          </div>
+
+          <!-- Renglón 33: Importaciones 15% -->
+          <div class="input-line">
+            <div class="input-info">
+              <span class="renglon-tag">Renglón 33</span>
+              <label>Importaciones Gravadas 15%</label>
+            </div>
+            <div class="input-calc-wrap">
+              <div class="input-prefix">L.</div>
+              <input type="number" [ngModel]="formImportaciones15()" (ngModelChange)="formImportaciones15.set($event)" min="0" step="100" placeholder="0.00" class="num-input" />
+              <div class="tax-result-pill text-green">
+                - L. {{ (formImportaciones15() * 0.15) | number:'1.2-2' }} (15%)
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="book-card-footer">
+          <div class="footer-stat">
+            <span class="stat-lbl">Compras Totales:</span>
+            <span class="stat-val font-bold">L. {{ liveTotalCompras() | number:'1.2-2' }}</span>
+          </div>
+          <div class="footer-stat highlight-green">
+            <span class="stat-lbl">Crédito Fiscal (SAR):</span>
+            <span class="stat-val font-bold text-green">L. {{ liveTotalCredito() | number:'1.2-2' }}</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- PANEL INFERIOR: DETERMINACIÓN & LIQUIDACIÓN FORMULARIO SAR-210 -->
+    <div class="sar210-summary-card">
+      <div class="summary-header">
+        <div class="summary-title-wrap">
+          <span class="badge-fiscal-id">Formulario SAR-210</span>
+          <h3>Determinación y Liquidación del Impuesto Sobre Ventas</h3>
+        </div>
+        
+        <!-- RESULTADO EN VIVO DESTACADO -->
+        <div class="final-result-badge" [class.result-pay]="liveImpuestoPagar() > 0" [class.result-favor]="liveSaldoFavor() > 0">
+          @if (liveImpuestoPagar() > 0) {
+            <span class="res-lbl">Impuesto a Pagar al SAR (Renglón 60):</span>
+            <span class="res-val">L. {{ liveImpuestoPagar() | number:'1.2-2' }}</span>
+          } @else if (liveSaldoFavor() > 0) {
+            <span class="res-lbl">Saldo a Favor para Siguiente Período:</span>
+            <span class="res-val">L. {{ liveSaldoFavor() | number:'1.2-2' }}</span>
+          } @else {
+            <span class="res-lbl">Liquidación Neutra:</span>
+            <span class="res-val">L. 0.00</span>
+          }
+        </div>
+      </div>
+
+      <!-- FILA DE DEDUCCIONES / SALDOS ANTERIORES -->
+      <div class="deductions-row">
+        <div class="deduction-field">
+          <div class="deduction-label-wrap">
+            <span class="renglon-tag">Renglón 50</span>
+            <label>Saldo a Favor del Mes Anterior</label>
+          </div>
+          <div class="input-prefix-wrap">
+            <span class="input-prefix">L.</span>
+            <input type="number" [ngModel]="formSaldoAnterior()" (ngModelChange)="formSaldoAnterior.set($event)" min="0" placeholder="0.00" class="num-input" />
+          </div>
+        </div>
+
+        <div class="deduction-field">
+          <div class="deduction-label-wrap">
+            <span class="renglon-tag">Renglón 55</span>
+            <label>Retenciones ISV Sufridas (1% Tarjetas / Agentes)</label>
+          </div>
+          <div class="input-prefix-wrap">
+            <span class="input-prefix">L.</span>
+            <input type="number" [ngModel]="formRetenciones()" (ngModelChange)="formRetenciones.set($event)" min="0" placeholder="0.00" class="num-input" />
+          </div>
+        </div>
+
+        <div class="deduction-field sar-declaration-field">
+          <label class="switch-field">
+            <input type="checkbox" [checked]="formMarcarLiquidado()" (change)="formMarcarLiquidado.set(!formMarcarLiquidado())" />
+            <span class="font-bold">Declarado en Plataforma SAR</span>
+          </label>
+          <input type="text" [ngModel]="formNumeroDeclaracion()" (ngModelChange)="formNumeroDeclaracion.set($event)" placeholder="N° Declaración SAR (Ej: SAR-2026-12345)" class="text-input" />
+        </div>
+      </div>
+
+      <!-- BOTONES DE ACCIÓN -->
+      <div class="summary-actions">
+        <div class="actions-left">
+          <button class="btn btn-secondary" (click)="imprimirHojaTrabajo()">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+            <span>Imprimir Hoja SAR-210</span>
+          </button>
+        </div>
+
+        <button class="btn btn-primary" (click)="guardarIndividual()" [disabled]="isSaving()">
+          @if (isSaving()) {
+            <div class="spinner-inline"></div>
+            <span>Guardando...</span>
+          } @else {
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            <span>Guardar Liquidación SAR-210</span>
+          }
+        </button>
+      </div>
+
+    </div>
+
+  }
+
+  <!-- ========================================== -->
+  <!-- MODALIDAD 2: CARGA MASIVA MEDIANTE EXCEL   -->
+  <!-- ========================================== -->
+  @if (activeTab() === 'masivo') {
+    <div class="bulk-upload-container">
+      
+      <!-- INSTRUCTIONS CARD -->
+      <div class="instructions-card">
+        <div class="instruct-header">
+          <div class="instruct-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          </div>
+          <div>
+            <h3>Importación Masiva de Libros ISV</h3>
+            <p>Sube las compras y ventas de todos tus clientes de un solo clic con la plantilla oficial compatible con Excel y CSV.</p>
+          </div>
+        </div>
+
+        <div class="steps-row">
+          <div class="step-box">
+            <span class="step-num">1</span>
+            <h4>Descarga la Plantilla</h4>
+            <p>Descarga el archivo prellenado con los RTN de tus clientes activos.</p>
+            <button class="btn btn-secondary btn-sm mt-2" (click)="descargarPlantilla()">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>Descargar Plantilla (.csv / Excel)</span>
+            </button>
+          </div>
+
+          <div class="step-box">
+            <span class="step-num">2</span>
+            <h4>Ingresa los Totales en Excel</h4>
+            <p>Llena las columnas de Ventas 15%, 18%, Exentas y Compras de cada contribuyente.</p>
+          </div>
+
+          <div class="step-box">
+            <span class="step-num">3</span>
+            <h4>Sube y Procesa en Lote</h4>
+            <p>Arrastra el archivo y el sistema liquidará automáticamente el SAR-210 de cada cliente.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- DROPZONE -->
+      <div 
+        class="dropzone-box" 
+        (drop)="onFileDrop($event)" 
+        (dragover)="onDragOver($event)"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-12 h-12 text-muted mb-2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <h4>Arrastra tu archivo aquí o selecciona desde tu equipo</h4>
+        <p>Formatos admitidos: .csv o .xlsx exportado como CSV</p>
+        
+        <label class="btn btn-primary mt-3 cursor-pointer">
+          <span>Seleccionar Archivo</span>
+          <input type="file" accept=".csv,.txt" (change)="onFileSelected($event)" class="hidden-input" />
+        </label>
+
+        @if (selectedFile()) {
+          <div class="selected-file-badge mt-3">
+            <span>📄 {{ selectedFile()?.name }}</span>
+          </div>
+        }
+      </div>
+
+      @if (parseError()) {
+        <div class="error-alert mt-4">
+          <span>{{ parseError() }}</span>
+        </div>
+      }
+
+      <!-- PREVISUALIZACIÓN DE FILAS -->
+      @if (parsedRows().length > 0) {
+        <div class="preview-card mt-4 animate-fade-in">
+          <div class="preview-header">
+            <h3>Previsualización de Datos ({{ parsedRows().length }} registros listos)</h3>
+            <button class="btn btn-success" (click)="ejecutarImportacionMasiva()" [disabled]="isImporting()">
+              @if (isImporting()) {
+                <div class="spinner-inline"></div>
+                <span>Procesando...</span>
+              } @else {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Confirmar e Importar {{ parsedRows().length }} Registros</span>
+              }
+            </button>
+          </div>
+
+          <div class="table-responsive">
+            <table class="preview-table">
+              <thead>
+                <tr>
+                  <th>RTN</th>
+                  <th>Período</th>
+                  <th>Ventas 15%</th>
+                  <th>Ventas Exentas</th>
+                  <th>Compras 15%</th>
+                  <th>Compras Exentas</th>
+                  <th>Saldo Anterior</th>
+                  <th>N° SAR</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of parsedRows(); track $index) {
+                  <tr>
+                    <td class="font-mono font-bold">{{ row.rtn }}</td>
+                    <td>{{ row.mes }}/{{ row.anio }}</td>
+                    <td class="font-bold text-blue">L. {{ row.ventasGravadas15 | number:'1.2-2' }}</td>
+                    <td>L. {{ row.ventasExentas | number:'1.2-2' }}</td>
+                    <td class="font-bold text-green">L. {{ row.comprasGravadas15 | number:'1.2-2' }}</td>
+                    <td>L. {{ row.comprasExentas | number:'1.2-2' }}</td>
+                    <td>L. {{ row.saldoAFavorPeriodoAnterior | number:'1.2-2' }}</td>
+                    <td class="font-mono text-xs">{{ row.numeroDeclaracionSAR || '—' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+
+      <!-- RESULTADOS TRAS IMPORTACIÓN -->
+      @if (importResult(); as res) {
+        <div class="results-card mt-4 animate-fade-in">
+          <div class="results-header">
+            <div class="result-stat bg-green-light text-green">
+              <span class="stat-num">{{ res.totalGuardados }}</span>
+              <span class="stat-text">Períodos Guardados</span>
+            </div>
+            <div class="result-stat bg-red-light text-red">
+              <span class="stat-num">{{ res.totalErrores }}</span>
+              <span class="stat-text">Errores / Omitidos</span>
+            </div>
+          </div>
+
+          @if (res.mensajes.length > 0) {
+            <div class="mensajes-log mt-3">
+              <h4>Detalle de procesamiento:</h4>
+              <ul>
+                @for (m of res.mensajes; track $index) {
+                  <li>{{ m }}</li>
+                }
+              </ul>
+            </div>
+          }
+        </div>
+      }
+
+    </div>
+  }
+
+  <!-- ======================================================== -->
+  <!-- DOCUMENTO OFICIAL PARA IMPRESIÓN (SOLO VISIBLE EN PRINT) -->
+  <!-- ======================================================== -->
+  <div class="printable-sar210-document">
+    <div class="doc-header">
+      <div class="doc-republica">
+        <h2>REPÚBLICA DE HONDURAS</h2>
+        <h3>SERVICIO DE ADMINISTRACIÓN DE RENTAS (SAR)</h3>
+        <div class="doc-badge-form">FORMULARIO SAR-210 • HOJA DE TRABAJO Y LIQUIDACIÓN ISV</div>
+      </div>
+    </div>
+
+    <!-- DATOS DEL CONTRIBUYENTE -->
+    <div class="doc-taxpayer-box">
+      <div class="taxpayer-row">
+        <div class="tp-col">
+          <span class="tp-lbl">Contribuyente / Razón Social:</span>
+          <span class="tp-val font-bold">{{ selectedCliente()?.nombreRazonSocial || '—' }}</span>
+        </div>
+        <div class="tp-col">
+          <span class="tp-lbl">RTN Fiscal:</span>
+          <span class="tp-val font-mono font-bold">{{ selectedCliente()?.rtn || '—' }}</span>
+        </div>
+      </div>
+      <div class="taxpayer-row">
+        <div class="tp-col">
+          <span class="tp-lbl">Período Fiscal:</span>
+          <span class="tp-val font-bold">{{ selectedMesNombre() }} {{ selectedAnio() }}</span>
+        </div>
+        <div class="tp-col">
+          <span class="tp-lbl">Giro / Rubro:</span>
+          <span class="tp-val">{{ selectedCliente()?.rubro || 'General' }}</span>
+        </div>
+        <div class="tp-col">
+          <span class="tp-lbl">N° Formulario SAR:</span>
+          <span class="tp-val font-mono">{{ formNumeroDeclaracion() || 'Borrador Oficial' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABLA OFICIAL SAR-210 -->
+    <table class="doc-table-sar">
+      <thead>
+        <tr class="section-title-row">
+          <th colspan="3">I. DETERMINACIÓN DEL DÉBITO FISCAL (VENTAS DEL MES)</th>
+        </tr>
+        <tr>
+          <th style="width: 18%;">Renglón</th>
+          <th style="width: 54%;">Concepto Tributario</th>
+          <th style="width: 28%;" class="text-right">Monto (HNL)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="renglon-code">Renglón 10</td>
+          <td>Ventas Gravadas con Tasa del Quince por Ciento (15%)</td>
+          <td class="text-right font-mono">L. {{ (formVentas15() || 0) | number:'1.2-2' }}</td>
+        </tr>
+        <tr>
+          <td class="renglon-code">Renglón 11</td>
+          <td>Ventas Gravadas con Tasa del Dieciocho por Ciento (18%)</td>
+          <td class="text-right font-mono">L. {{ (formVentas18() || 0) | number:'1.2-2' }}</td>
+        </tr>
+        <tr>
+          <td class="renglon-code">Renglón 12</td>
+          <td>Ventas Exentas y Exoneradas de Impuesto</td>
+          <td class="text-right font-mono">L. {{ (formVentasExentas() || 0) | number:'1.2-2' }}</td>
+        </tr>
+        <tr class="subtotal-row">
+          <td class="renglon-code">Renglón 20</td>
+          <td><strong>TOTAL DÉBITO FISCAL GENERADO EN EL MES</strong></td>
+          <td class="text-right font-mono font-bold">L. {{ liveTotalDebito() | number:'1.2-2' }}</td>
+        </tr>
+
+        <tr class="section-title-row">
+          <th colspan="3">II. DETERMINACIÓN DEL CRÉDITO FISCAL (COMPRAS E IMPORTACIONES)</th>
+        </tr>
+        <tr>
+          <td class="renglon-code">Renglón 30</td>
+          <td>Compras Locales Gravadas Tasa 15% (Base: L. {{ (formCompras15() || 0) | number:'1.2-2' }})</td>
+          <td class="text-right font-mono">L. {{ ((formCompras15() || 0) * 0.15) | number:'1.2-2' }}</td>
+        </tr>
+        <tr>
+          <td class="renglon-code">Renglón 31</td>
+          <td>Compras Locales Gravadas Tasa 18% (Base: L. {{ (formCompras18() || 0) | number:'1.2-2' }})</td>
+          <td class="text-right font-mono">L. {{ liveCredito18() | number:'1.2-2' }}</td>
+        </tr>
+        <tr>
+          <td class="renglon-code">Renglón 32</td>
+          <td>Compras Locales Exentas y sin Derecho a Crédito</td>
+          <td class="text-right font-mono">L. {{ (formComprasExentas() || 0) | number:'1.2-2' }}</td>
+        </tr>
+        <tr>
+          <td class="renglon-code">Renglón 33</td>
+          <td>Importaciones Gravadas Tasa 15% (Base: L. {{ (formImportaciones15() || 0) | number:'1.2-2' }})</td>
+          <td class="text-right font-mono">L. {{ ((formImportaciones15() || 0) * 0.15) | number:'1.2-2' }}</td>
+        </tr>
+        <tr class="subtotal-row">
+          <td class="renglon-code">Renglón 40</td>
+          <td><strong>TOTAL CRÉDITO FISCAL A FAVOR DEL MES</strong></td>
+          <td class="text-right font-mono font-bold">L. {{ liveTotalCredito() | number:'1.2-2' }}</td>
+        </tr>
+
+        <tr class="section-title-row">
+          <th colspan="3">III. LIQUIDACIÓN Y DETERMINACIÓN DEL IMPUESTO</th>
+        </tr>
+        <tr>
+          <td class="renglon-code">Renglón 50</td>
+          <td>(-) Saldo a Favor del Contribuyente del Mes Anterior</td>
+          <td class="text-right font-mono">L. {{ (formSaldoAnterior() || 0) | number:'1.2-2' }}</td>
+        </tr>
+        <tr>
+          <td class="renglon-code">Renglón 55</td>
+          <td>(-) Retenciones ISV Sufridas en el Período (1% Agentes / POS)</td>
+          <td class="text-right font-mono">L. {{ (formRetenciones() || 0) | number:'1.2-2' }}</td>
+        </tr>
+        <tr class="total-final-row">
+          <td class="renglon-code">Renglón 60</td>
+          <td>
+            <strong>{{ liveImpuestoPagar() > 0 ? 'IMPUESTO NETO A PAGAR AL SAR' : 'SALDO A FAVOR DEL CONTRIBUYENTE' }}</strong>
+          </td>
+          <td class="text-right font-mono font-bold">
+            L. {{ (liveImpuestoPagar() > 0 ? liveImpuestoPagar() : liveSaldoFavor()) | number:'1.2-2' }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- FIRMAS AL PIE -->
+    <div class="doc-signatures-box">
+      <div class="sig-line">
+        <div class="sig-stroke"></div>
+        <span class="sig-name">Firma y Sello del Contador Público</span>
+        <span class="sig-detail">Colegio Profesional (CAH)</span>
+      </div>
+      <div class="sig-line">
+        <div class="sig-stroke"></div>
+        <span class="sig-name">Firma del Contribuyente / Representante Legal</span>
+        <span class="sig-detail">RTN: {{ selectedCliente()?.rtn || '—' }}</span>
+      </div>
+    </div>
+  </div>
+
+</div>

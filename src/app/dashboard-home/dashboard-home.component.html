@@ -1,0 +1,119 @@
+<div class="page-container animate-fade-in">
+  <header class="page-header">
+    <div class="header-left">
+      <div class="header-badge bg-blue-light text-blue">Visión General</div>
+      <h1 class="header-title">Tablero Ejecutivo del Despacho</h1>
+      <p class="header-subtitle">Resumen en tiempo real de obligaciones SAR, cartera de clientes y honorarios</p>
+    </div>
+  </header>
+
+  <!-- KPIS -->
+  <section class="kpis-grid">
+    <div class="kpi-card" (click)="tabsService.openModulo(tabsService.catalogoModulos[1])" style="cursor: pointer;">
+      <div class="kpi-header">
+        <span class="kpi-label">Cartera de Clientes</span>
+        <div class="kpi-icon-box bg-blue-light text-blue">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+      </div>
+      <div class="kpi-body">
+        <h3 class="kpi-value">{{ clientes().length }}</h3>
+        <span class="kpi-subtext text-blue">Ver directorio completo →</span>
+      </div>
+    </div>
+
+    <div class="kpi-card" (click)="tabsService.openModulo(tabsService.catalogoModulos[2])" style="cursor: pointer;">
+      <div class="kpi-header">
+        <span class="kpi-label">Estado SAR (Día 10)</span>
+        <div class="kpi-icon-box bg-orange-light text-orange">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/><path d="m9 16 2 2 4-4"/></svg>
+        </div>
+      </div>
+      <div class="kpi-body">
+        <h3 class="kpi-value text-orange">{{ resumenSAR()?.facturasPendientesCount || 0 }} Pendientes</h3>
+        <span class="kpi-subtext text-orange">Ver semáforo mensual →</span>
+      </div>
+    </div>
+
+    <div class="kpi-card" (click)="tabsService.openModulo(tabsService.catalogoModulos[4])" style="cursor: pointer;">
+      <div class="kpi-header">
+        <span class="kpi-label">Recibos Emitidos</span>
+        <div class="kpi-icon-box bg-green-light text-green">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+      </div>
+      <div class="kpi-body">
+        <h3 class="kpi-value text-green">{{ pagos().length }}</h3>
+        <span class="kpi-subtext text-green">Ver cobros y honorarios →</span>
+      </div>
+    </div>
+
+    <!-- KPI CALENDARIO FISCAL SAR -->
+    <div class="kpi-card" (click)="tabsService.openModulo(tabsService.catalogoModulos[3])" style="cursor: pointer;">
+      <div class="kpi-header">
+        <span class="kpi-label">Próximo Vencimiento SAR</span>
+        <div class="kpi-icon-box bg-purple-light text-purple">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/></svg>
+        </div>
+      </div>
+      <div class="kpi-body">
+        @if (proximoHito(); as ph) {
+          <h3 class="kpi-value text-purple" style="font-size: 1.15rem;">{{ ph.diaVencimiento }} {{ ph.mesNombre }}</h3>
+          <span class="kpi-subtext text-purple font-semibold">{{ ph.titulo }} ({{ ph.diasRestantes }} días) →</span>
+        } @else {
+          <h3 class="kpi-value text-purple">Al día</h3>
+          <span class="kpi-subtext text-purple">Ver calendario fiscal →</span>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ACCESOS RÁPIDOS -->
+  <div class="quick-actions-section">
+    <h3>Módulos del Sistema Contable</h3>
+    <div class="modules-cards-grid">
+      @for (m of tabsService.catalogoModulos; track m.id) {
+        <div class="module-card" (click)="tabsService.openModulo(m)">
+          <div class="module-icon">
+            @switch (m.iconPath) {
+              @case ('dashboard') {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+              }
+              @case ('people') {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              }
+              @case ('event_note') {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/><path d="m9 16 2 2 4-4"/></svg>
+              }
+              @case ('menu_book') {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
+              }
+              @case ('receipt_long') {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><line x1="8" x2="16" y1="8" y2="8"/><line x1="8" x2="16" y1="12" y2="12"/><line x1="8" x2="12" y1="16" y2="16"/></svg>
+              }
+              @case ('description') {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              }
+              @case ('notifications_active') {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+              }
+              @case ('badge') {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+              }
+              @case ('insights') {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              }
+              @case ('import_export') {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              }
+            }
+          </div>
+          <div class="module-text">
+            <h4>{{ m.title }}</h4>
+            <p>{{ m.description }}</p>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>

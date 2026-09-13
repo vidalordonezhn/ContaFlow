@@ -1,0 +1,379 @@
+<div class="page-container animate-fade-in">
+  
+  <!-- TOAST NOTIFICATION -->
+  @if (successMsg()) {
+    <div class="toast-success">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <span>{{ successMsg() }}</span>
+    </div>
+  }
+
+  <!-- HEADER -->
+  <header class="page-header">
+    <div class="header-left">
+      <div class="header-badge">Equipo del Despacho</div>
+      <h1 class="header-title">Personal y Usuarios</h1>
+      <p class="header-subtitle">Gestión de accesos, roles de contadores y asistentes del despacho</p>
+    </div>
+    <div class="header-right">
+      <button class="btn btn-primary" (click)="openCreateModal()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-4 h-4"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+        <span>Nuevo Usuario</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- KPIS GRID -->
+  <section class="kpis-grid">
+    <!-- Total Personal -->
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-label">Total Personal</span>
+        <div class="kpi-icon-box bg-blue-light text-blue">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+      </div>
+      <div class="kpi-body">
+        <h3 class="kpi-value">{{ kpiTotal() }}</h3>
+        <span class="kpi-subtext text-blue">Registrados en sistema</span>
+      </div>
+    </div>
+
+    <!-- Contadores Activos -->
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-label">Contadores Activos</span>
+        <div class="kpi-icon-box bg-green-light text-green">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+        </div>
+      </div>
+      <div class="kpi-body">
+        <h3 class="kpi-value text-green">{{ kpiContadores() }}</h3>
+        <span class="kpi-subtext text-green">Gestores de clientes SAR</span>
+      </div>
+    </div>
+
+    <!-- Asistentes Contables -->
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-label">Asistentes Contables</span>
+        <div class="kpi-icon-box bg-purple-light text-purple">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+      </div>
+      <div class="kpi-body">
+        <h3 class="kpi-value text-purple">{{ kpiAsistentes() }}</h3>
+        <span class="kpi-subtext text-purple">Carga de facturas & recibos</span>
+      </div>
+    </div>
+
+    <!-- Inactivos / Bloqueados -->
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-label">Usuarios Inactivos</span>
+        <div class="kpi-icon-box bg-red-light text-red">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+        </div>
+      </div>
+      <div class="kpi-body">
+        <h3 class="kpi-value text-red">{{ kpiInactivos() }}</h3>
+        <span class="kpi-subtext text-red">Acceso restringido</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTROLS: TABS & SEARCH BAR -->
+  <div class="table-container-card">
+    
+    <!-- TABS BAR & SEARCH -->
+    <div class="filters-bar">
+      <!-- Tabs -->
+      <div class="tabs-nav">
+        <button class="tab-btn" [class.active]="activeTab() === 'todos'" (click)="activeTab.set('todos')">
+          Todos <span class="tab-badge">{{ kpiTotal() }}</span>
+        </button>
+        <button class="tab-btn" [class.active]="activeTab() === 'contadores'" (click)="activeTab.set('contadores')">
+          Contadores <span class="tab-badge">{{ kpiContadores() }}</span>
+        </button>
+        <button class="tab-btn" [class.active]="activeTab() === 'asistentes'" (click)="activeTab.set('asistentes')">
+          Asistentes <span class="tab-badge">{{ kpiAsistentes() }}</span>
+        </button>
+        <button class="tab-btn" [class.active]="activeTab() === 'admins'" (click)="activeTab.set('admins')">
+          Administradores <span class="tab-badge">{{ kpiAdmins() }}</span>
+        </button>
+        <button class="tab-btn" [class.active]="activeTab() === 'inactivos'" (click)="activeTab.set('inactivos')">
+          Inactivos <span class="tab-badge">{{ kpiInactivos() }}</span>
+        </button>
+      </div>
+
+      <!-- Search Input -->
+      <div class="search-box">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input 
+          type="text" 
+          placeholder="Buscar por nombre, usuario, correo..." 
+          [ngModel]="searchQuery()" 
+          (ngModelChange)="searchQuery.set($event)"
+        />
+        @if (searchQuery()) {
+          <button class="clear-search" (click)="searchQuery.set('')">✕</button>
+        }
+      </div>
+    </div>
+
+    <!-- DATA TABLE -->
+    @if (isLoading()) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Cargando información del personal...</p>
+      </div>
+    } @else if (filteredUsuarios().length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-12 h-12 text-muted"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+        <h4>No se encontraron usuarios</h4>
+        <p>No hay coincidencias con los filtros o el término de búsqueda actual.</p>
+      </div>
+    } @else {
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Personal / Usuario</th>
+              <th>Rol en Despacho</th>
+              <th>Contacto</th>
+              <th>Estado</th>
+              <th>Fecha de Registro</th>
+              <th class="text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (user of filteredUsuarios(); track user.id) {
+              <tr [class.row-inactive]="!user.activo">
+                <!-- Avatar & Name -->
+                <td>
+                  <div class="user-cell">
+                    <div class="avatar" [class.avatar-admin]="user.rol === 'Admin'" [class.avatar-contador]="user.rol === 'Contador'" [class.avatar-asistente]="user.rol === 'Asistente'">
+                      {{ user.nombre.substring(0, 1).toUpperCase() }}
+                    </div>
+                    <div class="user-info">
+                      <span class="user-fullname">{{ user.nombre }}</span>
+                      <span class="user-handle">&#64;{{ user.username }}</span>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Role Badge -->
+                <td>
+                  <span class="role-badge" [class.badge-admin]="user.rol === 'Admin'" [class.badge-contador]="user.rol === 'Contador'" [class.badge-asistente]="user.rol === 'Asistente'">
+                    @if (user.rol === 'Admin') {
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    } @else if (user.rol === 'Contador') {
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                    } @else {
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    }
+                    {{ user.rol }}
+                  </span>
+                </td>
+
+                <!-- Contact -->
+                <td>
+                  <div class="contact-info">
+                    @if (user.email) {
+                      <span class="contact-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5 text-muted"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                        {{ user.email }}
+                      </span>
+                    }
+                    @if (user.telefono) {
+                      <span class="contact-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5 text-muted"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                        {{ user.telefono }}
+                      </span>
+                    }
+                    @if (!user.email && !user.telefono) {
+                      <span class="text-muted text-xs">Sin datos</span>
+                    }
+                  </div>
+                </td>
+
+                <!-- Status Badge -->
+                <td>
+                  @if (user.activo) {
+                    <span class="status-pill status-active">
+                      <span class="dot"></span> Activo
+                    </span>
+                  } @else {
+                    <span class="status-pill status-inactive">
+                      <span class="dot"></span> Inactivo
+                    </span>
+                  }
+                </td>
+
+                <!-- Created Date -->
+                <td>
+                  <span class="date-text">{{ user.fechaCreacion | date:'dd/MM/yyyy' }}</span>
+                </td>
+
+                <!-- Actions -->
+                <td class="text-right">
+                  <div class="actions-group">
+                    <!-- Edit -->
+                    <button class="action-btn" (click)="openEditModal(user)" title="Editar Perfil">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                    </button>
+                    <!-- Key / Password -->
+                    <button class="action-btn" (click)="openPasswordModal(user)" title="Cambiar Contraseña">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    </button>
+                    <!-- Toggle Status -->
+                    <button class="action-btn" [class.text-red]="user.activo" [class.text-green]="!user.activo" (click)="toggleStatus(user)" [title]="user.activo ? 'Desactivar usuario' : 'Activar usuario'">
+                      @if (user.activo) {
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                      } @else {
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                      }
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- MODAL: CREAR / EDITAR USUARIO -->
+@if (isModalOpen()) {
+  <div class="modal-backdrop" (click)="closeModals()">
+    <div class="modal-card animate-fade-in" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-box">
+          <div class="modal-icon bg-blue-light text-blue">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+          </div>
+          <div>
+            <h3>{{ isEditing() ? 'Editar Usuario / Personal' : 'Nuevo Usuario / Personal' }}</h3>
+            <p>{{ isEditing() ? 'Actualiza los datos del empleado' : 'Ingresa los datos para crear un nuevo usuario' }}</p>
+          </div>
+        </div>
+        <button class="modal-close" (click)="closeModals()">✕</button>
+      </div>
+
+      @if (formError()) {
+        <div class="error-alert">
+          <span>{{ formError() }}</span>
+        </div>
+      }
+
+      <form (ngSubmit)="saveUsuario()" class="modal-form">
+        <div class="form-grid">
+          <!-- Nombre Completo -->
+          <div class="form-field full-width">
+            <label>Nombre Completo *</label>
+            <input type="text" [ngModel]="formNombre()" (ngModelChange)="formNombre.set($event)" name="formNombre" placeholder="Ej: Lic. Carlos Mendoza" required />
+          </div>
+
+          <!-- Username (Solo creación) -->
+          @if (!isEditing()) {
+            <div class="form-field">
+              <label>Nombre de Usuario *</label>
+              <input type="text" [ngModel]="formUsername()" (ngModelChange)="formUsername.set($event)" name="formUsername" placeholder="Ej: cmendoza" required />
+            </div>
+            
+            <div class="form-field">
+              <label>Contraseña Inicial *</label>
+              <input type="password" [ngModel]="formPassword()" (ngModelChange)="formPassword.set($event)" name="formPassword" placeholder="Mínimo 6 caracteres" required />
+            </div>
+          }
+
+          <!-- Rol -->
+          <div class="form-field">
+            <label>Rol en el Despacho *</label>
+            <select [ngModel]="formRol()" (ngModelChange)="formRol.set($event)" name="formRol">
+              <option value="Contador">Contador Principal</option>
+              <option value="Asistente">Asistente Contable</option>
+              <option value="Admin">Administrador General</option>
+            </select>
+          </div>
+
+          <!-- Correo -->
+          <div class="form-field">
+            <label>Correo Electrónico</label>
+            <input type="email" [ngModel]="formEmail()" (ngModelChange)="formEmail.set($event)" name="formEmail" placeholder="usuario@despacho.com" />
+          </div>
+
+          <!-- Teléfono -->
+          <div class="form-field">
+            <label>Teléfono / WhatsApp</label>
+            <input type="tel" [ngModel]="formTelefono()" (ngModelChange)="formTelefono.set($event)" name="formTelefono" placeholder="+504 9999-9999" />
+          </div>
+
+          <!-- Estado (Solo edición) -->
+          @if (isEditing()) {
+            <div class="form-field checkbox-field">
+              <label class="switch-label">
+                <input type="checkbox" [checked]="formActivo()" (change)="formActivo.set(!formActivo())" />
+                <span>Usuario Activo en el Sistema</span>
+              </label>
+            </div>
+          }
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeModals()">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            {{ isEditing() ? 'Guardar Cambios' : 'Crear Usuario' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- MODAL: CAMBIAR CONTRASEÑA -->
+@if (isPasswordModalOpen()) {
+  <div class="modal-backdrop" (click)="closeModals()">
+    <div class="modal-card modal-sm animate-fade-in" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-box">
+          <div class="modal-icon bg-orange-light text-orange">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <div>
+            <h3>Cambiar Contraseña</h3>
+            <p>Usuario: <strong>&#64;{{ selectedUsername() }}</strong></p>
+          </div>
+        </div>
+        <button class="modal-close" (click)="closeModals()">✕</button>
+      </div>
+
+      @if (formError()) {
+        <div class="error-alert">
+          <span>{{ formError() }}</span>
+        </div>
+      }
+
+      <form (ngSubmit)="savePassword()" class="modal-form">
+        <div class="form-field full-width">
+          <label>Nueva Contraseña *</label>
+          <input type="password" [ngModel]="newPassword()" (ngModelChange)="newPassword.set($event)" name="newPassword" placeholder="Mínimo 6 caracteres" required />
+        </div>
+
+        <div class="form-field full-width">
+          <label>Confirmar Nueva Contraseña *</label>
+          <input type="password" [ngModel]="confirmPassword()" (ngModelChange)="confirmPassword.set($event)" name="confirmPassword" placeholder="Repite la contraseña" required />
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeModals()">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Actualizar Contraseña</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

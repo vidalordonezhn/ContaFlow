@@ -1,0 +1,677 @@
+<div class="config-container">
+  <!-- ENCABEZADO DE PÁGINA -->
+  <div class="page-header">
+    <div class="header-titles">
+      <div class="title-with-badge">
+        <h1 class="page-title">Perfil del Despacho, Branding y CAI (SAR)</h1>
+        <span class="badge-custom">Régimen de Facturación & PDF</span>
+      </div>
+      <p class="page-subtitle">
+        Configura los datos fiscales del despacho de tu papá, logotipo, cuentas bancarias y el lote de autorización CAI del SAR para facturación y consumo automático.
+      </p>
+    </div>
+
+    <div class="header-actions">
+      <button 
+        type="button" 
+        class="btn-save" 
+        [disabled]="saving() || loading()"
+        (click)="guardar()"
+      >
+        @if (saving()) {
+          <span class="spinner-sm"></span>
+          <span>Guardando...</span>
+        } @else {
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          <span>Guardar Configuración</span>
+        }
+      </button>
+    </div>
+  </div>
+
+  <!-- ALERTAS DE ÉXITO O ERROR -->
+  @if (successMessage()) {
+    <div class="alert alert-success animate-fade-in">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><polyline points="20 6 9 17 4 12"/></svg>
+      <span>{{ successMessage() }}</span>
+    </div>
+  }
+
+  @if (errorMessage()) {
+    <div class="alert alert-danger animate-fade-in">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span>{{ errorMessage() }}</span>
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Cargando información del despacho y CAI...</p>
+    </div>
+  } @else {
+    <div class="config-grid">
+      <!-- COLUMNA IZQUIERDA: FORMULARIOS -->
+      <div class="forms-column">
+        
+        <!-- TARJETA CAI SAR Y CORRELATIVOS (NUEVO MÓDULO) -->
+        <div class="card-section cai-section">
+          <div class="card-header">
+            <div class="card-icon emerald">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10"共有 y2="10"/><path d="m9 16 2 2 4-4"/></svg>
+            </div>
+            <div class="card-header-flex">
+              <div>
+                <h2 class="card-title">Autorización CAI del SAR y Consumo de Correlativos</h2>
+                <p class="card-desc">Control oficial de emisión fiscal de facturas y recibos con auto-consumo consecutivo.</p>
+              </div>
+              @if (caiActivo()) {
+                <span class="cai-status-badge" [class.danger]="caiActivo()!.estaVencido || caiActivo()!.estaAgotado" [class.warning]="caiActivo()!.diasRestantes <= 30 || caiActivo()!.totalRestantes <= 20">
+                  {{ caiActivo()!.estaAgotado ? 'Agotado' : (caiActivo()!.estaVencido ? 'Vencido' : 'CAI Vigente') }}
+                </span>
+              }
+            </div>
+          </div>
+
+          <div class="card-body">
+            @if (caiActivo()) {
+              <!-- DASHBOARD DE CONSUMO CAI -->
+              <div class="cai-metrics-banner">
+                <div class="cai-info-row">
+                  <div class="cai-code-box">
+                    <span class="cai-lbl">CÓDIGO CAI AUTORIZADO (SAR):</span>
+                    <strong class="cai-value">{{ caiActivo()!.cai }}</strong>
+                  </div>
+                  <div class="cai-next-box">
+                    <span class="cai-lbl">PRÓXIMO CORRELATIVO A EMITIR:</span>
+                    <strong class="cai-next-val">{{ caiActivo()!.siguienteNumeroFormateado }}</strong>
+                  </div>
+                </div>
+
+                <!-- BARRA DE PROGRESO DE CONSUMO -->
+                <div class="progress-container">
+                  <div class="progress-labels">
+                    <span>Consumo: <strong>{{ caiActivo()!.totalConsumidos }} de {{ caiActivo()!.totalAutorizados }}</strong> facturas ({{ caiActivo()!.porcentajeConsumido }}%)</span>
+                    <span>Quedan <strong>{{ caiActivo()!.totalRestantes }}</strong> disponibles</span>
+                  </div>
+                  <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" [style.width.%]="caiActivo()!.porcentajeConsumido"></div>
+                  </div>
+                  <div class="progress-sublabels">
+                    <span>Inicio: {{ caiActivo()!.rangoInicialFormateado }}</span>
+                    <span>Vence: {{ caiActivo()!.fechaLimiteEmision | date:'dd/MM/yyyy' }} ({{ caiActivo()!.diasRestantes }} días restantes)</span>
+                    <span>Fin: {{ caiActivo()!.rangoFinalFormateado }}</span>
+                  </div>
+                </div>
+              </div>
+            }
+
+            <!-- FORMULARIO DE EDICIÓN / REGISTRO DE CAI -->
+            <div class="cai-form-container">
+              <div class="form-row full">
+                <label class="form-label">Código CAI (32 caracteres según SAR)</label>
+                <input 
+                  type="text" 
+                  class="form-control mono" 
+                  [(ngModel)]="caiForm.cai"
+                  placeholder="3C4F81-912A34-034389-112233-445566-77"
+                />
+              </div>
+
+              <div class="form-row three-cols">
+                <div>
+                  <label class="form-label">Establecimiento</label>
+                  <input type="text" class="form-control mono" [(ngModel)]="caiForm.establecimiento" maxlength="3" placeholder="000" />
+                </div>
+                <div>
+                  <label class="form-label">Punto de Emisión</label>
+                  <input type="text" class="form-control mono" [(ngModel)]="caiForm.puntoEmision" maxlength="3" placeholder="001" />
+                </div>
+                <div>
+                  <label class="form-label">Tipo Doc.</label>
+                  <input type="text" class="form-control mono" [(ngModel)]="caiForm.tipoDocCodigo" maxlength="2" placeholder="01" />
+                </div>
+              </div>
+
+              <div class="form-row three-cols">
+                <div>
+                  <label class="form-label">Rango Inicial</label>
+                  <input type="number" class="form-control mono" [(ngModel)]="caiForm.rangoInicial" placeholder="1" />
+                </div>
+                <div>
+                  <label class="form-label">Rango Final</label>
+                  <input type="number" class="form-control mono" [(ngModel)]="caiForm.rangoFinal" placeholder="500" />
+                </div>
+                <div>
+                  <label class="form-label">Fecha Límite Emisión</label>
+                  <input type="date" class="form-control" [(ngModel)]="caiForm.fechaLimiteEmision" />
+                </div>
+              </div>
+
+              <div class="cai-actions-row">
+                <button 
+                  type="button" 
+                  class="btn-save-cai" 
+                  [disabled]="savingCAI()"
+                  (click)="guardarCAI()"
+                >
+                  @if (savingCAI()) {
+                    <span class="spinner-sm"></span>
+                    <span>Guardando CAI...</span>
+                  } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span>Guardar / Actualizar Autorización CAI</span>
+                  }
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- TARJETA 1: DATOS FISCALES E IDENTIDAD -->
+        <div class="card-section">
+          <div class="card-header">
+            <div class="card-icon blue">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h10"/><path d="M7 12h10"/><path d="M7 17h6"/></svg>
+            </div>
+            <div>
+              <h2 class="card-title">Identidad del Despacho y Contador Titular</h2>
+              <p class="card-desc">Información legal que se imprimirá en el membrete de todos los comprobantes.</p>
+            </div>
+          </div>
+
+          <div class="card-body">
+            <div class="form-row full">
+              <label class="form-label">Nombre o Razón Social del Despacho</label>
+              <input 
+                type="text" 
+                class="form-control" 
+                [(ngModel)]="config.nombreDespacho"
+                placeholder="Ej. DESPACHO CONTABLE Y FISCAL ORDOÑEZ"
+              />
+            </div>
+
+            <div class="form-row two-cols">
+              <div>
+                <label class="form-label">Nombre del Contador Titular</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  [(ngModel)]="config.nombreContadorTitular"
+                  placeholder="Ej. Lic. Vidal Ordoñez"
+                />
+              </div>
+              <div>
+                <label class="form-label">Colegiación Profesional (CAH / Colegio)</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  [(ngModel)]="config.colegiacionCAH"
+                  placeholder="Ej. Col. Prof. CAH # 12458"
+                />
+              </div>
+            </div>
+
+            <div class="form-row two-cols">
+              <div>
+                <label class="form-label">RTN del Despacho o Contador</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  [(ngModel)]="config.rtnDespacho"
+                  maxlength="14"
+                  placeholder="08011980123456"
+                />
+                <span class="hint-text">14 dígitos numéricos según SAR</span>
+              </div>
+              <div>
+                <label class="form-label">Ciudad / Departamento</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  [(ngModel)]="config.ciudad"
+                  placeholder="Ej. Tegucigalpa, M.D.C."
+                />
+              </div>
+            </div>
+
+            <div class="form-row full">
+              <label class="form-label">Lema o Slogan Profesional</label>
+              <input 
+                type="text" 
+                class="form-control" 
+                [(ngModel)]="config.slogan"
+                placeholder="Ej. Servicios Profesionales de Contabilidad, Auditoría y Asesoría Tributaria SAR"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- TARJETA 2: LOGOTIPO DEL DESPACHO -->
+        <div class="card-section">
+          <div class="card-header">
+            <div class="card-icon purple">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+            </div>
+            <div>
+              <h2 class="card-title">Logotipo Oficial del Despacho</h2>
+              <p class="card-desc">Subir la imagen del logo que aparecerá en la esquina superior izquierda de los recibos PDF.</p>
+            </div>
+          </div>
+
+          <div class="card-body">
+            <div class="logo-upload-container">
+              <div class="logo-preview-box">
+                @if (config.logoBase64) {
+                  <img [src]="config.logoBase64" alt="Logotipo Despacho" class="uploaded-logo-img" />
+                } @else {
+                  <div class="logo-placeholder">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-10 h-10 text-muted"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                    <span>Sin logotipo configurado</span>
+                  </div>
+                }
+              </div>
+
+              <div class="logo-actions">
+                <label class="btn-upload-logo">
+                  <input type="file" accept="image/png, image/jpeg, image/webp" (change)="onLogoFileSelected($event)" style="display: none;" />
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  <span>Seleccionar Logotipo (PNG / JPG)</span>
+                </label>
+
+                @if (config.logoBase64) {
+                  <button type="button" class="btn-remove-logo" (click)="removerLogo()">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    <span>Remover Logo</span>
+                  </button>
+                }
+
+                <span class="hint-text">Recomendado: Imagen en formato PNG con fondo transparente (máx. 2MB).</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TARJETA 3: DATOS DE CONTACTO Y UBICACIÓN -->
+        <div class="card-section">
+          <div class="card-header">
+            <div class="card-icon emerald">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            </div>
+            <div>
+              <h2 class="card-title">Canales de Contacto y Ubicación</h2>
+              <p class="card-desc">Teléfonos, WhatsApp y dirección para que los clientes se comuniquen con el despacho.</p>
+            </div>
+          </div>
+
+          <div class="card-body">
+            <div class="form-row two-cols">
+              <div>
+                <label class="form-label">Teléfono de Oficina / Fijo</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  [(ngModel)]="config.telefono"
+                  placeholder="+504 2235-0000"
+                />
+              </div>
+              <div>
+                <label class="form-label">WhatsApp de Cobranza / Asistencia</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  [(ngModel)]="config.telefonoWhatsApp"
+                  placeholder="50499887766"
+                />
+              </div>
+            </div>
+
+            <div class="form-row full">
+              <label class="form-label">Correo Electrónico del Despacho</label>
+              <input 
+                type="email" 
+                class="form-control" 
+                [(ngModel)]="config.email"
+                placeholder="contacto@despachocontable.hn"
+              />
+            </div>
+
+            <div class="form-row full">
+              <label class="form-label">Dirección Física Completa</label>
+              <textarea 
+                rows="2" 
+                class="form-control" 
+                [(ngModel)]="config.direccion"
+                placeholder="Boulevard Morazán, Edificio Torre Alianza, Nivel 3, Tegucigalpa, M.D.C."
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- TARJETA 4: CUENTAS BANCARIAS PARA DEPÓSITO -->
+        <div class="card-section">
+          <div class="card-header">
+            <div class="card-icon amber">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+            </div>
+            <div>
+              <h2 class="card-title">Cuentas Bancarias para Depósito y Transferencias</h2>
+              <p class="card-desc">Se imprimirán al pie del recibo PDF y se incluirán en los mensajes de WhatsApp para facilitar el pago de los clientes.</p>
+            </div>
+          </div>
+
+          <div class="card-body">
+            <!-- BANCO 1 -->
+            <div class="bank-card" [class.inactive]="!config.banco1Activo">
+              <div class="bank-card-header">
+                <div class="bank-brand">
+                  <span class="bank-bullet red"></span>
+                  <strong>Banco 1: {{ config.banco1Nombre || 'Cuenta Principal' }}</strong>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" [(ngModel)]="config.banco1Activo" />
+                  <span class="slider"></span>
+                  <span class="toggle-label">{{ config.banco1Activo ? 'Activa en Recibo' : 'Inactiva' }}</span>
+                </label>
+              </div>
+              <div class="bank-card-body">
+                <div class="form-row three-cols">
+                  <div>
+                    <label class="form-label">Institución Bancaria</label>
+                    <input type="text" class="form-control" [(ngModel)]="config.banco1Nombre" placeholder="BAC Credomatic" />
+                  </div>
+                  <div>
+                    <label class="form-label">Tipo de Cuenta</label>
+                    <input type="text" class="form-control" [(ngModel)]="config.banco1TipoCuenta" placeholder="Cheques / Ahorros" />
+                  </div>
+                  <div>
+                    <label class="form-label">Número de Cuenta</label>
+                    <input type="text" class="form-control mono" [(ngModel)]="config.banco1Numero" placeholder="741-234567-01" />
+                  </div>
+                </div>
+                <div class="form-row full">
+                  <label class="form-label">Nombre del Titular / Beneficiario</label>
+                  <input type="text" class="form-control" [(ngModel)]="config.banco1Beneficiario" placeholder="Despacho Contable y Fiscal" />
+                </div>
+              </div>
+            </div>
+
+            <!-- BANCO 2 -->
+            <div class="bank-card" [class.inactive]="!config.banco2Activo">
+              <div class="bank-card-header">
+                <div class="bank-brand">
+                  <span class="bank-bullet orange"></span>
+                  <strong>Banco 2: {{ config.banco2Nombre || 'Cuenta Secundaria' }}</strong>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" [(ngModel)]="config.banco2Activo" />
+                  <span class="slider"></span>
+                  <span class="toggle-label">{{ config.banco2Activo ? 'Activa en Recibo' : 'Inactiva' }}</span>
+                </label>
+              </div>
+              <div class="bank-card-body">
+                <div class="form-row three-cols">
+                  <div>
+                    <label class="form-label">Institución Bancaria</label>
+                    <input type="text" class="form-control" [(ngModel)]="config.banco2Nombre" placeholder="Banco Atlántida" />
+                  </div>
+                  <div>
+                    <label class="form-label">Tipo de Cuenta</label>
+                    <input type="text" class="form-control" [(ngModel)]="config.banco2TipoCuenta" placeholder="Cuenta de Ahorros" />
+                  </div>
+                  <div>
+                    <label class="form-label">Número de Cuenta</label>
+                    <input type="text" class="form-control mono" [(ngModel)]="config.banco2Numero" placeholder="110-098765-22" />
+                  </div>
+                </div>
+                <div class="form-row full">
+                  <label class="form-label">Nombre del Titular / Beneficiario</label>
+                  <input type="text" class="form-control" [(ngModel)]="config.banco2Beneficiario" placeholder="Vidal Ordoñez" />
+                </div>
+              </div>
+            </div>
+
+            <!-- BANCO 3 -->
+            <div class="bank-card" [class.inactive]="!config.banco3Activo">
+              <div class="bank-card-header">
+                <div class="bank-brand">
+                  <span class="bank-bullet blue"></span>
+                  <strong>Banco 3: {{ config.banco3Nombre || 'Tercera Cuenta' }}</strong>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" [(ngModel)]="config.banco3Activo" />
+                  <span class="slider"></span>
+                  <span class="toggle-label">{{ config.banco3Activo ? 'Activa en Recibo' : 'Inactiva' }}</span>
+                </label>
+              </div>
+              <div class="bank-card-body">
+                <div class="form-row three-cols">
+                  <div>
+                    <label class="form-label">Institución Bancaria</label>
+                    <input type="text" class="form-control" [(ngModel)]="config.banco3Nombre" placeholder="Banco Ficohsa" />
+                  </div>
+                  <div>
+                    <label class="form-label">Tipo de Cuenta</label>
+                    <input type="text" class="form-control" [(ngModel)]="config.banco3TipoCuenta" placeholder="Cuenta de Ahorros" />
+                  </div>
+                  <div>
+                    <label class="form-label">Número de Cuenta</label>
+                    <input type="text" class="form-control mono" [(ngModel)]="config.banco3Numero" placeholder="200-019283-44" />
+                  </div>
+                </div>
+                <div class="form-row full">
+                  <label class="form-label">Nombre del Titular / Beneficiario</label>
+                  <input type="text" class="form-control" [(ngModel)]="config.banco3Beneficiario" placeholder="Vidal Ordoñez" />
+                </div>
+              </div>
+            </div>
+
+            <!-- BANCO 4 -->
+            <div class="bank-card" [class.inactive]="!config.banco4Activo">
+              <div class="bank-card-header">
+                <div class="bank-brand">
+                  <span class="bank-bullet green"></span>
+                  <strong>Banco 4: {{ config.banco4Nombre || 'Cuarta Cuenta' }}</strong>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" [(ngModel)]="config.banco4Activo" />
+                  <span class="slider"></span>
+                  <span class="toggle-label">{{ config.banco4Activo ? 'Activa en Recibo' : 'Inactiva' }}</span>
+                </label>
+              </div>
+              <div class="bank-card-body">
+                <div class="form-row three-cols">
+                  <div>
+                    <label class="form-label">Institución Bancaria</label>
+                    <input type="text" class="form-control" [(ngModel)]="config.banco4Nombre" placeholder="Banpaís / Banhcafé" />
+                  </div>
+                  <div>
+                    <label class="form-label">Tipo de Cuenta</label>
+                    <input type="text" class="form-control" [(ngModel)]="config.banco4TipoCuenta" placeholder="Cuenta de Ahorros" />
+                  </div>
+                  <div>
+                    <label class="form-label">Número de Cuenta</label>
+                    <input type="text" class="form-control mono" [(ngModel)]="config.banco4Numero" placeholder="01-502-000123-9" />
+                  </div>
+                </div>
+                <div class="form-row full">
+                  <label class="form-label">Nombre del Titular / Beneficiario</label>
+                  <input type="text" class="form-control" [(ngModel)]="config.banco4Beneficiario" placeholder="Despacho Contable" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TARJETA 5: LEYENDA LEGAL AL PIE -->
+        <div class="card-section">
+          <div class="card-header">
+            <div class="card-icon slate">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/></svg>
+            </div>
+            <div>
+              <h2 class="card-title">Leyenda y Pie de Página del Recibo</h2>
+              <p class="card-desc">Texto informativo que aparece centrado en la parte inferior del comprobante.</p>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="form-row full">
+              <textarea 
+                rows="2" 
+                class="form-control" 
+                [(ngModel)]="config.mensajePieRecibo"
+                placeholder="Este documento es un comprobante digital de pago de honorarios profesionales emitido conforme a las normas contables vigentes."
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- COLUMNA DERECHA: VISTA PREVIA EN VIVO DEL RECIBO PDF CON BLOQUE CAI -->
+      <div class="preview-column">
+        <div class="sticky-preview-card">
+          <div class="preview-header">
+            <div class="preview-title-box">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4 text-primary"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              <span>Vista Previa en Vivo (Formato SAR)</span>
+            </div>
+            <span class="preview-badge">Recibo con CAI</span>
+          </div>
+
+          <div class="pdf-mockup-sheet">
+            <!-- HEADER DEL RECIBO -->
+            <div class="pdf-mock-header">
+              <div class="mock-left-brand">
+                @if (config.logoBase64) {
+                  <img [src]="config.logoBase64" alt="Logo preview" class="mock-logo-img" />
+                } @else {
+                  <div class="mock-logo-box">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M14 8H8"/><path d="M16 12H8"/><path d="M13 16H8"/></svg>
+                  </div>
+                }
+                <div class="mock-despacho-info">
+                  <h3 class="mock-despacho-name">{{ config.nombreDespacho || 'DESPACHO CONTABLE' }}</h3>
+                  <p class="mock-slogan">{{ config.slogan || 'Servicios Profesionales de Contabilidad' }}</p>
+                  <div class="mock-meta-line">
+                    <strong>RTN:</strong> {{ config.rtnDespacho || '08011980123456' }} &bull;
+                    <strong>Titular:</strong> {{ config.nombreContadorTitular }} ({{ config.colegiacionCAH }})
+                  </div>
+                  <div class="mock-meta-line">
+                    <strong>Tel:</strong> {{ config.telefono }} &bull; <strong>Email:</strong> {{ config.email }}
+                  </div>
+                  <div class="mock-address">{{ config.direccion }}</div>
+                </div>
+              </div>
+
+              <div class="mock-receipt-number-card">
+                <span class="mock-rec-title">RECIBO POR HONORARIOS</span>
+                <span class="mock-rec-num">{{ caiActivo() ? caiActivo()!.siguienteNumeroFormateado : '000-001-01-00000001' }}</span>
+                <span class="mock-rec-date">Fecha: 13/09/2026</span>
+              </div>
+            </div>
+
+            <!-- CUERPO SIMULADO -->
+            <div class="pdf-mock-body">
+              
+              <!-- BLOQUE CAI DEL SAR -->
+              <div class="mock-cai-box">
+                <div class="m-cai-left">
+                  <span><strong>CAI (SAR):</strong> {{ caiActivo() ? caiActivo()!.cai : '3C4F81-912A34-034389-112233-445566-77' }}</span>
+                  <span><strong>Rango:</strong> {{ caiActivo() ? (caiActivo()!.rangoInicialFormateado + ' al ' + caiActivo()!.rangoFinalFormateado) : '000-001-01-00000001 al 000-001-01-00000500' }}</span>
+                </div>
+                <div class="m-cai-right">
+                  <span><strong>Límite Emisión:</strong> {{ (caiActivo()?.fechaLimiteEmision | date:'dd/MM/yyyy') || '31/12/2026' }}</span>
+                </div>
+              </div>
+
+              <div class="mock-amount-banner">
+                <span>POR VALOR DE:</span>
+                <strong>L. 3,500.00</strong>
+              </div>
+
+              <div class="mock-table">
+                <div class="mock-row">
+                  <span class="mock-label">Recibí de:</span>
+                  <span class="mock-val">Distribuidora Comercial del Valle S. de R.L.</span>
+                </div>
+                <div class="mock-row">
+                  <span class="mock-label">RTN Cliente:</span>
+                  <span class="mock-val">08011990145238</span>
+                </div>
+                <div class="mock-row">
+                  <span class="mock-label">La suma de:</span>
+                  <span class="mock-val italic">Tres Mil Quinientos Lempiras Exactos</span>
+                </div>
+                <div class="mock-row">
+                  <span class="mock-label">Por concepto de:</span>
+                  <span class="mock-val">Honorarios Contables y Liquidación SAR del mes de Septiembre 2026</span>
+                </div>
+                <div class="mock-row">
+                  <span class="mock-label">Método de Pago:</span>
+                  <span class="mock-val">Transferencia Bancaria</span>
+                </div>
+              </div>
+
+              <!-- CAJA DE CUENTAS BANCARIAS EN EL PDF -->
+              <div class="mock-bank-section">
+                <div class="mock-bank-title">CUENTAS BANCARIAS AUTORIZADAS PARA DEPÓSITO / TRANSFERENCIA</div>
+                <div class="mock-banks-grid">
+                  @if (config.banco1Activo && config.banco1Numero) {
+                    <div class="mock-bank-item">
+                      <span class="m-bank-name">• {{ config.banco1Nombre }} ({{ config.banco1TipoCuenta }})</span>
+                      <span class="m-bank-acc">Cuenta: {{ config.banco1Numero }}</span>
+                      <span class="m-bank-ben">{{ config.banco1Beneficiario }}</span>
+                    </div>
+                  }
+                  @if (config.banco2Activo && config.banco2Numero) {
+                    <div class="mock-bank-item">
+                      <span class="m-bank-name">• {{ config.banco2Nombre }} ({{ config.banco2TipoCuenta }})</span>
+                      <span class="m-bank-acc">Cuenta: {{ config.banco2Numero }}</span>
+                      <span class="m-bank-ben">{{ config.banco2Beneficiario }}</span>
+                    </div>
+                  }
+                  @if (config.banco3Activo && config.banco3Numero) {
+                    <div class="mock-bank-item">
+                      <span class="m-bank-name">• {{ config.banco3Nombre }} ({{ config.banco3TipoCuenta }})</span>
+                      <span class="m-bank-acc">Cuenta: {{ config.banco3Numero }}</span>
+                      <span class="m-bank-ben">{{ config.banco3Beneficiario }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <!-- FIRMA -->
+              <div class="mock-signature-box">
+                <div class="mock-sig-line"></div>
+                <span class="mock-sig-title">FIRMA AUTORIZADA / SELLO</span>
+                <span class="mock-sig-name">{{ config.nombreContadorTitular }}</span>
+                <span class="mock-sig-cah">{{ config.colegiacionCAH }}</span>
+              </div>
+            </div>
+
+            <!-- PIE DE PAGINA -->
+            <div class="pdf-mock-footer">
+              <div class="mock-original-copia">ORIGINAL: CLIENTE &bull; COPIA: OBLIGADO TRIBUTARIO EMISOR</div>
+              <p>{{ config.mensajePieRecibo }}</p>
+            </div>
+          </div>
+
+          <div class="preview-footer-action">
+            <button 
+              type="button" 
+              class="btn-save-full" 
+              [disabled]="saving()"
+              (click)="guardar()"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>{{ saving() ? 'Guardando Cambios...' : 'Guardar y Aplicar al Sistema' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  }
+</div>

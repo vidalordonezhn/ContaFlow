@@ -1,0 +1,143 @@
+<div class="client-selector-container" [class.is-open]="isOpen()" [class.is-disabled]="disabled()">
+
+  <!-- Selected Client Display Card (When a client is selected and dropdown is closed) -->
+  @if (selectedClient() && !isOpen()) {
+    <div class="selected-card" (click)="toggleDropdown()">
+      <div class="selected-avatar" [class.avatar-juridica]="selectedClient()?.tipoPersona === 'Juridica'" [class.avatar-natural]="selectedClient()?.tipoPersona === 'Natural'">
+        {{ selectedClient()?.nombreRazonSocial?.substring(0, 1)?.toUpperCase() }}
+      </div>
+      
+      <div class="selected-details">
+        <div class="selected-main">
+          <span class="selected-name">{{ selectedClient()?.nombreRazonSocial }}</span>
+          @if (selectedClient()?.nombreComercial) {
+            <span class="selected-trade">"{{ selectedClient()?.nombreComercial }}"</span>
+          }
+        </div>
+        <div class="selected-meta">
+          <span class="meta-rtn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="meta-icon"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+            RTN: {{ selectedClient()?.rtn }}
+          </span>
+          <span class="meta-cuota">Cuota: L. {{ selectedClient()?.cuotaMensual | number:'1.2-2' }}</span>
+          @if (selectedClient()?.rubro) {
+            <span class="meta-rubro">{{ selectedClient()?.rubro }}</span>
+          }
+        </div>
+      </div>
+
+      <div class="selected-actions">
+        <button type="button" class="btn-clear" (click)="clearSelection($event)" title="Cambiar cliente">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+        <span class="dropdown-chevron">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="m6 9 6 6 6-6"/></svg>
+        </span>
+      </div>
+    </div>
+  } @else {
+    <!-- Search Input Trigger Box -->
+    <div class="search-input-box" (click)="openDropdown()">
+      <div class="search-icon-wrapper">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-svg"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </div>
+
+      <input 
+        type="text" 
+        class="combobox-input"
+        [placeholder]="placeholder()"
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event)"
+        (focus)="openDropdown()"
+        (keydown)="onKeyDown($event)"
+        [disabled]="disabled()"
+        #searchInput
+      />
+
+      @if (searchQuery()) {
+        <button type="button" class="btn-input-clear" (click)="searchQuery.set('')" title="Borrar búsqueda">
+          ✕
+        </button>
+      }
+
+      <div class="input-actions" (click)="toggleDropdown()">
+        <span class="dropdown-chevron" [class.chevron-up]="isOpen()">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="m6 9 6 6 6-6"/></svg>
+        </span>
+      </div>
+    </div>
+  }
+
+  <!-- Dropdown Menu / Suggestions List -->
+  @if (isOpen()) {
+    <div class="dropdown-menu animate-fade-in">
+      <div class="dropdown-header">
+        <span class="dropdown-hint">Coincidencias encontradas: {{ filteredClients().length }}</span>
+        @if (selectedClient()) {
+          <button type="button" class="btn-keep-selected" (click)="closeDropdown()">
+            Mantener: {{ selectedClient()?.nombreRazonSocial }}
+          </button>
+        }
+      </div>
+
+      <div class="clients-list">
+        @if (filteredClients().length === 0) {
+          <div class="empty-dropdown">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="empty-svg"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <p class="empty-text">No se encontraron clientes con "{{ searchQuery() }}"</p>
+            <span class="empty-subtext">Verifica el RTN o nombre del cliente</span>
+          </div>
+        } @else {
+          @for (client of filteredClients(); track client.id; let idx = $index) {
+            <div 
+              class="client-item" 
+              [class.is-focused]="idx === focusedIndex()"
+              [class.is-selected]="client.id === selectedId()"
+              (click)="selectClient(client)"
+              (mouseenter)="focusedIndex.set(idx)"
+            >
+              <div class="item-avatar" [class.avatar-juridica]="client.tipoPersona === 'Juridica'" [class.avatar-natural]="client.tipoPersona === 'Natural'">
+                {{ client.nombreRazonSocial.substring(0, 1).toUpperCase() }}
+              </div>
+
+              <div class="item-info">
+                <div class="item-header-line">
+                  <span class="item-name">{{ client.nombreRazonSocial }}</span>
+                  <span class="item-persona-badge" [class.badge-juridica]="client.tipoPersona === 'Juridica'" [class.badge-natural]="client.tipoPersona === 'Natural'">
+                    {{ client.tipoPersona }}
+                  </span>
+                </div>
+
+                @if (client.nombreComercial) {
+                  <span class="item-trade">"{{ client.nombreComercial }}"</span>
+                }
+
+                <div class="item-meta">
+                  <span class="item-rtn">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                    {{ client.rtn }}
+                  </span>
+
+                  @if (client.rubro) {
+                    <span class="item-rubro">{{ client.rubro }}</span>
+                  }
+                </div>
+              </div>
+
+              <div class="item-right">
+                <span class="item-fee-label">Cuota mensual</span>
+                <span class="item-fee-amount">L. {{ client.cuotaMensual | number:'1.2-2' }}</span>
+                @if (client.id === selectedId()) {
+                  <span class="selected-check">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-4 h-4"><polyline points="20 6 9 17 4 12"/></svg>
+                  </span>
+                }
+              </div>
+            </div>
+          }
+        }
+      </div>
+    </div>
+  }
+
+</div>
