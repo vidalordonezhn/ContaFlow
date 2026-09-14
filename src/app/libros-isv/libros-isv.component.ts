@@ -20,7 +20,11 @@ export class LibrosIsvComponent implements OnInit {
   readonly activeTab = signal<'detalle' | 'declaracion' | 'masivo'>('detalle');
   readonly clientes = signal<ClienteResponse[]>([]);
   readonly selectedClienteId = signal<number | null>(null);
-  readonly selectedCliente = computed(() => this.clientes().find(c => c.id === this.selectedClienteId()));
+  readonly selectedCliente = computed(() => {
+    const id = this.selectedClienteId();
+    if (!id) return null;
+    return this.clientes().find(c => Number(c.id) === Number(id)) || null;
+  });
   readonly selectedMesNombre = computed(() => this.mesesList.find(m => m.num === this.selectedMes())?.nombre || 'Mes');
   readonly selectedAnio = signal<number>(new Date().getFullYear());
   readonly selectedMes = signal<number>(new Date().getMonth() + 1);
@@ -159,20 +163,25 @@ export class LibrosIsvComponent implements OnInit {
   cargarClientes(): void {
     this.clientsService.getClientes().subscribe({
       next: (data) => {
-        const activos = data.filter(c => c.activo);
-        this.clientes.set(activos);
-        if (activos.length > 0 && !this.selectedClienteId()) {
-          this.selectedClienteId.set(activos[0].id);
-          this.serviciosProfesionales.set(activos[0].cuotaMensual || 0);
+        this.clientes.set(data || []);
+        if (data && data.length > 0 && !this.selectedClienteId()) {
+          const primerCliente = data.find(c => c.activo) || data[0];
+          this.selectedClienteId.set(Number(primerCliente.id));
+          this.serviciosProfesionales.set(primerCliente.cuotaMensual || 0);
           this.cargarDatosPeriodo();
         }
+      },
+      error: (err) => {
+        console.error('Error al cargar clientes:', err);
       }
     });
   }
 
-  onClienteSeleccionado(clienteId: number): void {
-    this.selectedClienteId.set(clienteId);
-    const cli = this.clientes().find(c => c.id === clienteId);
+  onClienteSeleccionado(clienteId: any): void {
+    const numId = Number(clienteId);
+    if (!numId) return;
+    this.selectedClienteId.set(numId);
+    const cli = this.clientes().find(c => Number(c.id) === numId);
     if (cli) {
       this.serviciosProfesionales.set(cli.cuotaMensual || 0);
     }

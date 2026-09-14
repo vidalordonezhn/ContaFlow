@@ -47,8 +47,9 @@
       <div class="filter-group client-select-group">
         <label>Contribuyente / Cliente *</label>
         <select [ngModel]="selectedClienteId()" (ngModelChange)="onClienteSeleccionado($event)" class="form-select">
+          <option [ngValue]="null" disabled>-- Seleccione un Contribuyente --</option>
           @for (c of clientes(); track c.id) {
-            <option [value]="c.id">{{ c.nombreRazonSocial }} (RTN: {{ c.rtn }})</option>
+            <option [ngValue]="c.id">{{ c.nombreRazonSocial }} (RTN: {{ c.rtn }})</option>
           }
         </select>
       </div>
