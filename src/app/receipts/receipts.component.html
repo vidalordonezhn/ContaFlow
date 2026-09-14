@@ -203,10 +203,10 @@
                     <div class="product-selector-wrapper">
                       <select 
                         class="table-select font-semibold"
-                        [value]="item.producto"
-                        (change)="onSelectProducto(i, $any($event.target).value)"
+                        [ngModel]="item.producto"
+                        (ngModelChange)="onSelectProducto(i, $event)"
                       >
-                        <option value="" disabled selected>-- Seleccionar producto / servicio --</option>
+                        <option value="" disabled>-- Seleccionar producto / servicio --</option>
                         @for (s of serviciosCatalogo(); track s.id) {
                           <option [value]="s.nombre">
                             {{ s.nombre }} (L. {{ s.precioDefault | number:'1.2-2' }})

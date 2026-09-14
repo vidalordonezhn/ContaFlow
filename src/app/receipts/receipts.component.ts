@@ -37,6 +37,17 @@ export class ReceiptsComponent implements OnInit {
   // Estados de navegación
   readonly currentView = signal<'emitir' | 'historial' | 'catalogo'>('emitir');
 
+  // Catálogo base precargado para disponibilidad inmediata
+  readonly defaultServicios: ServicioCatalogoResponse[] = [
+    { id: 1, nombre: 'Talonario de Facturas', descripcionDefault: 'Talonario de facturas fiscales de 3 copias', precioDefault: 350, categoria: 'Talonarios', activo: true, fechaCreacion: new Date().toISOString() },
+    { id: 2, nombre: 'Constancia Electrónica', descripcionDefault: 'Emisión de constancia electrónica fiscal ante el SAR', precioDefault: 250, categoria: 'SAR', activo: true, fechaCreacion: new Date().toISOString() },
+    { id: 3, nombre: 'Pagos a Cuenta SAR', descripcionDefault: 'Cálculo y presentación de cuota trimestral de Pagos a Cuenta', precioDefault: 400, categoria: 'SAR', activo: true, fechaCreacion: new Date().toISOString() },
+    { id: 4, nombre: 'Impuesto sobre la Renta', descripcionDefault: 'Declaración jurada y liquidación anual de ISR', precioDefault: 800, categoria: 'Declaraciones', activo: true, fechaCreacion: new Date().toISOString() },
+    { id: 5, nombre: 'Controles Tributarios', descripcionDefault: 'Revisión y auditoría de control tributario mensual', precioDefault: 500, categoria: 'Auditoría', activo: true, fechaCreacion: new Date().toISOString() },
+    { id: 6, nombre: 'Honorarios Mensuales', descripcionDefault: 'Asesoría contable y cumplimiento tributario mensual', precioDefault: 600, categoria: 'Honorarios', activo: true, fechaCreacion: new Date().toISOString() },
+    { id: 7, nombre: 'Trámites en Línea SAR', descripcionDefault: 'Gestión de solicitudes y trámites en plataforma SAR', precioDefault: 300, categoria: 'SAR', activo: true, fechaCreacion: new Date().toISOString() }
+  ];
+
   // Datos principales
   readonly recibos = signal<ReciboResponse[]>([]);
   readonly clientes = signal<ClienteResponse[]>([]);
@@ -109,7 +120,7 @@ export class ReceiptsComponent implements OnInit {
 
   // Cálculos reactivos de Totales
   readonly formSubtotal = computed(() => {
-    return this.formItems().reduce((acc, item) => acc + (Number(item.total) || 0), 0);
+    return (this.formItems() || []).reduce((acc, item) => acc + (Number(item.total) || 0), 0);
   });
 
   readonly formImpuesto = computed(() => {
@@ -123,10 +134,11 @@ export class ReceiptsComponent implements OnInit {
 
   // Lista filtrada del historial
   readonly filteredRecibos = computed(() => {
-    const query = this.searchQuery().toLowerCase().trim();
+    const query = (this.searchQuery() || '').toLowerCase().trim();
     const tipo = this.filterTipo();
 
-    return this.recibos().filter(r => {
+    return (this.recibos() || []).filter(r => {
+      if (!r) return false;
       let matchTipo = true;
       if (tipo !== 'todos') {
         matchTipo = r.tipoComprobante === tipo;
@@ -134,22 +146,30 @@ export class ReceiptsComponent implements OnInit {
       if (!matchTipo) return false;
 
       if (!query) return true;
-      return (r.numeroRecibo && r.numeroRecibo.toLowerCase().includes(query)) ||
-             (r.numeroFiscal && r.numeroFiscal.toLowerCase().includes(query)) ||
-             r.nombreCliente.toLowerCase().includes(query) ||
-             r.rtnCliente.toLowerCase().includes(query) ||
-             r.concepto.toLowerCase().includes(query);
+      const numRecibo = (r.numeroRecibo || '').toLowerCase();
+      const numFiscal = (r.numeroFiscal || '').toLowerCase();
+      const nombre = (r.nombreCliente || '').toLowerCase();
+      const rtn = (r.rtnCliente || '').toLowerCase();
+      const concepto = (r.concepto || '').toLowerCase();
+
+      return numRecibo.includes(query) ||
+             numFiscal.includes(query) ||
+             nombre.includes(query) ||
+             rtn.includes(query) ||
+             concepto.includes(query);
     });
   });
 
   // Lista filtrada del catálogo de servicios
   readonly filteredCatalog = computed(() => {
-    const query = this.catalogSearchQuery().toLowerCase().trim();
-    return this.serviciosCatalogo().filter(s => {
+    const query = (this.catalogSearchQuery() || '').toLowerCase().trim();
+    return (this.serviciosCatalogo() || []).filter(s => {
+      if (!s) return false;
       if (!query) return true;
-      return s.nombre.toLowerCase().includes(query) ||
-             (s.descripcionDefault && s.descripcionDefault.toLowerCase().includes(query)) ||
-             (s.categoria && s.categoria.toLowerCase().includes(query));
+      const nombre = (s.nombre || '').toLowerCase();
+      const desc = (s.descripcionDefault || '').toLowerCase();
+      const cat = (s.categoria || '').toLowerCase();
+      return nombre.includes(query) || desc.includes(query) || cat.includes(query);
     });
   });
 
@@ -159,12 +179,27 @@ export class ReceiptsComponent implements OnInit {
   }
 
   cargarDatos(): void {
+    this.cargarClientes();
+    this.cargarCatalogoServicios();
+    this.cargarRecibos();
+  }
+
+  cargarClientes(): void {
+    this.clientsService.getClientes().subscribe({
+      next: (cls) => {
+        if (cls && cls.length > 0) {
+          this.clientes.set(cls);
+        }
+      },
+      error: () => {}
+    });
+  }
+
+  cargarRecibos(): void {
     this.isLoading.set(true);
     this.recibosService.getRecibos().subscribe({
       next: (data) => {
-        this.recibos.set(data);
-        this.clientsService.getClientes().subscribe(cls => this.clientes.set(cls.filter(c => c.activo)));
-        this.cargarCatalogoServicios();
+        this.recibos.set(data || []);
         this.isLoading.set(false);
       },
       error: () => {
@@ -176,12 +211,17 @@ export class ReceiptsComponent implements OnInit {
   cargarCatalogoServicios(): void {
     this.serviciosCatalogoService.getServicios().subscribe({
       next: (servicios) => {
-        this.serviciosCatalogo.set(servicios);
+        if (servicios && servicios.length > 0) {
+          this.serviciosCatalogo.set(servicios);
+        } else {
+          this.serviciosCatalogo.set([...this.defaultServicios]);
+        }
 
         // Si la primera fila de ítems está vacía y hay servicios, inicializar con el primero
         const items = this.formItems();
-        if (items.length === 1 && !items[0].producto && servicios.length > 0) {
-          const primero = servicios[0];
+        const catalog = this.serviciosCatalogo();
+        if (items.length === 1 && (!items[0].producto || items[0].producto === '') && catalog.length > 0) {
+          const primero = catalog[0];
           this.formItems.set([
             {
               producto: primero.nombre,
@@ -193,7 +233,11 @@ export class ReceiptsComponent implements OnInit {
           ]);
         }
       },
-      error: () => {}
+      error: () => {
+        if (this.serviciosCatalogo().length === 0) {
+          this.serviciosCatalogo.set([...this.defaultServicios]);
+        }
+      }
     });
   }
 

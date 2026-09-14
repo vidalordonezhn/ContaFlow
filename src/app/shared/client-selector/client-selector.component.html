@@ -97,14 +97,14 @@
               (mouseenter)="focusedIndex.set(idx)"
             >
               <div class="item-avatar" [class.avatar-juridica]="client.tipoPersona === 'Juridica'" [class.avatar-natural]="client.tipoPersona === 'Natural'">
-                {{ client.nombreRazonSocial.substring(0, 1).toUpperCase() }}
+                {{ (client.nombreRazonSocial || 'C').substring(0, 1).toUpperCase() }}
               </div>
 
               <div class="item-info">
                 <div class="item-header-line">
-                  <span class="item-name">{{ client.nombreRazonSocial }}</span>
+                  <span class="item-name">{{ client.nombreRazonSocial || 'Sin nombre' }}</span>
                   <span class="item-persona-badge" [class.badge-juridica]="client.tipoPersona === 'Juridica'" [class.badge-natural]="client.tipoPersona === 'Natural'">
-                    {{ client.tipoPersona }}
+                    {{ client.tipoPersona || 'Natural' }}
                   </span>
                 </div>
 

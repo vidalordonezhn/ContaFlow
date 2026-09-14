@@ -28,23 +28,25 @@ export class ClientSelectorComponent {
   readonly selectedClient = computed(() => {
     const id = this.selectedId();
     if (!id) return null;
-    return this.clients().find(c => c.id === id) || null;
+    return (this.clients() || []).find(c => c && c.id === id) || null;
   });
 
   readonly filteredClients = computed(() => {
-    const query = this.searchQuery().toLowerCase().trim();
-    const all = this.clients();
+    const query = (this.searchQuery() || '').toLowerCase().trim();
+    const all = this.clients() || [];
 
     if (!query) {
       return all.slice(0, 50);
     }
 
-    return all.filter(c => 
-      c.nombreRazonSocial.toLowerCase().includes(query) ||
-      (c.nombreComercial && c.nombreComercial.toLowerCase().includes(query)) ||
-      c.rtn.toLowerCase().includes(query) ||
-      (c.rubro && c.rubro.toLowerCase().includes(query))
-    ).slice(0, 50);
+    return all.filter(c => {
+      if (!c) return false;
+      const nombre = (c.nombreRazonSocial || '').toLowerCase();
+      const comercial = (c.nombreComercial || '').toLowerCase();
+      const rtn = (c.rtn || '').toLowerCase();
+      const rubro = (c.rubro || '').toLowerCase();
+      return nombre.includes(query) || comercial.includes(query) || rtn.includes(query) || rubro.includes(query);
+    }).slice(0, 50);
   });
 
   @HostListener('document:click', ['$event'])
