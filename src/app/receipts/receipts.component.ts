@@ -40,7 +40,15 @@ export class ReceiptsComponent implements OnInit {
   // Datos principales
   readonly recibos = signal<ReciboResponse[]>([]);
   readonly clientes = signal<ClienteResponse[]>([]);
-  readonly serviciosCatalogo = signal<ServicioCatalogoResponse[]>([]);
+  readonly serviciosCatalogo = signal<ServicioCatalogoResponse[]>([
+    { id: 1, nombre: 'Talonario de Facturas', descripcionDefault: 'Talonario de facturas fiscales de 3 copias', precioDefault: 350, categoria: 'Talonarios', activo: true, fechaCreacion: new Date().toISOString() },
+    { id: 2, nombre: 'Constancia Electrónica', descripcionDefault: 'Emisión de constancia electrónica fiscal ante el SAR', precioDefault: 250, categoria: 'SAR', activo: true, fechaCreacion: new Date().toISOString() },
+    { id: 3, nombre: 'Pagos a Cuenta SAR', descripcionDefault: 'Cálculo y presentación de cuota trimestral de Pagos a Cuenta', precioDefault: 400, categoria: 'SAR', activo: true, fechaCreacion: new Date().toISOString() },
+    { id: 4, nombre: 'Impuesto sobre la Renta', descripcionDefault: 'Declaración jurada y liquidación anual de ISR', precioDefault: 800, categoria: 'Declaraciones', activo: true, fechaCreacion: new Date().toISOString() },
+    { id: 5, nombre: 'Controles Tributarios', descripcionDefault: 'Revisión y auditoría de control tributario mensual', precioDefault: 500, categoria: 'Auditoría', activo: true, fechaCreacion: new Date().toISOString() },
+    { id: 6, nombre: 'Honorarios Mensuales', descripcionDefault: 'Asesoría contable y cumplimiento tributario mensual', precioDefault: 600, categoria: 'Honorarios', activo: true, fechaCreacion: new Date().toISOString() },
+    { id: 7, nombre: 'Trámites en Línea SAR', descripcionDefault: 'Gestión de solicitudes y trámites en plataforma SAR', precioDefault: 300, categoria: 'SAR', activo: true, fechaCreacion: new Date().toISOString() }
+  ]);
   readonly isLoading = signal(true);
   readonly isSaving = signal(false);
   readonly successMsg = signal<string | null>(null);
@@ -91,11 +99,11 @@ export class ReceiptsComponent implements OnInit {
   // Lista de Ítems del comprobante
   readonly formItems = signal<ReciboItem[]>([
     {
-      producto: '',
-      descripcion: '',
+      producto: 'Talonario de Facturas',
+      descripcion: 'Talonario de facturas fiscales de 3 copias',
       cantidad: 1,
-      precio: 0,
-      total: 0
+      precio: 350,
+      total: 350
     }
   ]);
 
