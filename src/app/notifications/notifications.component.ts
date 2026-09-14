@@ -9,8 +9,7 @@ import { ApiRecordatoriosService, RecordatorioResponse, RecordatorioCreate } fro
 import { ClientSelectorComponent } from '../shared/client-selector/client-selector.component';
 
 export type EstadoRecordatorio = 'Pendiente' | 'Enviado' | 'Respondido' | 'Omitido';
-export type MainTab = 'clientes' | 'mensajes';
-export type FiltroCliente = 'todos' | 'sar_pendiente' | 'cobro_pendiente' | 'con_avisos';
+export type FiltroEstado = 'todos' | 'sar_pendiente' | 'cobro_pendiente';
 
 export interface ClienteNotifView {
   id: number;
@@ -56,10 +55,9 @@ export class NotificationsComponent implements OnInit {
   readonly successMsg = signal<string | null>(null);
   readonly errorMsg = signal<string | null>(null);
 
-  // Tabs de navegación unificadas (solo 2 pestañas principales)
-  readonly activeTab = signal<MainTab>('clientes');
+  // Filtro activo único controlado directamente por las tarjetas KPI
+  readonly filtroEstado = signal<FiltroEstado>('todos');
   readonly searchQuery = signal('');
-  readonly filtroClienteEstado = signal<FiltroCliente>('todos');
 
   // Modal para agregar recordatorio
   readonly isModalOpen = signal(false);
@@ -68,7 +66,7 @@ export class NotificationsComponent implements OnInit {
   readonly modalMensaje = signal('');
   readonly modalError = signal<string | null>(null);
 
-  // Modal / Drawer de detalle de avisos por cliente
+  // Modal de detalle de avisos por cliente
   readonly clienteDetalleAvisos = signal<ClienteNotifView | null>(null);
 
   // Plantillas de mensajes predefinidas
@@ -125,7 +123,7 @@ export class NotificationsComponent implements OnInit {
     });
   });
 
-  // Métricas
+  // Conteos para las 3 tarjetas KPI
   readonly pendientesSARCount = computed(() => {
     return this.clientesEnriquecidos().filter(c => c.tieneFacturasPendientesSAR).length;
   });
@@ -134,26 +132,16 @@ export class NotificationsComponent implements OnInit {
     return this.clientesEnriquecidos().filter(c => c.tieneCobroPendiente).length;
   });
 
-  readonly conAvisosCount = computed(() => {
-    return this.clientesEnriquecidos().filter(c => c.avisos.length > 0).length;
-  });
-
-  readonly totalAvisosPendientes = computed(() => {
-    return this.recordatorios().filter(r => r.estado === 'Pendiente').length;
-  });
-
-  // Clientes filtrados según la píldora de estado seleccionada y búsqueda
+  // Clientes filtrados por el KPI activo y el buscador
   readonly filteredClientes = computed(() => {
     const q = this.searchQuery().toLowerCase().trim();
-    const filtro = this.filtroClienteEstado();
+    const filtro = this.filtroEstado();
     let list = this.clientesEnriquecidos();
 
     if (filtro === 'sar_pendiente') {
       list = list.filter(c => c.tieneFacturasPendientesSAR);
     } else if (filtro === 'cobro_pendiente') {
       list = list.filter(c => c.tieneCobroPendiente);
-    } else if (filtro === 'con_avisos') {
-      list = list.filter(c => c.avisos.length > 0);
     }
 
     if (!q) return list;
@@ -162,19 +150,6 @@ export class NotificationsComponent implements OnInit {
       c.rtn.toLowerCase().includes(q) ||
       (c.nombreComercial && c.nombreComercial.toLowerCase().includes(q)) ||
       (c.rubro && c.rubro.toLowerCase().includes(q))
-    );
-  });
-
-  // Avisos filtrados para la pestaña de Mensajes
-  readonly filteredRecordatorios = computed(() => {
-    const q = this.searchQuery().toLowerCase().trim();
-    const list = this.recordatorios();
-    if (!q) return list;
-    return list.filter(r => 
-      r.clienteNombre.toLowerCase().includes(q) || 
-      r.clienteRtn.toLowerCase().includes(q) ||
-      r.mensaje.toLowerCase().includes(q) ||
-      r.tipo.toLowerCase().includes(q)
     );
   });
 
@@ -224,11 +199,6 @@ export class NotificationsComponent implements OnInit {
         }
       }
     });
-  }
-
-  seleccionarFiltroDesdeKPI(filtro: FiltroCliente): void {
-    this.activeTab.set('clientes');
-    this.filtroClienteEstado.set(filtro);
   }
 
   openNewReminderModal(preselectedClientId?: number, tipo: 'SAR' | 'Cobro' | 'Declaracion' | 'Personalizado' = 'SAR'): void {
@@ -349,18 +319,6 @@ export class NotificationsComponent implements OnInit {
       },
       error: () => {
         this.showToast('Error al eliminar aviso.');
-      }
-    });
-  }
-
-  limpiarEnviados(): void {
-    this.recordatoriosService.limpiarEnviados().subscribe({
-      next: (resp) => {
-        this.showToast(resp.mensaje || 'Se limpiaron los avisos gestionados.');
-        this.recargarRecordatorios();
-      },
-      error: () => {
-        this.showToast('Error al limpiar los avisos.');
       }
     });
   }

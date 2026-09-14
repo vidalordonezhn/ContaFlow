@@ -13,14 +13,14 @@
     <div class="header-left">
       <div class="header-badge bg-orange-light text-orange">Centro de Comunicaciones</div>
       <h1 class="header-title">Avisos y Notificaciones a Clientes</h1>
-      <p class="header-subtitle">Supervisa el estado de cada cliente y emite notificaciones por WhatsApp o Correo</p>
+      <p class="header-subtitle">Supervisa el estado de cada cliente y emite notificaciones selectivas por WhatsApp o Correo</p>
     </div>
   </header>
 
-  <!-- KPIS / STATS INTERACTIVOS -->
-  <section class="kpis-grid">
-    <!-- Directorio Completo -->
-    <div class="kpi-card" [class.active-kpi]="activeTab() === 'clientes' && filtroClienteEstado() === 'todos'" (click)="seleccionarFiltroDesdeKPI('todos')">
+  <!-- KPIS / FILTROS DIRECTOS (3 ÚNICOS SELECTORES) -->
+  <section class="kpis-grid-3">
+    <!-- 1. Todos los Clientes -->
+    <div class="kpi-card" [class.active-kpi]="filtroEstado() === 'todos'" (click)="filtroEstado.set('todos')">
       <div class="kpi-header">
         <span class="kpi-label">Todos los Clientes</span>
         <div class="kpi-icon-box bg-purple-light text-purple">
@@ -29,12 +29,12 @@
       </div>
       <div class="kpi-body">
         <h3 class="kpi-value text-purple">{{ clientesEnriquecidos().length }}</h3>
-        <span class="kpi-subtext text-purple">Directorio activo</span>
+        <span class="kpi-subtext text-purple">Directorio completo activo</span>
       </div>
     </div>
 
-    <!-- Pendientes SAR -->
-    <div class="kpi-card" [class.active-kpi]="activeTab() === 'clientes' && filtroClienteEstado() === 'sar_pendiente'" (click)="seleccionarFiltroDesdeKPI('sar_pendiente')">
+    <!-- 2. Pendientes SAR -->
+    <div class="kpi-card" [class.active-kpi]="filtroEstado() === 'sar_pendiente'" (click)="filtroEstado.set('sar_pendiente')">
       <div class="kpi-header">
         <span class="kpi-label">Pendientes SAR</span>
         <div class="kpi-icon-box bg-red-light text-red">
@@ -43,12 +43,12 @@
       </div>
       <div class="kpi-body">
         <h3 class="kpi-value text-red">{{ pendientesSARCount() }}</h3>
-        <span class="kpi-subtext text-red">Facturas sin entregar este mes</span>
+        <span class="kpi-subtext text-red">Facturas de compras/ventas sin entregar</span>
       </div>
     </div>
 
-    <!-- Pendientes de Honorarios -->
-    <div class="kpi-card" [class.active-kpi]="activeTab() === 'clientes' && filtroClienteEstado() === 'cobro_pendiente'" (click)="seleccionarFiltroDesdeKPI('cobro_pendiente')">
+    <!-- 3. Honorarios por Cobrar -->
+    <div class="kpi-card" [class.active-kpi]="filtroEstado() === 'cobro_pendiente'" (click)="filtroEstado.set('cobro_pendiente')">
       <div class="kpi-header">
         <span class="kpi-label">Honorarios por Cobrar</span>
         <div class="kpi-icon-box bg-orange-light text-orange">
@@ -57,45 +57,32 @@
       </div>
       <div class="kpi-body">
         <h3 class="kpi-value text-orange">{{ pendientesCobroCount() }}</h3>
-        <span class="kpi-subtext text-orange">Cuota pendiente en {{ mesActual() }}</span>
-      </div>
-    </div>
-
-    <!-- Cola de Avisos Activos -->
-    <div class="kpi-card" [class.active-kpi]="activeTab() === 'mensajes'" (click)="activeTab.set('mensajes')">
-      <div class="kpi-header">
-        <span class="kpi-label">Avisos Emitidos</span>
-        <div class="kpi-icon-box bg-blue-light text-blue">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1 2-2h2"/><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></svg>
-        </div>
-      </div>
-      <div class="kpi-body">
-        <h3 class="kpi-value text-blue">{{ totalAvisosPendientes() }} <span class="text-xs font-normal text-muted">/ {{ recordatorios().length }}</span></h3>
-        <span class="kpi-subtext text-blue">{{ totalAvisosPendientes() }} pendientes de enviar</span>
+        <span class="kpi-subtext text-orange">Cuota mensual no registrada en {{ mesActual() }}</span>
       </div>
     </div>
   </section>
 
-  <!-- MAIN CONTAINER CARD -->
+  <!-- CONTENEDOR DE TABLA PRINCIPAL -->
   <div class="table-container-card">
     
-    <!-- TABS BAR (SOLO 2 VISTAS CLARAS) -->
-    <div class="filters-bar">
-      <div class="tabs-nav">
-        <button class="tab-btn" [class.active]="activeTab() === 'clientes'" (click)="activeTab.set('clientes')">
-          👥 Clientes y Emisión de Avisos <span class="tab-badge">{{ clientesEnriquecidos().length }}</span>
-        </button>
-        <button class="tab-btn" [class.active]="activeTab() === 'mensajes'" (click)="activeTab.set('mensajes')">
-          📋 Cola de Mensajes <span class="tab-badge">{{ recordatorios().length }}</span>
-        </button>
+    <!-- BARRA SUPERIOR DE LA TABLA (BUSCADOR E INDICADOR DE ESTADO) -->
+    <div class="table-toolbar">
+      <div class="current-filter-badge">
+        @if (filtroEstado() === 'todos') {
+          <span class="filter-title">👥 Mostrando todos los clientes ({{ filteredClientes().length }})</span>
+        } @else if (filtroEstado() === 'sar_pendiente') {
+          <span class="filter-title text-red">🚨 Clientes con facturas SAR pendientes ({{ filteredClientes().length }})</span>
+        } @else if (filtroEstado() === 'cobro_pendiente') {
+          <span class="filter-title text-orange">💰 Clientes con honorarios por cobrar ({{ filteredClientes().length }})</span>
+        }
       </div>
 
-      <!-- Search Box -->
+      <!-- Buscador -->
       <div class="search-box">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input 
           type="text" 
-          [placeholder]="activeTab() === 'clientes' ? 'Buscar cliente, RTN o rubro...' : 'Buscar en avisos emitidos...'" 
+          placeholder="Buscar por cliente, RTN o rubro..." 
           [ngModel]="searchQuery()" 
           (ngModelChange)="searchQuery.set($event)"
         />
@@ -105,31 +92,19 @@
       </div>
     </div>
 
-    <!-- VISTA 1: CLIENTES Y EMISIÓN -->
-    @if (activeTab() === 'clientes') {
-      <div class="sub-filter-bar">
-        <div class="sub-filter-pills">
-          <button class="sub-pill" [class.active]="filtroClienteEstado() === 'todos'" (click)="filtroClienteEstado.set('todos')">
-            Todos ({{ clientesEnriquecidos().length }})
-          </button>
-          <button class="sub-pill pill-sar" [class.active]="filtroClienteEstado() === 'sar_pendiente'" (click)="filtroClienteEstado.set('sar_pendiente')">
-            🚨 Facturas SAR Pendientes ({{ pendientesSARCount() }})
-          </button>
-          <button class="sub-pill pill-cobro" [class.active]="filtroClienteEstado() === 'cobro_pendiente'" (click)="filtroClienteEstado.set('cobro_pendiente')">
-            💰 Cobros Pendientes ({{ pendientesCobroCount() }})
-          </button>
-          <button class="sub-pill pill-avisos" [class.active]="filtroClienteEstado() === 'con_avisos'" (click)="filtroClienteEstado.set('con_avisos')">
-            🔔 Con Avisos ({{ conAvisosCount() }})
-          </button>
-        </div>
+    <!-- TABLA MAESTRA -->
+    @if (filteredClientes().length === 0) {
+      <div class="empty-state">
+        <h4>No se encontraron clientes</h4>
+        <p>No hay registros que coincidan con el filtro o término de búsqueda seleccionado.</p>
       </div>
-
+    } @else {
       <div class="table-responsive">
         <table class="data-table">
           <thead>
             <tr>
               <th>Cliente / Contribuyente</th>
-              <th>Estado SAR (Facturas)</th>
+              <th>Estado Facturas SAR</th>
               <th>Cuota & Cobranza</th>
               <th>Avisos Asignados</th>
               <th>Contacto</th>
@@ -234,115 +209,10 @@
       </div>
     }
 
-    <!-- VISTA 2: COLA DE MENSAJES REGISTRADOS -->
-    @if (activeTab() === 'mensajes') {
-      @if (recordatorios().length === 0) {
-        <div class="empty-state">
-          <div class="empty-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-12 h-12 text-muted"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/></svg>
-          </div>
-          <h4>No hay avisos registrados en la cola</h4>
-          <p>Ve a la pestaña de Clientes y haz clic en "Crear Aviso" para generar recordatorios.</p>
-          <button class="btn btn-primary mt-3" (click)="activeTab.set('clientes')">Ir a Directorio de Clientes</button>
-        </div>
-      } @else {
-        <div class="table-header-action-bar">
-          <span class="text-xs text-muted font-semibold">Mostrando {{ filteredRecordatorios().length }} avisos en el sistema</span>
-          <button class="btn-clear-completed" (click)="limpiarEnviados()">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-            <span>Limpiar gestionados</span>
-          </button>
-        </div>
-
-        <div class="table-responsive">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th style="min-width: 145px;">Estado del Aviso</th>
-                <th>Cliente / Contribuyente</th>
-                <th>Tipo de Aviso</th>
-                <th>Mensaje Preparado</th>
-                <th>Contacto</th>
-                <th class="text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (r of filteredRecordatorios(); track r.id) {
-                <tr [class.row-completed]="r.estado === 'Enviado' || r.estado === 'Respondido'">
-                  <td>
-                    <div class="status-select-wrapper" [attr.data-status]="r.estado">
-                      <select 
-                        class="status-combobox" 
-                        [ngModel]="r.estado" 
-                        (ngModelChange)="cambiarEstado(r.id, $event)"
-                      >
-                        <option value="Pendiente">⏳ Pendiente</option>
-                        <option value="Enviado">✅ Enviado</option>
-                        <option value="Respondido">💬 Respondido</option>
-                        <option value="Omitido">🛑 Omitido</option>
-                      </select>
-                    </div>
-                  </td>
-                  <td>
-                    <div class="flex flex-col">
-                      <span class="font-bold text-sm" [class.line-through]="r.estado === 'Enviado' || r.estado === 'Respondido'">{{ r.clienteNombre }}</span>
-                      <span class="font-mono text-xs text-muted">{{ r.clienteRtn }}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <span class="type-badge" [class.type-sar]="r.tipo === 'SAR'" [class.type-cobro]="r.tipo === 'Cobro'" [class.type-declaracion]="r.tipo === 'Declaracion'" [class.type-custom]="r.tipo === 'Personalizado'">
-                      {{ r.tipo }}
-                    </span>
-                  </td>
-                  <td>
-                    <p class="message-snippet" [title]="r.mensaje">{{ r.mensaje }}</p>
-                  </td>
-                  <td>
-                    <div class="contact-badges">
-                      @if (r.telefonoWhatsApp) {
-                        <span class="contact-chip text-green">
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                          {{ r.telefonoWhatsApp }}
-                        </span>
-                      }
-                      @if (r.email) {
-                        <span class="contact-chip text-muted">
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-                          {{ r.email }}
-                        </span>
-                      }
-                    </div>
-                  </td>
-                  <td class="text-right">
-                    <div class="row-actions">
-                      @if (r.telefonoWhatsApp) {
-                        <button (click)="enviarPorWhatsApp(r)" class="btn-whatsapp-action" title="Enviar WhatsApp al cliente">
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                          <span>WhatsApp</span>
-                        </button>
-                      }
-                      @if (r.email) {
-                        <a [href]="getEmailUrl(r.email, 'Aviso de Despacho Contable - ' + r.tipo, r.mensaje)" class="btn-email-action" title="Enviar correo">
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-                        </a>
-                      }
-                      <button class="btn-delete-item" (click)="eliminarRecordatorio(r.id)" title="Eliminar de la base de datos">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      }
-    }
-
   </div>
 </div>
 
-<!-- MODAL / DRAWER DE DETALLE DE AVISOS POR CLIENTE -->
+<!-- MODAL DE DETALLE DE AVISOS POR CLIENTE -->
 @if (clienteDetalleAvisos()) {
   <div class="modal-backdrop" (click)="cerrarDetalleAvisos()">
     <div class="modal-card modal-card-lg animate-fade-in" (click)="$event.stopPropagation()">
@@ -439,7 +309,7 @@
   </div>
 }
 
-<!-- MODAL NUEVO RECORDATORIO MANUAL -->
+<!-- MODAL CREAR AVISO -->
 @if (isModalOpen()) {
   <div class="modal-backdrop" (click)="closeModal()">
     <div class="modal-card animate-fade-in" (click)="$event.stopPropagation()">
