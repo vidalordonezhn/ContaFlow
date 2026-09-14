@@ -160,45 +160,48 @@
                 <!-- Estado SAR -->
                 <td>
                   @if (c.tieneFacturasPendientesSAR) {
-                    <span class="status-badge-sar-pend">
+                    <span class="badge-status-pill badge-sar-warn">
                       <span class="dot-blink"></span>
-                      <span>🚨 Facturas Pendientes</span>
+                      <span>Facturas Pendientes</span>
                     </span>
                   } @else {
-                    <span class="status-badge-ok">
-                      <span>✓ Facturas al Día</span>
+                    <span class="badge-status-pill badge-sar-ok">
+                      <span class="dot-ok"></span>
+                      <span>Al Día</span>
                     </span>
                   }
                 </td>
 
                 <!-- Estado Cobranza -->
                 <td>
-                  @if (c.tieneCobroPendiente) {
-                    <div class="flex flex-col">
-                      <span class="status-badge-cobro-pend">
-                        <span>💰 Pendiente: L. {{ c.cuotaMensual | number:'1.2-2' }}</span>
-                      </span>
-                      <span class="text-2xs text-muted mt-0.5">Cobro día {{ c.diaCobro }}</span>
-                    </div>
-                  } @else {
-                    <span class="status-badge-ok">
-                      <span>✓ Cuota Pagada</span>
+                  <div class="cobro-cell">
+                    <span class="monto-val" [class.text-amber-700]="c.tieneCobroPendiente" [class.text-emerald-700]="!c.tieneCobroPendiente">
+                      L. {{ c.cuotaMensual | number:'1.2-2' }}
                     </span>
-                  }
+                    @if (c.tieneCobroPendiente) {
+                      <span class="cobro-status-sub text-amber-700">
+                        <span class="status-dot dot-warn"></span> Pendiente • Día {{ c.diaCobro }}
+                      </span>
+                    } @else {
+                      <span class="cobro-status-sub text-emerald-600">
+                        <span class="status-dot dot-ok"></span> Pagado este mes
+                      </span>
+                    }
+                  </div>
                 </td>
 
                 <!-- Avisos Asignados -->
                 <td>
                   @if (c.avisos.length > 0) {
-                    <button class="btn-avisos-count" (click)="verAvisosDeCliente(c)" title="Ver y gestionar todos los avisos de este cliente">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5 text-blue"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-                      <span><strong>{{ c.avisos.length }}</strong> aviso(s)</span>
+                    <button class="btn-avisos-tag" (click)="verAvisosDeCliente(c)" title="Ver y gestionar todos los avisos de este cliente">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+                      <span>{{ c.avisos.length }} aviso{{ c.avisos.length > 1 ? 's' : '' }}</span>
                       @if (c.avisosPendientesCount > 0) {
-                        <span class="badge-pend-dot" title="{{ c.avisosPendientesCount }} pendiente(s)">{{ c.avisosPendientesCount }}</span>
+                        <span class="dot-count" title="{{ c.avisosPendientesCount }} pendiente(s)">{{ c.avisosPendientesCount }}</span>
                       }
                     </button>
                   } @else {
-                    <span class="text-xs text-muted italic">Sin avisos creados</span>
+                    <span class="text-xs text-muted">0 avisos</span>
                   }
                 </td>
 
