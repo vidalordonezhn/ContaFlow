@@ -92,6 +92,18 @@ export class ReceiptsComponent implements OnInit {
   readonly newServiceCategoria = signal('General');
   readonly newServiceError = signal<string | null>(null);
 
+  // Listas para selección segura de período
+  readonly mesesList = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  ];
+
+  readonly aniosList = [
+    new Date().getFullYear() - 1,
+    new Date().getFullYear(),
+    new Date().getFullYear() + 1
+  ];
+
   // -------------------------------------------------------------
   // FORMULARIO DE EMISIÓN DE COMPROBANTE
   // -------------------------------------------------------------
@@ -104,7 +116,16 @@ export class ReceiptsComponent implements OnInit {
   readonly formMetodoPago = signal<string>('Transferencia');
   readonly formAplicarIsv = signal<boolean>(false);
   readonly formRegistrarComoPago = signal<boolean>(true);
-  readonly formMesAplicado = signal<string>(`${new Intl.DateTimeFormat('es-HN', { month: 'long' }).format(new Date())} ${new Date().getFullYear()}`);
+  
+  readonly formMes = signal<string>(
+    new Intl.DateTimeFormat('es-HN', { month: 'long' }).format(new Date()).replace(/^\w/, c => c.toUpperCase())
+  );
+  readonly formAnio = signal<number>(new Date().getFullYear());
+
+  readonly formMesAplicado = computed(() => {
+    return `${this.formMes()} ${this.formAnio()}`;
+  });
+
   readonly formObservaciones = signal<string>('');
 
   // Lista de Ítems del comprobante

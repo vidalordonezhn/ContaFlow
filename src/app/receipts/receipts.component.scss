@@ -1004,6 +1004,22 @@
   gap: 1rem;
 }
 
+.period-selectors-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  width: 100%;
+
+  .select-mes {
+    flex: 2;
+  }
+
+  .select-anio {
+    flex: 1;
+    min-width: 90px;
+  }
+}
+
 .btn {
   display: inline-flex;
   align-items: center;

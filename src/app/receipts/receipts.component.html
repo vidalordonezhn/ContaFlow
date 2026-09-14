@@ -306,7 +306,26 @@
 
             <div class="form-group flex-1">
               <label>Período / Mes Aplicado</label>
-              <input type="text" class="form-control" [ngModel]="formMesAplicado()" (ngModelChange)="formMesAplicado.set($event)" />
+              <div class="period-selectors-row">
+                <select 
+                  class="form-control font-semibold select-mes"
+                  [ngModel]="formMes()" 
+                  (ngModelChange)="formMes.set($event)"
+                >
+                  @for (m of mesesList; track m) {
+                    <option [value]="m">{{ m }}</option>
+                  }
+                </select>
+                <select 
+                  class="form-control font-semibold select-anio"
+                  [ngModel]="formAnio()" 
+                  (ngModelChange)="formAnio.set($event)"
+                >
+                  @for (a of aniosList; track a) {
+                    <option [value]="a">{{ a }}</option>
+                  }
+                </select>
+              </div>
             </div>
           </div>
 
