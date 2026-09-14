@@ -9,6 +9,8 @@ import { ApiRecordatoriosService, RecordatorioResponse, RecordatorioCreate } fro
 import { ClientSelectorComponent } from '../shared/client-selector/client-selector.component';
 
 export type EstadoRecordatorio = 'Pendiente' | 'Enviado' | 'Respondido' | 'Omitido';
+export type MainTab = 'clientes' | 'mensajes';
+export type FiltroCliente = 'todos' | 'sar_pendiente' | 'cobro_pendiente' | 'con_avisos';
 
 export interface ClienteNotifView {
   id: number;
@@ -54,10 +56,10 @@ export class NotificationsComponent implements OnInit {
   readonly successMsg = signal<string | null>(null);
   readonly errorMsg = signal<string | null>(null);
 
-  // Tabs de navegación
-  readonly activeTab = signal<'manual' | 'sar' | 'cobros' | 'todos'>('todos');
+  // Tabs de navegación unificadas (solo 2 pestañas principales)
+  readonly activeTab = signal<MainTab>('clientes');
   readonly searchQuery = signal('');
-  readonly filtroClienteEstado = signal<'todos' | 'sar_pendiente' | 'cobro_pendiente' | 'con_avisos'>('todos');
+  readonly filtroClienteEstado = signal<FiltroCliente>('todos');
 
   // Modal para agregar recordatorio
   readonly isModalOpen = signal(false);
@@ -123,17 +125,24 @@ export class NotificationsComponent implements OnInit {
     });
   });
 
-  // Clientes con facturas SAR pendientes
-  readonly pendientesSAR = computed(() => {
-    return this.clientesEnriquecidos().filter(c => c.tieneFacturasPendientesSAR);
+  // Métricas
+  readonly pendientesSARCount = computed(() => {
+    return this.clientesEnriquecidos().filter(c => c.tieneFacturasPendientesSAR).length;
   });
 
-  // Clientes con honorarios pendientes de pago este mes
-  readonly pendientesCobro = computed(() => {
-    return this.clientesEnriquecidos().filter(c => c.tieneCobroPendiente);
+  readonly pendientesCobroCount = computed(() => {
+    return this.clientesEnriquecidos().filter(c => c.tieneCobroPendiente).length;
   });
 
-  // Clientes filtrados para la pestaña Todos los Clientes
+  readonly conAvisosCount = computed(() => {
+    return this.clientesEnriquecidos().filter(c => c.avisos.length > 0).length;
+  });
+
+  readonly totalAvisosPendientes = computed(() => {
+    return this.recordatorios().filter(r => r.estado === 'Pendiente').length;
+  });
+
+  // Clientes filtrados según la píldora de estado seleccionada y búsqueda
   readonly filteredClientes = computed(() => {
     const q = this.searchQuery().toLowerCase().trim();
     const filtro = this.filtroClienteEstado();
@@ -156,7 +165,7 @@ export class NotificationsComponent implements OnInit {
     );
   });
 
-  // Avisos filtrados para la pestaña Mi Lista de Avisos
+  // Avisos filtrados para la pestaña de Mensajes
   readonly filteredRecordatorios = computed(() => {
     const q = this.searchQuery().toLowerCase().trim();
     const list = this.recordatorios();
@@ -167,10 +176,6 @@ export class NotificationsComponent implements OnInit {
       r.mensaje.toLowerCase().includes(q) ||
       r.tipo.toLowerCase().includes(q)
     );
-  });
-
-  readonly totalAvisosPendientes = computed(() => {
-    return this.recordatorios().filter(r => r.estado === 'Pendiente').length;
   });
 
   ngOnInit(): void {
@@ -212,7 +217,6 @@ export class NotificationsComponent implements OnInit {
     this.recordatoriosService.getRecordatorios().subscribe({
       next: (recs) => {
         this.recordatorios.set(recs);
-        // Si hay un cliente abierto en detalle, actualizarlo
         const currentDetalle = this.clienteDetalleAvisos();
         if (currentDetalle) {
           const updated = this.clientesEnriquecidos().find(c => c.id === currentDetalle.id);
@@ -220,6 +224,11 @@ export class NotificationsComponent implements OnInit {
         }
       }
     });
+  }
+
+  seleccionarFiltroDesdeKPI(filtro: FiltroCliente): void {
+    this.activeTab.set('clientes');
+    this.filtroClienteEstado.set(filtro);
   }
 
   openNewReminderModal(preselectedClientId?: number, tipo: 'SAR' | 'Cobro' | 'Declaracion' | 'Personalizado' = 'SAR'): void {
@@ -313,51 +322,7 @@ export class NotificationsComponent implements OnInit {
       },
       error: () => {
         this.isSaving.set(false);
-        this.modalError.set('Ocurrió un error al guardar el aviso en la base de datos.');
-      }
-    });
-  }
-
-  agregarDesdeSugerencia(cliente: ClienteNotifView, tipo: 'SAR' | 'Cobro'): void {
-    const yaExiste = cliente.avisos.some(r => r.tipo === tipo && r.estado === 'Pendiente');
-    if (yaExiste) {
-      this.showToast(`"${cliente.nombreRazonSocial}" ya tiene un aviso pendiente de ${tipo}.`);
-      return;
-    }
-
-    let template = this.plantillas[tipo];
-    const cuota = Number(cliente.cuotaMensual || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    template = template
-      .replace('{cliente}', cliente.nombreRazonSocial)
-      .replace('{cuota}', cuota)
-      .replace('{mes}', this.mesActual());
-
-    if (tipo === 'Cobro') {
-      const cfg = this.configDespacho();
-      if (cfg && cfg.banco1Activo && cfg.banco1Numero) {
-        template += ` Puede depositar a ${cfg.banco1Nombre} (${cfg.banco1TipoCuenta}): ${cfg.banco1Numero} a nombre de ${cfg.banco1Beneficiario}.`;
-      }
-    }
-
-    const dto: RecordatorioCreate = {
-      clienteId: cliente.id,
-      tipo: tipo,
-      titulo: `Aviso ${tipo} - ${this.mesActual()}`,
-      mensaje: template,
-      canal: 'WhatsApp',
-      estado: 'Pendiente',
-      telefonoDestino: cliente.telefonoWhatsApp || cliente.telefono,
-      emailDestino: cliente.emailPrincipal
-    };
-
-    this.recordatoriosService.crearRecordatorio(dto).subscribe({
-      next: (creado) => {
-        this.recordatorios.update(list => [creado, ...list]);
-        this.showToast(`Aviso de ${tipo} creado para "${cliente.nombreRazonSocial}".`);
-        this.recargarRecordatorios();
-      },
-      error: () => {
-        this.showToast('Error al crear el aviso sugerido.');
+        this.modalError.set('Ocurrió un error al guardar el aviso.');
       }
     });
   }
