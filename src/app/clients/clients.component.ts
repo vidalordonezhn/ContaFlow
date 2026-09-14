@@ -1,7 +1,8 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ApiClientsService, ClienteResponse, ClienteCreate, ClienteUpdate, ExpedienteFiscal } from '../services/api-clients.service';
+import * as XLSX from 'xlsx';
+import { ApiClientsService, ClienteResponse, ClienteCreate, ClienteUpdate, ExpedienteFiscal, ClienteImportItem, ClienteImportResponse } from '../services/api-clients.service';
 import { ApiRubrosService, RubroResponse } from '../services/api-rubros.service';
 import { PdfGeneratorService } from '../services/pdf-generator.service';
 
@@ -33,6 +34,14 @@ export class ClientsComponent implements OnInit {
   readonly isEditing = signal(false);
   readonly selectedClienteId = signal<number | null>(null);
   readonly formError = signal<string | null>(null);
+
+  // Modal Carga Masiva de Clientes (Excel / CSV)
+  readonly isImportModalOpen = signal(false);
+  readonly selectedImportFile = signal<File | null>(null);
+  readonly parsedClients = signal<ClienteImportItem[]>([]);
+  readonly isImporting = signal(false);
+  readonly importResult = signal<ClienteImportResponse | null>(null);
+  readonly importError = signal<string | null>(null);
 
   // Modal Expediente Fiscal Digital 360°
   readonly isExpedienteModalOpen = signal(false);
@@ -374,6 +383,170 @@ export class ClientsComponent implements OnInit {
 
   imprimirExpediente(): void {
     this.descargarExpedientePdf();
+  }
+
+  // ==========================================
+  // CARGA MASIVA DE CLIENTES (EXCEL / CSV)
+  // ==========================================
+
+  openImportModal(): void {
+    this.selectedImportFile.set(null);
+    this.parsedClients.set([]);
+    this.importResult.set(null);
+    this.importError.set(null);
+    this.isImportModalOpen.set(true);
+  }
+
+  closeImportModal(): void {
+    this.isImportModalOpen.set(false);
+    this.selectedImportFile.set(null);
+    this.parsedClients.set([]);
+    this.importResult.set(null);
+    this.importError.set(null);
+  }
+
+  descargarPlantilla(): void {
+    window.location.href = this.clientsService.descargarPlantillaUrl();
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.procesarArchivo(input.files[0]);
+    }
+  }
+
+  onFileDrop(event: DragEvent): void {
+    event.preventDefault();
+    if (event.dataTransfer && event.dataTransfer.files.length > 0) {
+      this.procesarArchivo(event.dataTransfer.files[0]);
+    }
+  }
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+  }
+
+  private procesarArchivo(file: File): void {
+    this.selectedImportFile.set(file);
+    this.importError.set(null);
+    this.importResult.set(null);
+    this.parsedClients.set([]);
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const buffer = e.target?.result as ArrayBuffer;
+        const workbook = XLSX.read(buffer, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+
+        const rawData: any[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+
+        if (!rawData || rawData.length < 2) {
+          throw new Error('El archivo está vacío o no contiene filas de datos.');
+        }
+
+        // Buscar fila de encabezados
+        let headerRowIndex = 0;
+        for (let i = 0; i < Math.min(5, rawData.length); i++) {
+          const rowStr = rawData[i].map((c: any) => String(c).toLowerCase()).join(' ');
+          if (rowStr.includes('rtn') || rowStr.includes('nombre') || rowStr.includes('razon') || rowStr.includes('cliente')) {
+            headerRowIndex = i;
+            break;
+          }
+        }
+
+        const headers = rawData[headerRowIndex].map((h: any) => String(h).trim().toLowerCase());
+        
+        // Mapeo flexible de índices
+        const getColIndex = (keywords: string[]): number => {
+          return headers.findIndex((h: string) => keywords.some(k => h.includes(k)));
+        };
+
+        const idxRtn = getColIndex(['rtn', 'identidad', 'cif', 'id']);
+        const idxNombre = getColIndex(['razon', 'nombre', 'cliente', 'empresa']);
+        const idxComercial = getColIndex(['comercial', 'rotulo', 'negocio', 'local']);
+        const idxTipo = getColIndex(['tipo', 'persona']);
+        const idxRubro = getColIndex(['rubro', 'giro', 'actividad', 'categoria']);
+        const idxSar = getColIndex(['sar', 'clave', 'pass', 'contrasena', 'contraseña']);
+        const idxEmail = getColIndex(['email', 'correo']);
+        const idxEmailSec = getColIndex(['emailsec', 'secundario', 'correo2']);
+        const idxTel = getColIndex(['tel', 'telefono', 'fijo']);
+        const idxWa = getColIndex(['whatsapp', 'wa', 'cel', 'celular', 'movil']);
+        const idxDir = getColIndex(['dir', 'direccion', 'ciudad', 'domicilio']);
+        const idxCuota = getColIndex(['cuota', 'honorario', 'monto', 'tarifa', 'pago', 'precio']);
+        const idxDia = getColIndex(['dia', 'cobro', 'corte']);
+        const idxNotas = getColIndex(['nota', 'obs', 'comentario']);
+
+        const list: ClienteImportItem[] = [];
+
+        for (let r = headerRowIndex + 1; r < rawData.length; r++) {
+          const row = rawData[r];
+          if (!row || row.length === 0) continue;
+
+          const rawRtn = idxRtn >= 0 ? String(row[idxRtn] || '') : String(row[0] || '');
+          const cleanRtn = rawRtn.replace(/[^0-9A-Za-z]/g, '').trim().toUpperCase();
+          const rawNombre = idxNombre >= 0 ? String(row[idxNombre] || '') : String(row[1] || '');
+
+          if (!cleanRtn && !rawNombre) continue;
+
+          const cuotaVal = idxCuota >= 0 ? parseFloat(String(row[idxCuota]).replace(/[^0-9.]/g, '')) || 0 : 0;
+          const diaVal = idxDia >= 0 ? parseInt(String(row[idxDia]).replace(/[^0-9]/g, '')) || 5 : 5;
+
+          list.push({
+            rtn: cleanRtn,
+            nombreRazonSocial: rawNombre.trim(),
+            nombreComercial: idxComercial >= 0 ? String(row[idxComercial] || '').trim() : undefined,
+            tipoPersona: idxTipo >= 0 ? (String(row[idxTipo] || '').toLowerCase().includes('natural') ? 'Natural' : 'Juridica') : (cleanRtn.startsWith('0801') && cleanRtn.length === 13 ? 'Natural' : 'Juridica'),
+            rubro: idxRubro >= 0 && row[idxRubro] ? String(row[idxRubro]).trim() : 'Comercio General',
+            contrasenaSAR: idxSar >= 0 ? String(row[idxSar] || '').trim() : undefined,
+            emailPrincipal: idxEmail >= 0 ? String(row[idxEmail] || '').trim() : undefined,
+            emailSecundario: idxEmailSec >= 0 ? String(row[idxEmailSec] || '').trim() : undefined,
+            telefono: idxTel >= 0 ? String(row[idxTel] || '').trim() : undefined,
+            telefonoWhatsApp: idxWa >= 0 ? String(row[idxWa] || '').trim() : undefined,
+            direccion: idxDir >= 0 ? String(row[idxDir] || '').trim() : undefined,
+            cuotaMensual: cuotaVal > 0 ? cuotaVal : 1500,
+            diaCobro: diaVal >= 1 && diaVal <= 31 ? diaVal : 5,
+            notas: idxNotas >= 0 ? String(row[idxNotas] || '').trim() : undefined
+          });
+        }
+
+        if (list.length === 0) {
+          throw new Error('No se detectaron clientes con RTN o Nombre válido.');
+        }
+
+        this.parsedClients.set(list);
+        this.showToast(`¡Se detectaron ${list.length} clientes listos para importar!`);
+      } catch (err: any) {
+        this.importError.set(err.message || 'Error al procesar el archivo Excel.');
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  ejecutarImportacionMasiva(): void {
+    const list = this.parsedClients();
+    if (list.length === 0) return;
+
+    this.isImporting.set(true);
+    this.importError.set(null);
+
+    this.clientsService.importarMasivo(list).subscribe({
+      next: (res) => {
+        this.importResult.set(res);
+        this.isImporting.set(false);
+        this.parsedClients.set([]);
+        this.selectedImportFile.set(null);
+        this.showToast(`¡Importación completada! ${res.totalGuardados} creados, ${res.totalActualizados} actualizados.`);
+        this.cargarClientes();
+        this.cargarRubros();
+      },
+      error: (err) => {
+        this.isImporting.set(false);
+        this.importError.set(err.error?.mensaje || 'Error al enviar la carga masiva al servidor.');
+      }
+    });
   }
 
   private showToast(msg: string): void {

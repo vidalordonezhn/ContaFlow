@@ -15,7 +15,11 @@
       <h1 class="header-title">Cartera de Clientes & Contribuyentes</h1>
       <p class="header-subtitle">Gestiona la información tributaria, credenciales SAR, cuotas mensuales y expedientes fiscales</p>
     </div>
-    <div class="header-right">
+    <div class="header-right flex items-center gap-2">
+      <button class="btn btn-secondary btn-mass-import" (click)="openImportModal()" title="Importar lista de clientes desde Excel o CSV">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4 text-emerald"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>⚡ Carga Masiva (Excel / CSV)</span>
+      </button>
       <button class="btn btn-primary" (click)="openCreateModal()">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-4 h-4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         <span>+ Registrar Nuevo Cliente</span>
@@ -728,6 +732,165 @@
           <button type="button" class="btn btn-primary" (click)="guardarNuevoRubro()">Guardar Rubro</button>
         </div>
       </div>
+    </div>
+  </div>
+}
+
+<!-- MODAL CARGA MASIVA DE CLIENTES (EXCEL / CSV) -->
+@if (isImportModalOpen()) {
+  <div class="modal-backdrop import-backdrop">
+    <div class="modal-card modal-card-xl animate-fade-in" (click)="$event.stopPropagation()">
+      
+      <div class="modal-header">
+        <div class="modal-title-box">
+          <div class="modal-icon bg-emerald-light text-emerald">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </div>
+          <div>
+            <h3>Carga Masiva de Clientes desde Excel / CSV</h3>
+            <p>Importa o actualiza decenas de clientes en segundos reconociendo automáticamente las columnas</p>
+          </div>
+        </div>
+        <button class="modal-close" (click)="closeImportModal()" title="Cerrar">✕</button>
+      </div>
+
+      @if (importError()) {
+        <div class="error-alert">
+          <span>{{ importError() }}</span>
+        </div>
+      }
+
+      <div class="modal-body-import">
+        
+        <!-- BARRA SUPERIOR CON DESCARGA DE PLANTILLA -->
+        <div class="import-helper-banner">
+          <div class="banner-text">
+            <strong>¿No tienes el formato oficial?</strong>
+            <span>Descarga nuestra plantilla oficial formateada con las columnas del SAR y ContaFlow.</span>
+          </div>
+          <button type="button" class="btn btn-outline-primary btn-sm" (click)="descargarPlantilla()">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>Descargar Plantilla CSV</span>
+          </button>
+        </div>
+
+        <!-- DROPZONE / SELECCIÓN DE ARCHIVO -->
+        <div 
+          class="import-dropzone" 
+          (drop)="onFileDrop($event)" 
+          (dragover)="onDragOver($event)"
+        >
+          <div class="dropzone-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-10 h-10 text-emerald"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg>
+          </div>
+          <h4>Arrastra tu archivo Excel (.xlsx / .xls) o CSV aquí</h4>
+          <p>Mapeo inteligente: reconoce columnas como RTN, Razón Social, Clave SAR, Cuota, WhatsApp, etc.</p>
+
+          <label class="btn btn-primary btn-sm mt-3 cursor-pointer">
+            <input type="file" accept=".xlsx, .xls, .csv" (change)="onFileSelected($event)" style="display: none;" />
+            <span>Seleccionar Archivo en tu Equipo</span>
+          </label>
+        </div>
+
+        <!-- PREVISUALIZACIÓN DE CLIENTES RECONOCIDOS -->
+        @if (parsedClients().length > 0) {
+          <div class="parsed-preview-section mt-4">
+            <div class="preview-header-bar">
+              <div>
+                <h4>Clientes Detectados en el Archivo: <span class="badge-count">{{ parsedClients().length }}</span></h4>
+                <p>Verifica los datos antes de confirmar la importación.</p>
+              </div>
+
+              <button 
+                type="button" 
+                class="btn btn-success" 
+                [disabled]="isImporting()" 
+                (click)="ejecutarImportacionMasiva()"
+              >
+                @if (isImporting()) {
+                  <span class="spinner-sm"></span>
+                  <span>Guardando...</span>
+                } @else {
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span>✓ Confirmar e Importar {{ parsedClients().length }} Clientes</span>
+                }
+              </button>
+            </div>
+
+            <div class="table-responsive-preview">
+              <table class="table-preview-custom">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>RTN</th>
+                    <th>Razón Social / Nombre</th>
+                    <th>Tipo</th>
+                    <th>Rubro</th>
+                    <th>Cuota Mensual</th>
+                    <th>Contraseña SAR</th>
+                    <th>WhatsApp / Tel</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (c of parsedClients(); track $index) {
+                    <tr>
+                      <td class="text-center">{{ $index + 1 }}</td>
+                      <td class="font-mono font-bold">{{ c.rtn }}</td>
+                      <td class="font-semibold">{{ c.nombreRazonSocial }}</td>
+                      <td>
+                        <span class="badge-pill" [class.badge-juridica]="c.tipoPersona === 'Juridica'" [class.badge-natural]="c.tipoPersona === 'Natural'">
+                          {{ c.tipoPersona }}
+                        </span>
+                      </td>
+                      <td>{{ c.rubro }}</td>
+                      <td class="text-right font-mono font-bold text-emerald">
+                        L. {{ c.cuotaMensual | number:'1.2-2' }}
+                      </td>
+                      <td class="font-mono text-center">
+                        {{ c.contrasenaSAR || '—' }}
+                      </td>
+                      <td>{{ c.telefonoWhatsApp || c.telefono || '—' }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        }
+
+        <!-- RESULTADO DE IMPORTACIÓN -->
+        @if (importResult(); as res) {
+          <div class="import-result-summary mt-4">
+            <div class="result-badges">
+              <div class="res-badge bg-emerald-subtle text-emerald">
+                <strong>{{ res.totalGuardados }}</strong> Clientes Creados
+              </div>
+              <div class="res-badge bg-blue-subtle text-blue">
+                <strong>{{ res.totalActualizados }}</strong> Clientes Actualizados
+              </div>
+              @if (res.totalErrores > 0) {
+                <div class="res-badge bg-red-subtle text-red">
+                  <strong>{{ res.totalErrores }}</strong> Con Advertencia
+                </div>
+              }
+            </div>
+
+            @if (res.mensajes && res.mensajes.length > 0) {
+              <div class="log-messages-box mt-3">
+                @for (m of res.mensajes; track $index) {
+                  <div class="log-item">{{ m }}</div>
+                }
+              </div>
+            }
+          </div>
+        }
+
+      </div>
+
+      <div class="modal-actions mt-4">
+        <button type="button" class="btn btn-secondary" (click)="closeImportModal()">Cerrar</button>
+      </div>
+
     </div>
   </div>
 }

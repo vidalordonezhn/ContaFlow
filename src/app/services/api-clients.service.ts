@@ -113,6 +113,31 @@ export interface ExpedienteFiscal {
   totalHonorariosPagados: number;
 }
 
+export interface ClienteImportItem {
+  rtn: string;
+  nombreRazonSocial: string;
+  nombreComercial?: string;
+  tipoPersona?: string;
+  rubro?: string;
+  contrasenaSAR?: string;
+  emailPrincipal?: string;
+  emailSecundario?: string;
+  telefono?: string;
+  telefonoWhatsApp?: string;
+  direccion?: string;
+  cuotaMensual?: number;
+  diaCobro?: number;
+  notas?: string;
+}
+
+export interface ClienteImportResponse {
+  totalProcesados: number;
+  totalGuardados: number;
+  totalActualizados: number;
+  totalErrores: number;
+  mensajes: string[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -141,6 +166,14 @@ export class ApiClientsService {
 
   toggleStatus(id: number): Observable<any> {
     return this.http.patch<any>(`${environment.apiUrl}/api/clientes/${id}/toggle-status`, {});
+  }
+
+  importarMasivo(items: ClienteImportItem[]): Observable<ClienteImportResponse> {
+    return this.http.post<ClienteImportResponse>(`${environment.apiUrl}/api/clientes/importar-masivo`, items);
+  }
+
+  descargarPlantillaUrl(): string {
+    return `${environment.apiUrl}/api/clientes/plantilla`;
   }
 }
 
