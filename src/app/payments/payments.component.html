@@ -15,7 +15,12 @@
       <h1 class="header-title">Honorarios y Recibos</h1>
       <p class="header-subtitle">Registro de cobros mensuales y emisión de recibos digitales en PDF</p>
     </div>
-    <div class="header-right">
+    <div class="header-right" style="display: flex; gap: 0.5rem;">
+      <button class="btn btn-secondary" (click)="tabsService.openModulo(tabsService.catalogoModulos[6])" title="Ir a la pantalla de emisión de facturas y recibos con desglose">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4 text-amber"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span>Facturación y Recibos</span>
+      </button>
+
       <button class="btn btn-primary" (click)="openCreateModal()">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-4 h-4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         <span>Registrar Pago</span>

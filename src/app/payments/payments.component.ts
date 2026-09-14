@@ -5,6 +5,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ApiPagosService, PagoResponse, PagoCreate } from '../services/api-pagos.service';
 import { ApiClientsService, ClienteResponse } from '../services/api-clients.service';
 import { ClientSelectorComponent } from '../shared/client-selector/client-selector.component';
+import { TabsService } from '../services/tabs.service';
 
 export interface ReciboPreviewData {
   reciboId: number;
@@ -29,6 +30,7 @@ export class PaymentsComponent implements OnInit {
   private readonly pagosService = inject(ApiPagosService);
   private readonly clientsService = inject(ApiClientsService);
   private readonly sanitizer = inject(DomSanitizer);
+  readonly tabsService = inject(TabsService);
 
   readonly pagos = signal<PagoResponse[]>([]);
   readonly clientes = signal<ClienteResponse[]>([]);

@@ -34,6 +34,7 @@ export const routes: Routes = [
       { path: 'calendario-fiscal', component: CalendarioFiscalComponent },
       { path: 'pagos', component: PaymentsComponent },
       { path: 'recibos', component: ReceiptsComponent },
+      { path: 'facturacion', component: ReceiptsComponent },
       { path: 'notificaciones', component: NotificationsComponent },
       { path: 'usuarios', component: UsuariosComponent },
       { path: 'reportes', component: ReportesComponent },

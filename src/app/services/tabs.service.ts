@@ -83,9 +83,9 @@ export class TabsService {
     },
     {
       id: 'recibos',
-      title: 'Emisión de Recibos',
-      shortTitle: 'Recibos PDF',
-      description: 'Generación, correlativo y descarga directa de comprobantes en PDF.',
+      title: 'Facturación y Recibos',
+      shortTitle: 'Facturación',
+      description: 'Emisión de Facturas SAR con CAI y Recibos informales con desglose de servicios e ítems.',
       category: 'Clientes & Honorarios',
       route: '/recibos',
       iconPath: 'description',
