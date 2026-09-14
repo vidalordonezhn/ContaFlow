@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiLibrosIsvService, LibroIsvDetalle, LibroIsvGuardar, LibroIsvImportItem, LibroIsvImportResponse, LibroPartidaItem, LibroDetalleCompleto, GuardarLibroDetallePartidas } from '../services/api-libros-isv.service';
 import { ApiClientsService, ClienteResponse } from '../services/api-clients.service';
+import { PdfGeneratorService } from '../services/pdf-generator.service';
 
 @Component({
   selector: 'app-libros-isv',
@@ -14,6 +15,7 @@ import { ApiClientsService, ClienteResponse } from '../services/api-clients.serv
 export class LibrosIsvComponent implements OnInit {
   private readonly librosService = inject(ApiLibrosIsvService);
   private readonly clientsService = inject(ApiClientsService);
+  private readonly pdfService = inject(PdfGeneratorService);
 
   readonly activeTab = signal<'detalle' | 'declaracion' | 'masivo'>('detalle');
   readonly clientes = signal<ClienteResponse[]>([]);
@@ -549,8 +551,60 @@ export class LibrosIsvComponent implements OnInit {
     });
   }
 
-  imprimirHojaTrabajo(): void {
-    window.print();
+  descargarPdfOficial(): void {
+    const cli = this.selectedCliente();
+    if (!cli) {
+      this.errorMsg.set('Seleccione un cliente para generar el PDF.');
+      return;
+    }
+
+    this.pdfService.generarLibroDetallePdf({
+      cliente: cli,
+      mesNombre: this.selectedMesNombre(),
+      mes: this.selectedMes(),
+      anio: this.selectedAnio(),
+      items: this.detalleItems(),
+      sumComprasExentas: this.sumComprasExentas(),
+      sumComprasGravadas: this.sumComprasGravadas(),
+      sumIsvCompras: this.sumIsvCompras(),
+      sumVentasExentas: this.sumVentasExentas(),
+      sumVentasGravadas: this.sumVentasGravadas(),
+      sumIsvVentas: this.sumIsvVentas(),
+      impuestoAPagar: this.liveImpuestoAPagarDetalle(),
+      saldoAFavor: this.liveSaldoAFavorDetalle(),
+      serviciosProfesionales: Number(this.serviciosProfesionales()) || 0,
+      totalLps: this.liveTotalLpsDetalle()
+    }, true);
+
+    this.showToast('¡Reporte PDF oficial generado y descargado con éxito!');
+  }
+
+  exportarExcelOficial(): void {
+    const cli = this.selectedCliente();
+    if (!cli) {
+      this.errorMsg.set('Seleccione un cliente para exportar a Excel.');
+      return;
+    }
+
+    this.pdfService.exportarLibroDetalleExcel({
+      cliente: cli,
+      mesNombre: this.selectedMesNombre(),
+      mes: this.selectedMes(),
+      anio: this.selectedAnio(),
+      items: this.detalleItems(),
+      sumComprasExentas: this.sumComprasExentas(),
+      sumComprasGravadas: this.sumComprasGravadas(),
+      sumIsvCompras: this.sumIsvCompras(),
+      sumVentasExentas: this.sumVentasExentas(),
+      sumVentasGravadas: this.sumVentasGravadas(),
+      sumIsvVentas: this.sumIsvVentas(),
+      impuestoAPagar: this.liveImpuestoAPagarDetalle(),
+      saldoAFavor: this.liveSaldoAFavorDetalle(),
+      serviciosProfesionales: Number(this.serviciosProfesionales()) || 0,
+      totalLps: this.liveTotalLpsDetalle()
+    });
+
+    this.showToast('¡Libro de Compras y Ventas exportado a Excel (.xlsx) con éxito!');
   }
 
   private showToast(msg: string): void {

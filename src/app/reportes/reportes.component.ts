@@ -1,6 +1,7 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiReportesService, ReporteFinancieroResponse } from '../services/api-reportes.service';
+import { PdfGeneratorService } from '../services/pdf-generator.service';
 
 @Component({
   selector: 'app-reportes',
@@ -11,6 +12,7 @@ import { ApiReportesService, ReporteFinancieroResponse } from '../services/api-r
 })
 export class ReportesComponent implements OnInit {
   private readonly reportesService = inject(ApiReportesService);
+  private readonly pdfService = inject(PdfGeneratorService);
 
   readonly data = signal<ReporteFinancieroResponse | null>(null);
   readonly isLoading = signal(true);
@@ -49,7 +51,14 @@ export class ReportesComponent implements OnInit {
     return Math.max(12, Math.min(160, height));
   }
 
+  descargarReportePdf(): void {
+    const rep = this.data();
+    if (rep) {
+      this.pdfService.generarReporteFinancieroPdf(rep);
+    }
+  }
+
   imprimirReporte(): void {
-    window.print();
+    this.descargarReportePdf();
   }
 }

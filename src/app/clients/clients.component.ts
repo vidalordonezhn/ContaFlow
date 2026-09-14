@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiClientsService, ClienteResponse, ClienteCreate, ClienteUpdate, ExpedienteFiscal } from '../services/api-clients.service';
 import { ApiRubrosService, RubroResponse } from '../services/api-rubros.service';
+import { PdfGeneratorService } from '../services/pdf-generator.service';
 
 @Component({
   selector: 'app-clients',
@@ -14,6 +15,7 @@ import { ApiRubrosService, RubroResponse } from '../services/api-rubros.service'
 export class ClientsComponent implements OnInit {
   private readonly clientsService = inject(ApiClientsService);
   private readonly rubrosService = inject(ApiRubrosService);
+  private readonly pdfService = inject(PdfGeneratorService);
 
   readonly clientes = signal<ClienteResponse[]>([]);
   readonly rubros = signal<RubroResponse[]>([]);
@@ -362,8 +364,16 @@ export class ClientsComponent implements OnInit {
     return `https://wa.me/${fullPhone}?text=${msg}`;
   }
 
+  descargarExpedientePdf(): void {
+    const exp = this.selectedExpediente();
+    if (exp) {
+      this.pdfService.generarExpedienteFiscalPdf(exp);
+      this.showToast('¡Expediente Fiscal en PDF generado con éxito!');
+    }
+  }
+
   imprimirExpediente(): void {
-    window.print();
+    this.descargarExpedientePdf();
   }
 
   private showToast(msg: string): void {

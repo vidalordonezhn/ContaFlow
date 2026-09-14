@@ -312,13 +312,67 @@
       &:hover { background: #e2e8f0; }
     }
 
-    &.btn-save-hoja {
-      background: #059669;
+    &.btn-pdf-tool {
+      background: #dc2626;
       color: #ffffff;
-      box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2);
-      &:hover:not(:disabled) { background: #047857; }
+      box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
+      &:hover { background: #b91c1c; }
+    }
+
+    &.btn-excel-tool {
+      background: #15803d;
+      color: #ffffff;
+      box-shadow: 0 2px 4px rgba(21, 128, 61, 0.2);
+      &:hover { background: #166534; }
+    }
+
+    &.btn-save-hoja {
+      background: #2563eb;
+      color: #ffffff;
+      box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+      &:hover:not(:disabled) { background: #1d4ed8; }
       &:disabled { opacity: 0.6; cursor: not-allowed; }
     }
+  }
+}
+
+.btn-pdf-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1rem;
+  background: #dc2626;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
+
+  &:hover {
+    background: #b91c1c;
+  }
+}
+
+.btn-excel-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1rem;
+  background: #15803d;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 4px rgba(21, 128, 61, 0.2);
+
+  &:hover {
+    background: #166534;
   }
 }
 
