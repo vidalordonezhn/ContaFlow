@@ -9,112 +9,52 @@
   }
 }
 
-/* Selected Client Card */
+/* Selected Client Card (Single line, clean and sleek) */
 .selected-card {
   display: flex;
   align-items: center;
-  gap: 0.875rem;
-  padding: 0.625rem 0.875rem;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.875rem;
+  min-height: 42px;
   background-color: #ffffff;
   border: 1.5px solid #6366f1;
-  border-radius: var(--radius-lg);
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.08);
+  border-radius: var(--radius-md, 8px);
+  box-shadow: 0 1px 3px rgba(99, 102, 241, 0.08);
   cursor: pointer;
   transition: all 0.2s ease;
 
   &:hover {
     border-color: #4f46e5;
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+    box-shadow: 0 2px 6px rgba(99, 102, 241, 0.15);
   }
 
-  .selected-avatar {
-    width: 38px;
-    height: 38px;
-    border-radius: var(--radius-md);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    color: #ffffff;
-    font-size: 0.95rem;
-    flex-shrink: 0;
-
-    &.avatar-juridica { background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%); }
-    &.avatar-natural { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
-  }
-
-  .selected-details {
+  .selected-pure-name {
     flex: 1;
     min-width: 0;
     display: flex;
-    flex-direction: column;
-    gap: 0.125rem;
+    align-items: baseline;
+    gap: 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 
-    .selected-main {
-      display: flex;
-      align-items: baseline;
-      gap: 0.5rem;
+    .selected-name {
+      font-weight: 700;
+      font-size: 0.9375rem;
+      color: #0f172a;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-
-      .selected-name {
-        font-weight: 700;
-        font-size: 0.9375rem;
-        color: var(--text-primary);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .selected-trade {
-        font-size: 0.75rem;
-        color: var(--text-secondary);
-        font-style: italic;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
     }
 
-    .selected-meta {
-      display: flex;
-      align-items: center;
-      gap: 0.625rem;
-      flex-wrap: wrap;
-
-      .meta-rtn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.25rem;
-        font-family: monospace;
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: #475569;
-        background-color: #f1f5f9;
-        padding: 0.1rem 0.375rem;
-        border-radius: var(--radius-sm);
-
-        .meta-icon {
-          width: 0.75rem;
-          height: 0.75rem;
-        }
-      }
-
-      .meta-cuota {
-        font-size: 0.75rem;
-        font-weight: 700;
-        color: var(--color-green-dark);
-      }
-
-      .meta-rubro {
-        font-size: 0.6875rem;
-        font-weight: 600;
-        color: var(--color-blue-dark);
-        background-color: var(--color-blue-light);
-        padding: 0.1rem 0.375rem;
-        border-radius: var(--radius-sm);
-      }
+    .selected-trade {
+      font-size: 0.8125rem;
+      color: #64748b;
+      font-style: italic;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   }
 
