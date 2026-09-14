@@ -68,7 +68,7 @@ export class ClientsComponent implements OnInit {
   readonly formTelefono = signal('');
   readonly formTelefonoWhatsApp = signal('');
   readonly formDireccion = signal('');
-  readonly formCuotaMensual = signal<number>(2500);
+  readonly formCuotaMensual = signal<number>(0);
   readonly formDiaCobro = signal<number>(5);
   readonly formActivo = signal(true);
   readonly formNotas = signal('');
@@ -161,7 +161,7 @@ export class ClientsComponent implements OnInit {
     this.formTelefono.set('');
     this.formTelefonoWhatsApp.set('');
     this.formDireccion.set('');
-    this.formCuotaMensual.set(2500);
+    this.formCuotaMensual.set(0);
     this.formDiaCobro.set(5);
     this.formActivo.set(true);
     this.formNotas.set('');

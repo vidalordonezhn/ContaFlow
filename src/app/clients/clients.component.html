@@ -215,8 +215,13 @@
                 <!-- Cuota Mensual & Dia de Cobro -->
                 <td>
                   <div class="fee-info">
-                    <span class="fee-amount">L. {{ c.cuotaMensual | number:'1.2-2' }}</span>
-                    <span class="fee-day">Cobro día {{ c.diaCobro }}</span>
+                    @if (c.cuotaMensual && c.cuotaMensual > 0) {
+                      <span class="fee-amount">L. {{ c.cuotaMensual | number:'1.2-2' }}</span>
+                      <span class="fee-day">Cobro día {{ c.diaCobro }}</span>
+                    } @else {
+                      <span class="fee-amount text-muted">Por Evento</span>
+                      <span class="fee-day text-xs">Sin cuota fija</span>
+                    }
                   </div>
                 </td>
 
@@ -641,10 +646,10 @@
             </select>
           </div>
 
-          <!-- Cuota Mensual -->
+          <!-- Cuota Mensual (Opcional) -->
           <div class="form-field">
-            <label>Cuota Mensual Honorarios (L.) *</label>
-            <input type="number" [ngModel]="formCuotaMensual()" (ngModelChange)="formCuotaMensual.set($event)" name="formCuotaMensual" min="0" step="100" required />
+            <label>Cuota Mensual Honorarios (L.) <span class="text-xs text-muted font-normal">(Opcional / Clientes Fijos)</span></label>
+            <input type="number" [ngModel]="formCuotaMensual()" (ngModelChange)="formCuotaMensual.set($event)" name="formCuotaMensual" min="0" step="50" placeholder="0.00 (Opcional)" />
           </div>
 
           <!-- Día de Cobro -->
