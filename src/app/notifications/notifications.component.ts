@@ -324,7 +324,8 @@ export class NotificationsComponent implements OnInit {
   }
 
   enviarPorWhatsApp(reminder: RecordatorioResponse): void {
-    const url = this.getWhatsAppUrl(reminder.telefonoWhatsApp, reminder.mensaje);
+    const phone = reminder.telefonoWhatsApp || this.clienteDetalleAvisos()?.telefonoWhatsApp || this.clienteDetalleAvisos()?.telefono;
+    const url = this.getWhatsAppUrl(phone, reminder.mensaje);
     if (url !== '#') {
       window.open(url, '_blank');
       if (reminder.estado === 'Pendiente') {
