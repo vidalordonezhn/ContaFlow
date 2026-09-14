@@ -11,12 +11,16 @@
   <!-- HEADER -->
   <header class="page-header no-print">
     <div class="header-left">
-      <div class="header-badge">Tributación Hondureña SAR • Declaración SAR-210</div>
-      <h1 class="header-title">Libros Oficiales de Ventas, Compras y Liquidación ISV</h1>
-      <p class="header-subtitle">Gestión separada por libros, casillas con copiado rápido en 1-clic y hoja consolidada</p>
+      <div class="header-badge">TRIBUTACIÓN HONDUREÑA SAR • DECLARACIÓN SAR-210</div>
+      <h1 class="header-title">Libros Oficiales ISV & Declaración SAR-210</h1>
+      <p class="header-subtitle">Libros de compras, ventas, liquidación consolidada y copiado rápido de casillas SAR</p>
     </div>
     <div class="header-right">
       <div class="header-nav-tabs">
+        <button class="nav-tab-btn" [class.active]="activeTab() === 'vistaDual'" (click)="activeTab.set('vistaDual')">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><rect width="8" height="18" x="3" y="3" rx="1"/><rect width="8" height="18" x="13" y="3" rx="1"/></svg>
+          <span>📑 Vista Dual Completa</span>
+        </button>
         <button class="nav-tab-btn" [class.active]="activeTab() === 'ventas'" (click)="activeTab.set('ventas')">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4 text-blue"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/></svg>
           <span>🔵 Libro de Ventas</span>
@@ -27,11 +31,7 @@
         </button>
         <button class="nav-tab-btn" [class.active]="activeTab() === 'liquidacion'" (click)="activeTab.set('liquidacion')">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4 text-amber"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          <span>📊 Liquidación Consolidada</span>
-        </button>
-        <button class="nav-tab-btn" [class.active]="activeTab() === 'vistaDual'" (click)="activeTab.set('vistaDual')">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><rect width="8" height="18" x="3" y="3" rx="1"/><rect width="8" height="18" x="13" y="3" rx="1"/></svg>
-          <span>📑 Vista Dual Completa</span>
+          <span>📊 Liquidación SAR</span>
         </button>
         <button class="nav-tab-btn" [class.active]="activeTab() === 'masivo'" (click)="activeTab.set('masivo')">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -53,13 +53,13 @@
     <div class="filter-controls-row">
       <!-- Selector de Cliente con Búsqueda Inteligente -->
       <div class="filter-group client-select-group">
-        <label>Contribuyente / Cliente (Búsqueda por RTN o Razón Social) *</label>
+        <label>Contribuyente / Cliente *</label>
         <app-client-selector
           [clients]="clientes()"
           [selectedId]="selectedClienteId()"
           (clientSelected)="onClientAutocompleteSelected($event)"
           (clientCleared)="onClientAutocompleteCleared()"
-          placeholder="Buscar contribuyente por RTN, razón social o negocio..."
+          placeholder="Buscar contribuyente por RTN o nombre comercial..."
         />
       </div>
 
@@ -85,23 +85,23 @@
 
       <!-- Botones de Acción Globales -->
       <div class="filter-action-btn flex items-center gap-2">
-        <label class="btn btn-upload-excel" title="Cargar archivo Excel (.xlsx / EJEMPLO.xlsx)">
+        <label class="btn btn-upload-excel" title="Cargar archivo Excel (.xlsx)">
           <input type="file" accept=".xlsx, .xls" (change)="onExcelSelected($event)" style="display: none;" />
           @if (isImportingExcel()) {
             <span class="spinner-sm"></span>
             <span>Cargando...</span>
           } @else {
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            <span>Cargar Excel (.xlsx)</span>
+            <span>Cargar Excel</span>
           }
         </label>
 
-        <button class="btn btn-pdf-export" (click)="descargarPdfOficial()" title="Descargar PDF Oficial Landscape con firmas">
+        <button class="btn btn-pdf-export" (click)="descargarPdfOficial()" title="Descargar PDF Oficial con firmas">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
           <span>Descargar PDF</span>
         </button>
 
-        <button class="btn btn-excel-export" (click)="exportarExcelOficial()" title="Exportar a Excel (.xlsx) con fórmulas intactas">
+        <button class="btn btn-excel-export" (click)="exportarExcelOficial()" title="Exportar a Excel (.xlsx)">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           <span>Exportar Excel</span>
         </button>
@@ -118,7 +118,7 @@
       </div>
     </div>
 
-    <!-- TARJETA DE CREDENCIALES RÁPIDAS DEL CLIENTE (RTN & PASSWORD SAR CON COPIADO EN 1-CLIC) -->
+    <!-- TARJETA DE CREDENCIALES RÁPIDAS DEL CLIENTE (RTN & CONTRASEÑA SAR VISIBLE DIRECTAMENTE CON COPIADO RÁPIDO) -->
     @if (selectedCliente(); as cli) {
       <div class="sar-credentials-bar">
         <div class="cred-item">
@@ -134,14 +134,14 @@
             class="btn-copy-quick" 
             [class.copied]="copiedCasilla() === 'rtn'"
             (click)="copiarCasilla(cli.rtn, 'rtn')"
-            title="Copiar RTN al portapapeles"
+            title="Copiar RTN"
           >
             @if (copiedCasilla() === 'rtn') {
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5 text-emerald"><polyline points="20 6 9 17 4 12"/></svg>
               <span>¡Copiado!</span>
             } @else {
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-              <span>Copiar</span>
+              <span>Copiar RTN</span>
             }
           </button>
         </div>
@@ -149,27 +149,15 @@
         <div class="cred-item">
           <span class="cred-label">Contraseña SAR:</span>
           @if (cli.contrasenaSAR) {
-            <code class="cred-code password-mask">
-              {{ mostrarSARPassword() ? cli.contrasenaSAR : '••••••••••••' }}
+            <code class="cred-code password-mask font-bold">
+              {{ cli.contrasenaSAR }}
             </code>
-            <button 
-              type="button" 
-              class="btn-toggle-eye" 
-              (click)="togglePasswordSAR()"
-              title="Mostrar/Ocultar contraseña SAR"
-            >
-              @if (mostrarSARPassword()) {
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-              } @else {
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-              }
-            </button>
             <button 
               type="button" 
               class="btn-copy-quick" 
               [class.copied]="copiedCasilla() === 'pass'"
               (click)="copiarCasilla(cli.contrasenaSAR, 'pass')"
-              title="Copiar contraseña para ingresar a la Oficina Virtual del SAR"
+              title="Copiar contraseña SAR"
             >
               @if (copiedCasilla() === 'pass') {
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5 text-emerald"><polyline points="20 6 9 17 4 12"/></svg>
@@ -180,7 +168,7 @@
               }
             </button>
           } @else {
-            <span class="no-pass-text">Sin contraseña SAR registrada</span>
+            <span class="no-pass-text">Sin clave SAR</span>
           }
         </div>
 
@@ -828,6 +816,69 @@
             </tfoot>
           </table>
         </div>
+
+        <!-- CUADRO CASILLAS SAR VENTAS CON BOTONES COPIAR EN 1-CLIC -->
+        <div class="resumen-casillas-container mt-3">
+          <div class="resumen-card-header bg-blue-subtle">
+            <div class="header-left-title">
+              <span class="sar-badge-mini bg-blue text-white">SAR-210</span>
+              <h4>Casillas SAR de Ventas (Copiado Rápido)</h4>
+            </div>
+            <span class="header-hint">Copie en 1-clic cada monto para el portal del SAR</span>
+          </div>
+
+          <div class="casillas-grid">
+            <div class="casilla-box">
+              <div class="casilla-info">
+                <span class="casilla-num">Ventas Exoneradas</span>
+                <strong class="casilla-val">L. {{ sumVentasExonerado() | number:'1.2-2' }}</strong>
+              </div>
+              <button type="button" class="btn-copy-casilla" [class.copied]="copiedCasilla() === 'v_exon'" (click)="copiarCasilla(sumVentasExonerado(), 'v_exon')">
+                @if (copiedCasilla() === 'v_exon') { <span>✓ Copiado</span> } @else { <span>📋 Copiar</span> }
+              </button>
+            </div>
+
+            <div class="casilla-box">
+              <div class="casilla-info">
+                <span class="casilla-num">Ventas Exentas</span>
+                <strong class="casilla-val">L. {{ sumVentasExento() | number:'1.2-2' }}</strong>
+              </div>
+              <button type="button" class="btn-copy-casilla" [class.copied]="copiedCasilla() === 'v_exen'" (click)="copiarCasilla(sumVentasExento(), 'v_exen')">
+                @if (copiedCasilla() === 'v_exen') { <span>✓ Copiado</span> } @else { <span>📋 Copiar</span> }
+              </button>
+            </div>
+
+            <div class="casilla-box">
+              <div class="casilla-info">
+                <span class="casilla-num">Base Gravada 15%</span>
+                <strong class="casilla-val">L. {{ sumVentasGravado15() | number:'1.2-2' }}</strong>
+              </div>
+              <button type="button" class="btn-copy-casilla" [class.copied]="copiedCasilla() === 'v_g15'" (click)="copiarCasilla(sumVentasGravado15(), 'v_g15')">
+                @if (copiedCasilla() === 'v_g15') { <span>✓ Copiado</span> } @else { <span>📋 Copiar</span> }
+              </button>
+            </div>
+
+            <div class="casilla-box">
+              <div class="casilla-info">
+                <span class="casilla-num">Base Gravada 18%</span>
+                <strong class="casilla-val">L. {{ sumVentasGravado18() | number:'1.2-2' }}</strong>
+              </div>
+              <button type="button" class="btn-copy-casilla" [class.copied]="copiedCasilla() === 'v_g18'" (click)="copiarCasilla(sumVentasGravado18(), 'v_g18')">
+                @if (copiedCasilla() === 'v_g18') { <span>✓ Copiado</span> } @else { <span>📋 Copiar</span> }
+              </button>
+            </div>
+
+            <div class="casilla-box highlight-blue">
+              <div class="casilla-info">
+                <span class="casilla-num font-bold text-blue">Débito Fiscal (ISV 15%+18%)</span>
+                <strong class="casilla-val text-blue font-bold text-lg">L. {{ sumVentasDebito() | number:'1.2-2' }}</strong>
+              </div>
+              <button type="button" class="btn-copy-casilla btn-blue-copy" [class.copied]="copiedCasilla() === 'v_debito'" (click)="copiarCasilla(sumVentasDebito(), 'v_debito')">
+                @if (copiedCasilla() === 'v_debito') { <span>✓ Copiado</span> } @else { <span>📋 Copiar Débito</span> }
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- SECCIÓN 2: LIBRO DE COMPRAS -->
@@ -884,43 +935,195 @@
             </tfoot>
           </table>
         </div>
+
+        <!-- CUADRO CASILLAS SAR COMPRAS CON BOTONES COPIAR EN 1-CLIC -->
+        <div class="resumen-casillas-container mt-3">
+          <div class="resumen-card-header bg-emerald-subtle">
+            <div class="header-left-title">
+              <span class="sar-badge-mini bg-emerald text-white">SAR-210</span>
+              <h4>Casillas SAR de Compras (Copiado Rápido)</h4>
+            </div>
+            <span class="header-hint">Copie en 1-clic cada monto para el portal del SAR</span>
+          </div>
+
+          <div class="casillas-grid">
+            <div class="casilla-box">
+              <div class="casilla-info">
+                <span class="casilla-num">Compras Exoneradas</span>
+                <strong class="casilla-val">L. {{ sumComprasExonerado() | number:'1.2-2' }}</strong>
+              </div>
+              <button type="button" class="btn-copy-casilla" [class.copied]="copiedCasilla() === 'c_exon'" (click)="copiarCasilla(sumComprasExonerado(), 'c_exon')">
+                @if (copiedCasilla() === 'c_exon') { <span>✓ Copiado</span> } @else { <span>📋 Copiar</span> }
+              </button>
+            </div>
+
+            <div class="casilla-box">
+              <div class="casilla-info">
+                <span class="casilla-num">Compras Exentas</span>
+                <strong class="casilla-val">L. {{ sumComprasExento() | number:'1.2-2' }}</strong>
+              </div>
+              <button type="button" class="btn-copy-casilla" [class.copied]="copiedCasilla() === 'c_exen'" (click)="copiarCasilla(sumComprasExento(), 'c_exen')">
+                @if (copiedCasilla() === 'c_exen') { <span>✓ Copiado</span> } @else { <span>📋 Copiar</span> }
+              </button>
+            </div>
+
+            <div class="casilla-box">
+              <div class="casilla-info">
+                <span class="casilla-num">Base Gravada 15%</span>
+                <strong class="casilla-val">L. {{ sumComprasGravado15() | number:'1.2-2' }}</strong>
+              </div>
+              <button type="button" class="btn-copy-casilla" [class.copied]="copiedCasilla() === 'c_g15'" (click)="copiarCasilla(sumComprasGravado15(), 'c_g15')">
+                @if (copiedCasilla() === 'c_g15') { <span>✓ Copiado</span> } @else { <span>📋 Copiar</span> }
+              </button>
+            </div>
+
+            <div class="casilla-box">
+              <div class="casilla-info">
+                <span class="casilla-num">Base Gravada 18%</span>
+                <strong class="casilla-val">L. {{ sumComprasGravado18() | number:'1.2-2' }}</strong>
+              </div>
+              <button type="button" class="btn-copy-casilla" [class.copied]="copiedCasilla() === 'c_g18'" (click)="copiarCasilla(sumComprasGravado18(), 'c_g18')">
+                @if (copiedCasilla() === 'c_g18') { <span>✓ Copiado</span> } @else { <span>📋 Copiar</span> }
+              </button>
+            </div>
+
+            <div class="casilla-box highlight-emerald">
+              <div class="casilla-info">
+                <span class="casilla-num font-bold text-emerald">Crédito Fiscal (ISV 15%+18%)</span>
+                <strong class="casilla-val text-emerald font-bold text-lg">L. {{ sumComprasCredito() | number:'1.2-2' }}</strong>
+              </div>
+              <button type="button" class="btn-copy-casilla btn-emerald-copy" [class.copied]="copiedCasilla() === 'c_credito'" (click)="copiarCasilla(sumComprasCredito(), 'c_credito')">
+                @if (copiedCasilla() === 'c_credito') { <span>✓ Copiado</span> } @else { <span>📋 Copiar Crédito</span> }
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <!-- SECCIÓN 3: CUADRO DE LIQUIDACIÓN SAR -->
-      <div class="dual-section-block mt-4 flex justify-end">
-        <div class="resumen-mini-box">
-          <div class="resumen-mini-title">LIQUIDACIÓN SAR-210</div>
-          <div class="resumen-mini-row">
-            <span>Débito Ventas:</span>
-            <strong class="text-blue">L. {{ sumVentasDebito() | number:'1.2-2' }}</strong>
+      <!-- SECCIÓN 3: LIQUIDACIÓN CONSOLIDADA & CIERRE SAR -->
+      <div class="dual-section-block mt-4">
+        <div class="dual-block-title text-amber">
+          <h3>3. LIQUIDACIÓN CONSOLIDADA Y CIERRE SAR-210</h3>
+          <span class="tag-badge" [class.bg-danger]="liveImpuestoPagar() > 0" [class.bg-emerald]="liveSaldoFavor() > 0">
+            {{ liveImpuestoPagar() > 0 ? 'IMPUESTO A PAGAR' : (liveSaldoFavor() > 0 ? 'SALDO A FAVOR' : 'SALDO CERO') }}
+          </span>
+        </div>
+
+        <div class="dual-liq-grid">
+          <!-- Cuadro de Desglose de Liquidación -->
+          <div class="dual-liq-details">
+            <div class="liq-row-item">
+              <div class="row-label">
+                <span class="icon-circle bg-blue-subtle text-blue">1</span>
+                <span>Débito Fiscal Ventas:</span>
+              </div>
+              <div class="row-val-wrap">
+                <strong class="val-mono text-blue">L. {{ sumVentasDebito() | number:'1.2-2' }}</strong>
+                <button type="button" class="btn-copy-inline" [class.copied]="copiedCasilla() === 'liq_deb'" (click)="copiarCasilla(sumVentasDebito(), 'liq_deb')">📋</button>
+              </div>
+            </div>
+
+            <div class="liq-row-item">
+              <div class="row-label">
+                <span class="icon-circle bg-emerald-subtle text-emerald">2</span>
+                <span>(-) Crédito Fiscal Compras:</span>
+              </div>
+              <div class="row-val-wrap">
+                <strong class="val-mono text-emerald">L. {{ sumComprasCredito() | number:'1.2-2' }}</strong>
+                <button type="button" class="btn-copy-inline" [class.copied]="copiedCasilla() === 'liq_cred'" (click)="copiarCasilla(sumComprasCredito(), 'liq_cred')">📋</button>
+              </div>
+            </div>
+
+            <div class="liq-row-item">
+              <div class="row-label">
+                <span class="icon-circle bg-gray-subtle">3</span>
+                <span>(-) Saldo Período Anterior:</span>
+              </div>
+              <div class="row-input-wrap">
+                <span class="currency-label">L.</span>
+                <input type="number" step="0.01" min="0" class="input-liq-field" [ngModel]="saldoAnterior()" (ngModelChange)="saldoAnterior.set($event)" placeholder="0.00" />
+              </div>
+            </div>
+
+            <div class="liq-row-item">
+              <div class="row-label">
+                <span class="icon-circle bg-gray-subtle">4</span>
+                <span>(-) Retenciones Sufridas (15% + 18%):</span>
+              </div>
+              <div class="row-input-wrap flex gap-1">
+                <input type="number" step="0.01" min="0" class="input-liq-field" [ngModel]="retenciones15()" (ngModelChange)="retenciones15.set($event)" placeholder="15%" title="Retención 15%" />
+                <input type="number" step="0.01" min="0" class="input-liq-field" [ngModel]="retenciones18()" (ngModelChange)="retenciones18.set($event)" placeholder="18%" title="Retención 18%" />
+              </div>
+            </div>
+
+            <div class="liq-row-item highlight-res">
+              <div class="row-label font-bold">
+                <span>(=) Liquidación SAR:</span>
+              </div>
+              <div class="row-val-wrap">
+                @if (liveImpuestoPagar() > 0) {
+                  <strong class="val-mono text-danger font-bold text-base">L. {{ liveImpuestoPagar() | number:'1.2-2' }}</strong>
+                } @else {
+                  <strong class="val-mono text-emerald font-bold text-base">L. {{ liveSaldoFavor() | number:'1.2-2' }} (A Favor)</strong>
+                }
+              </div>
+            </div>
+
+            <div class="liq-row-item">
+              <div class="row-label">
+                <span class="icon-circle bg-gray-subtle">5</span>
+                <span>(+) Honorarios Contables:</span>
+              </div>
+              <div class="row-input-wrap">
+                <span class="currency-label">L.</span>
+                <input type="number" step="0.01" min="0" class="input-liq-field font-bold" [ngModel]="serviciosProfesionales()" (ngModelChange)="serviciosProfesionales.set($event)" placeholder="0.00" />
+              </div>
+            </div>
+
+            <!-- TOTAL LPS -->
+            <div class="liq-total-grand-banner">
+              <div class="grand-left">
+                <span class="grand-label">TOTAL LPS A LIQUIDAR (ISV + Honorarios):</span>
+              </div>
+              <div class="grand-right">
+                <span class="grand-amount">L. {{ liveTotalLps() | number:'1.2-2' }}</span>
+                <button type="button" class="btn-copy-grand" [class.copied]="copiedCasilla() === 'total_lps'" (click)="copiarCasilla(liveTotalLps(), 'total_lps')">
+                  @if (copiedCasilla() === 'total_lps') { <span>✓ Copiado</span> } @else { <span>📋 Copiar Total</span> }
+                </button>
+              </div>
+            </div>
           </div>
-          <div class="resumen-mini-row">
-            <span>(-) Crédito Compras:</span>
-            <strong class="text-emerald">L. {{ sumComprasCredito() | number:'1.2-2' }}</strong>
-          </div>
-          <div class="resumen-mini-row">
-            <span>(-) Saldo Anterior:</span>
-            <strong>L. {{ saldoAnterior() | number:'1.2-2' }}</strong>
-          </div>
-          <div class="resumen-mini-row">
-            <span>(-) Retenciones:</span>
-            <strong>L. {{ totalRetenciones() | number:'1.2-2' }}</strong>
-          </div>
-          <div class="resumen-mini-row border-top">
-            <span>Liquidación SAR:</span>
-            @if (liveImpuestoPagar() > 0) {
-              <strong class="text-danger">L. {{ liveImpuestoPagar() | number:'1.2-2' }}</strong>
-            } @else {
-              <strong class="text-emerald">L. {{ liveSaldoFavor() | number:'1.2-2' }} (A Favor)</strong>
+
+          <!-- Cuadro de Cierre de Declaración y Guardado -->
+          <div class="dual-cierre-box">
+            <h4 class="cierre-box-title">Cierre de Declaración Fiscal</h4>
+            <p class="cierre-box-desc">Marque cuando la declaración haya sido presentada en la Oficina Virtual del SAR.</p>
+
+            <div class="cierre-field-group">
+              <label class="checkbox-label">
+                <input type="checkbox" [ngModel]="marcarLiquidado()" (ngModelChange)="marcarLiquidado.set($event)" />
+                <span>Marcar como <strong>Declarada ante el SAR</strong></span>
+              </label>
+            </div>
+
+            @if (marcarLiquidado()) {
+              <div class="cierre-field-group animate-fade-in">
+                <label class="field-label">N° de Declaración SAR:</label>
+                <input type="text" [ngModel]="numeroDeclaracion()" (ngModelChange)="numeroDeclaracion.set($event)" placeholder="Ej. 210-987654321" class="form-control-decl" />
+              </div>
             }
-          </div>
-          <div class="resumen-mini-row">
-            <span>(+) Honorarios:</span>
-            <strong>L. {{ serviciosProfesionales() | number:'1.2-2' }}</strong>
-          </div>
-          <div class="resumen-mini-grand">
-            <span>TOTAL LPS:</span>
-            <span>L. {{ liveTotalLps() | number:'1.2-2' }}</span>
+
+            <div class="cierre-actions mt-4">
+              <button type="button" class="btn btn-save-all w-full" [disabled]="isSaving()" (click)="guardarTodo()">
+                @if (isSaving()) {
+                  <span class="spinner-sm"></span>
+                  <span>Guardando...</span>
+                } @else {
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                  <span>Guardar Libros y Cierre SAR</span>
+                }
+              </button>
+            </div>
           </div>
         </div>
       </div>

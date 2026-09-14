@@ -32,8 +32,8 @@ export class LibrosIsvComponent implements OnInit {
   private readonly clientsService = inject(ApiClientsService);
   private readonly pdfService = inject(PdfGeneratorService);
 
-  // Pestañas principales
-  readonly activeTab = signal<'ventas' | 'compras' | 'liquidacion' | 'vistaDual' | 'masivo'>('ventas');
+  // Pestañas principales (Vista Dual Completa por defecto)
+  readonly activeTab = signal<'vistaDual' | 'ventas' | 'compras' | 'liquidacion' | 'masivo'>('vistaDual');
 
   // Selección de Contribuyente & Período
   readonly clientes = signal<ClienteResponse[]>([]);
@@ -54,7 +54,7 @@ export class LibrosIsvComponent implements OnInit {
   readonly errorMsg = signal<string | null>(null);
 
   // Copiado y Seguridad SAR
-  readonly mostrarSARPassword = signal(false);
+  readonly mostrarSARPassword = signal(true);
   readonly copiedCasilla = signal<string | null>(null);
 
   // ==========================================

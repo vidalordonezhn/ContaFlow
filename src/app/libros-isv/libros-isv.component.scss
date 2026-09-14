@@ -1068,43 +1068,221 @@
     }
   }
 
-  .resumen-mini-box {
-    width: 320px;
-    border: 2px solid #0f172a;
-    border-radius: 0.5rem;
-    overflow: hidden;
-    background: #ffffff;
+  .dual-liq-grid {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 1.5rem;
+    align-items: start;
 
-    .resumen-mini-title {
-      background: #0f172a;
-      color: #ffffff;
-      padding: 0.4rem 0.75rem;
-      font-size: 0.8rem;
-      font-weight: 800;
-      text-align: center;
-      letter-spacing: 0.05em;
+    @media (max-width: 992px) {
+      grid-template-columns: 1fr;
     }
 
-    .resumen-mini-row {
+    .dual-liq-details {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.75rem;
+      padding: 1.25rem 1.5rem;
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.4rem 0.75rem;
-      border-bottom: 1px solid #e2e8f0;
-      font-size: 0.8rem;
+      flex-direction: column;
+      gap: 0.85rem;
 
-      &.border-top { border-top: 1px solid #0f172a; }
+      .liq-row-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        padding-bottom: 0.65rem;
+        border-bottom: 1px dashed #e2e8f0;
+
+        &.highlight-res {
+          background: #ffffff;
+          padding: 0.75rem 1rem;
+          border-radius: 0.5rem;
+          border: 1px solid #cbd5e1;
+        }
+
+        .row-label {
+          display: flex;
+          align-items: center;
+          gap: 0.6rem;
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: #334155;
+
+          .icon-circle {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+          }
+        }
+
+        .row-val-wrap {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+
+          .val-mono {
+            font-family: monospace;
+            font-size: 0.95rem;
+            font-weight: 700;
+          }
+        }
+
+        .row-input-wrap {
+          display: flex;
+          align-items: center;
+          gap: 0.4rem;
+
+          .currency-label {
+            font-weight: 700;
+            color: #64748b;
+            font-size: 0.85rem;
+          }
+
+          .input-liq-field {
+            width: 130px;
+            padding: 0.35rem 0.6rem;
+            text-align: right;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.375rem;
+            font-family: monospace;
+            font-weight: 600;
+            font-size: 0.9rem;
+            background: #ffffff;
+
+            &:focus {
+              border-color: #2563eb;
+              outline: none;
+              box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            }
+          }
+        }
+      }
+
+      .liq-total-grand-banner {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        color: #ffffff;
+        padding: 1rem 1.25rem;
+        border-radius: 0.625rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 0.5rem;
+
+        .grand-label {
+          font-weight: 800;
+          font-size: 0.9rem;
+          letter-spacing: 0.02em;
+        }
+
+        .grand-right {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+
+          .grand-amount {
+            font-family: monospace;
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #38bdf8;
+          }
+
+          .btn-copy-grand {
+            background: rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 0.375rem;
+            padding: 0.35rem 0.65rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s;
+
+            &:hover {
+              background: rgba(255, 255, 255, 0.25);
+            }
+
+            &.copied {
+              background: #10b981;
+              border-color: #10b981;
+            }
+          }
+        }
+      }
     }
 
-    .resumen-mini-grand {
-      background: #0f172a;
-      color: #38bdf8;
-      font-weight: 900;
-      font-family: monospace;
-      font-size: 1rem;
+    .dual-cierre-box {
+      background: #ffffff;
+      border: 1.5px solid #0f172a;
+      border-radius: 0.75rem;
+      padding: 1.25rem 1.5rem;
       display: flex;
-      justify-content: space-between;
-      padding: 0.6rem 0.75rem;
+      flex-direction: column;
+      gap: 0.85rem;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+
+      .cierre-box-title {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 800;
+        color: #0f172a;
+      }
+
+      .cierre-box-desc {
+        margin: 0;
+        font-size: 0.8rem;
+        color: #64748b;
+        line-height: 1.4;
+      }
+
+      .cierre-field-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+
+        .checkbox-label {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-size: 0.875rem;
+          color: #0f172a;
+          cursor: pointer;
+
+          input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+          }
+        }
+
+        .field-label {
+          font-size: 0.75rem;
+          font-weight: 700;
+          color: #64748b;
+          text-transform: uppercase;
+        }
+
+        .form-control-decl {
+          padding: 0.5rem 0.75rem;
+          border: 1px solid #cbd5e1;
+          border-radius: 0.375rem;
+          font-family: monospace;
+          font-size: 0.875rem;
+          background: #f8fafc;
+
+          &:focus {
+            background: #ffffff;
+            border-color: #2563eb;
+            outline: none;
+          }
+        }
+      }
     }
   }
 }
