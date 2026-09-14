@@ -12,30 +12,30 @@
   <header class="page-header">
     <div class="header-left">
       <div class="header-badge bg-orange-light text-orange">Centro de Comunicaciones</div>
-      <h1 class="header-title">Recordatorios y Notificaciones Selectivas</h1>
-      <p class="header-subtitle">Gestiona avisos personalizados de facturas SAR, cobros y mensajes a clientes específicos</p>
+      <h1 class="header-title">Avisos y Notificaciones a Clientes</h1>
+      <p class="header-subtitle">Supervisa el estado de cada cliente (SAR, Cobranza y Avisos) y emite notificaciones selectivas</p>
     </div>
     <div class="header-right">
       <button class="btn btn-primary" (click)="openNewReminderModal()">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-4 h-4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        <span>+ Nuevo Recordatorio Manual</span>
+        <span>+ Nuevo Aviso a Cliente</span>
       </button>
     </div>
   </header>
 
   <!-- KPIS / STATS -->
   <section class="kpis-grid">
-    <!-- Lista Manual -->
-    <div class="kpi-card" [class.active-kpi]="activeTab() === 'manual'" (click)="activeTab.set('manual')">
+    <!-- Directorio Completo -->
+    <div class="kpi-card" [class.active-kpi]="activeTab() === 'todos'" (click)="activeTab.set('todos')">
       <div class="kpi-header">
-        <span class="kpi-label">Mi Lista de Avisos</span>
-        <div class="kpi-icon-box bg-blue-light text-blue">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></svg>
+        <span class="kpi-label">Directorio de Clientes</span>
+        <div class="kpi-icon-box bg-purple-light text-purple">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         </div>
       </div>
       <div class="kpi-body">
-        <h3 class="kpi-value text-blue">{{ manualReminders().length }}</h3>
-        <span class="kpi-subtext text-blue">Avisos seleccionados manualmente</span>
+        <h3 class="kpi-value text-purple">{{ clientesEnriquecidos().length }}</h3>
+        <span class="kpi-subtext text-purple">Contribuyentes registrados</span>
       </div>
     </div>
 
@@ -49,7 +49,7 @@
       </div>
       <div class="kpi-body">
         <h3 class="kpi-value text-red">{{ pendientesSAR().length }}</h3>
-        <span class="kpi-subtext text-red">Facturas de compras/ventas sin entregar</span>
+        <span class="kpi-subtext text-red">Facturas de compras/ventas pendientes</span>
       </div>
     </div>
 
@@ -66,6 +66,20 @@
         <span class="kpi-subtext text-orange">Cuota mensual no registrada en {{ mesActual() }}</span>
       </div>
     </div>
+
+    <!-- Cola de Avisos Activos -->
+    <div class="kpi-card" [class.active-kpi]="activeTab() === 'manual'" (click)="activeTab.set('manual')">
+      <div class="kpi-header">
+        <span class="kpi-label">Avisos en Cola</span>
+        <div class="kpi-icon-box bg-blue-light text-blue">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></svg>
+        </div>
+      </div>
+      <div class="kpi-body">
+        <h3 class="kpi-value text-blue">{{ totalAvisosPendientes() }} <span class="text-xs font-normal text-muted">/ {{ recordatorios().length }} total</span></h3>
+        <span class="kpi-subtext text-blue">Avisos creados en el sistema</span>
+      </div>
+    </div>
   </section>
 
   <!-- MAIN CONTAINER CARD -->
@@ -74,17 +88,17 @@
     <!-- TABS & SEARCH -->
     <div class="filters-bar">
       <div class="tabs-nav">
+        <button class="tab-btn" [class.active]="activeTab() === 'todos'" (click)="activeTab.set('todos')">
+          👥 Todos los Clientes <span class="tab-badge">{{ filteredClientes().length }}</span>
+        </button>
         <button class="tab-btn" [class.active]="activeTab() === 'manual'" (click)="activeTab.set('manual')">
-          📋 Mi Lista Manual <span class="tab-badge">{{ manualReminders().length }}</span>
+          📋 Cola de Avisos <span class="tab-badge">{{ recordatorios().length }}</span>
         </button>
         <button class="tab-btn" [class.active]="activeTab() === 'sar'" (click)="activeTab.set('sar')">
           🚨 Pendientes SAR <span class="tab-badge">{{ pendientesSAR().length }}</span>
         </button>
         <button class="tab-btn" [class.active]="activeTab() === 'cobros'" (click)="activeTab.set('cobros')">
           💰 Pendientes Cobro <span class="tab-badge">{{ pendientesCobro().length }}</span>
-        </button>
-        <button class="tab-btn" [class.active]="activeTab() === 'todos'" (click)="activeTab.set('todos')">
-          👥 Todos los Clientes <span class="tab-badge">{{ filteredClientes().length }}</span>
         </button>
       </div>
 
@@ -93,7 +107,7 @@
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input 
           type="text" 
-          placeholder="Buscar contribuyente o RTN..." 
+          placeholder="Buscar cliente, RTN o aviso..." 
           [ngModel]="searchQuery()" 
           (ngModelChange)="searchQuery.set($event)"
         />
@@ -103,23 +117,150 @@
       </div>
     </div>
 
-    <!-- TAB 1: MI LISTA MANUAL DE RECORDATORIOS -->
+    <!-- TAB 1: TODOS LOS CLIENTES (DIRECTORIO INTELIGENTE CON RADIOGRAFÍA) -->
+    @if (activeTab() === 'todos') {
+      <div class="sub-filter-bar">
+        <div class="sub-filter-pills">
+          <button class="sub-pill" [class.active]="filtroClienteEstado() === 'todos'" (click)="filtroClienteEstado.set('todos')">
+            Todos ({{ clientesEnriquecidos().length }})
+          </button>
+          <button class="sub-pill pill-sar" [class.active]="filtroClienteEstado() === 'sar_pendiente'" (click)="filtroClienteEstado.set('sar_pendiente')">
+            🚨 Facturas SAR Pendientes ({{ pendientesSAR().length }})
+          </button>
+          <button class="sub-pill pill-cobro" [class.active]="filtroClienteEstado() === 'cobro_pendiente'" (click)="filtroClienteEstado.set('cobro_pendiente')">
+            💰 Cobros Pendientes ({{ pendientesCobro().length }})
+          </button>
+          <button class="sub-pill pill-avisos" [class.active]="filtroClienteEstado() === 'con_avisos'" (click)="filtroClienteEstado.set('con_avisos')">
+            🔔 Con Avisos Asignados ({{ recordatorios().length }})
+          </button>
+        </div>
+        <span class="text-xs text-muted font-semibold">Identifica de un vistazo el estado de cada cliente y sus avisos</span>
+      </div>
+
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Cliente / Contribuyente</th>
+              <th>Estado Facturas SAR</th>
+              <th>Cuota y Cobranza</th>
+              <th>Avisos Asignados</th>
+              <th>Contacto</th>
+              <th class="text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of filteredClientes(); track c.id) {
+              <tr [class.row-highlight-warn]="c.tieneFacturasPendientesSAR || c.tieneCobroPendiente">
+                <!-- Cliente -->
+                <td>
+                  <div class="flex flex-col">
+                    <span class="font-bold text-sm text-primary">{{ c.nombreRazonSocial }}</span>
+                    <div class="flex items-center gap-2 mt-0.5">
+                      <span class="font-mono text-xs text-muted">{{ c.rtn }}</span>
+                      <span class="rubro-tag">{{ c.rubro || 'General' }}</span>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Estado SAR -->
+                <td>
+                  @if (c.tieneFacturasPendientesSAR) {
+                    <span class="status-badge-sar-pend">
+                      <span class="dot-blink"></span>
+                      <span>🚨 Facturas Pendientes</span>
+                    </span>
+                  } @else {
+                    <span class="status-badge-ok">
+                      <span>✓ Facturas al Día</span>
+                    </span>
+                  }
+                </td>
+
+                <!-- Estado Cobranza -->
+                <td>
+                  @if (c.tieneCobroPendiente) {
+                    <div class="flex flex-col">
+                      <span class="status-badge-cobro-pend">
+                        <span>💰 Pendiente: L. {{ c.cuotaMensual | number:'1.2-2' }}</span>
+                      </span>
+                      <span class="text-2xs text-muted mt-0.5">Cobro día {{ c.diaCobro }}</span>
+                    </div>
+                  } @else {
+                    <span class="status-badge-ok">
+                      <span>✓ Cuota Pagada</span>
+                    </span>
+                  }
+                </td>
+
+                <!-- Avisos Asignados -->
+                <td>
+                  @if (c.avisos.length > 0) {
+                    <button class="btn-avisos-count" (click)="verAvisosDeCliente(c)" title="Ver y gestionar todos los avisos de este cliente">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5 text-blue"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+                      <span><strong>{{ c.avisos.length }}</strong> aviso(s)</span>
+                      @if (c.avisosPendientesCount > 0) {
+                        <span class="badge-pend-dot" title="{{ c.avisosPendientesCount }} pendiente(s)">{{ c.avisosPendientesCount }}</span>
+                      }
+                    </button>
+                  } @else {
+                    <span class="text-xs text-muted italic">Sin avisos creados</span>
+                  }
+                </td>
+
+                <!-- Contacto -->
+                <td>
+                  <div class="flex items-center gap-1.5">
+                    @if (c.telefonoWhatsApp || c.telefono) {
+                      <a [href]="getWhatsAppUrl(c.telefonoWhatsApp || c.telefono)" target="_blank" class="contact-pill text-green" title="WhatsApp: {{ c.telefonoWhatsApp || c.telefono }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                        <span>{{ c.telefonoWhatsApp || c.telefono }}</span>
+                      </a>
+                    }
+                    @if (c.emailPrincipal) {
+                      <a [href]="getEmailUrl(c.emailPrincipal)" class="contact-pill text-muted" title="{{ c.emailPrincipal }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                      </a>
+                    }
+                    @if (!c.telefonoWhatsApp && !c.telefono && !c.emailPrincipal) {
+                      <span class="text-xs text-muted">Sin contacto</span>
+                    }
+                  </div>
+                </td>
+
+                <!-- Acciones -->
+                <td class="text-right">
+                  <div class="row-actions">
+                    <button class="btn btn-outline-primary text-xs py-1 px-2.5" (click)="openNewReminderModal(c.id, c.tieneFacturasPendientesSAR ? 'SAR' : (c.tieneCobroPendiente ? 'Cobro' : 'Personalizado'))" title="Crear un aviso para este cliente">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      <span>+ Crear Aviso</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- TAB 2: COLA DE AVISOS CREADOS (PERSISTENTES EN BASE DE DATOS) -->
     @if (activeTab() === 'manual') {
-      @if (manualReminders().length === 0) {
+      @if (recordatorios().length === 0) {
         <div class="empty-state">
           <div class="empty-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-12 h-12 text-muted"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/></svg>
           </div>
-          <h4>Tu lista manual de avisos está vacía</h4>
-          <p>Agrega clientes específicos usando el botón superior o desde las pestañas de pendientes SAR y Cobros.</p>
-          <button class="btn btn-primary mt-3" (click)="openNewReminderModal()">+ Agregar Cliente a mi Lista</button>
+          <h4>No hay avisos registrados en la cola</h4>
+          <p>Crea avisos personalizados o genera recordatorios desde las pestañas de SAR y Cobros.</p>
+          <button class="btn btn-primary mt-3" (click)="openNewReminderModal()">+ Crear Primer Aviso</button>
         </div>
       } @else {
         <div class="table-header-action-bar">
-          <span class="text-xs text-muted font-semibold">Mostrando {{ filteredManualReminders().length }} avisos en cola</span>
+          <span class="text-xs text-muted font-semibold">Mostrando {{ filteredRecordatorios().length }} avisos en el sistema</span>
           <button class="btn-clear-completed" (click)="limpiarEnviados()">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-            <span>Limpiar enviados</span>
+            <span>Limpiar gestionados</span>
           </button>
         </div>
 
@@ -136,7 +277,7 @@
               </tr>
             </thead>
             <tbody>
-              @for (r of filteredManualReminders(); track r.id) {
+              @for (r of filteredRecordatorios(); track r.id) {
                 <tr [class.row-completed]="r.estado === 'Enviado' || r.estado === 'Respondido'">
                   <td>
                     <div class="status-select-wrapper" [attr.data-status]="r.estado">
@@ -185,17 +326,17 @@
                   <td class="text-right">
                     <div class="row-actions">
                       @if (r.telefonoWhatsApp) {
-                        <a [href]="getWhatsAppUrl(r.telefonoWhatsApp, r.mensaje)" target="_blank" (click)="r.estado === 'Pendiente' && cambiarEstado(r.id, 'Enviado')" class="btn-whatsapp-action" title="Enviar WhatsApp al cliente">
+                        <button (click)="enviarPorWhatsApp(r)" class="btn-whatsapp-action" title="Enviar WhatsApp al cliente">
                           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
                           <span>WhatsApp</span>
-                        </a>
+                        </button>
                       }
                       @if (r.email) {
                         <a [href]="getEmailUrl(r.email, 'Aviso de Despacho Contable - ' + r.tipo, r.mensaje)" class="btn-email-action" title="Enviar correo">
                           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
                         </a>
                       }
-                      <button class="btn-delete-item" (click)="eliminarRecordatorio(r.id)" title="Eliminar de la lista">
+                      <button class="btn-delete-item" (click)="eliminarRecordatorio(r.id)" title="Eliminar de la base de datos">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                       </button>
                     </div>
@@ -208,11 +349,11 @@
       }
     }
 
-    <!-- TAB 2: SUGERIDOS POR PENDIENTES SAR -->
+    <!-- TAB 3: SUGERIDOS POR PENDIENTES SAR -->
     @if (activeTab() === 'sar') {
       <div class="tab-intro-bar">
         <span class="intro-title">Contribuyentes con facturas pendientes para este mes ({{ pendientesSAR().length }})</span>
-        <span class="intro-desc">Agrega selectivamente a los clientes que deseas contactar</span>
+        <span class="intro-desc">Genera avisos para recordar la entrega de facturas antes del cierre fiscal</span>
       </div>
 
       @if (pendientesSAR().length === 0) {
@@ -228,34 +369,40 @@
                 <th>Contribuyente</th>
                 <th>RTN</th>
                 <th>Contacto Directo</th>
-                <th>Estado Facturas</th>
+                <th>Avisos Activos</th>
                 <th class="text-right">Acciones</th>
               </tr>
             </thead>
             <tbody>
               @for (p of pendientesSAR(); track p.id) {
                 <tr>
-                  <td><span class="font-bold">{{ p.clienteNombre }}</span></td>
-                  <td><span class="font-mono text-xs text-muted">{{ p.clienteRtn }}</span></td>
+                  <td><span class="font-bold">{{ p.nombreRazonSocial }}</span></td>
+                  <td><span class="font-mono text-xs text-muted">{{ p.rtn }}</span></td>
                   <td>
-                    @if (p.clienteWhatsApp) {
-                      <span class="contact-chip text-green">{{ p.clienteWhatsApp }}</span>
+                    @if (p.telefonoWhatsApp || p.telefono) {
+                      <span class="contact-chip text-green">{{ p.telefonoWhatsApp || p.telefono }}</span>
                     } @else {
                       <span class="text-xs text-muted">Sin teléfono</span>
                     }
                   </td>
                   <td>
-                    <span class="status-pill status-inactive"><span class="dot"></span> Facturas Pendientes</span>
+                    @if (p.avisos.length > 0) {
+                      <button class="btn-avisos-count" (click)="verAvisosDeCliente(p)">
+                        <span>🔔 {{ p.avisos.length }} aviso(s)</span>
+                      </button>
+                    } @else {
+                      <span class="text-xs text-muted">Sin aviso SAR</span>
+                    }
                   </td>
                   <td class="text-right">
                     <div class="row-actions">
-                      <button class="btn-add-queue" (click)="agregarDesdeSugerencia({ id: p.clienteId, nombreRazonSocial: p.clienteNombre, rtn: p.clienteRtn, telefonoWhatsApp: p.clienteWhatsApp, cuotaMensual: 0 }, 'SAR')" title="Agregar a mi lista de recordatorios">
+                      <button class="btn-add-queue" (click)="agregarDesdeSugerencia(p, 'SAR')" title="Crear aviso de SAR a la cola">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        <span>Agregar a mi lista</span>
+                        <span>Crear Aviso SAR</span>
                       </button>
 
-                      @if (p.clienteWhatsApp) {
-                        <a [href]="getWhatsAppUrl(p.clienteWhatsApp)" target="_blank" class="btn-whatsapp-action" title="Enviar WhatsApp inmediato">
+                      @if (p.telefonoWhatsApp || p.telefono) {
+                        <a [href]="getWhatsAppUrl(p.telefonoWhatsApp || p.telefono)" target="_blank" class="btn-whatsapp-action" title="Enviar WhatsApp inmediato">
                           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
                           <span>WhatsApp</span>
                         </a>
@@ -270,11 +417,11 @@
       }
     }
 
-    <!-- TAB 3: SUGERIDOS POR PENDIENTES DE PAGO -->
+    <!-- TAB 4: SUGERIDOS POR PENDIENTES DE PAGO -->
     @if (activeTab() === 'cobros') {
       <div class="tab-intro-bar">
         <span class="intro-title">Clientes con cuota mensual pendiente en {{ mesActual() }} ({{ pendientesCobro().length }})</span>
-        <span class="intro-desc">Selecciona a quién enviar el recordatorio de pago</span>
+        <span class="intro-desc">Genera avisos con la cuota y cuentas bancarias para agilizar la cobranza</span>
       </div>
 
       @if (pendientesCobro().length === 0) {
@@ -290,7 +437,7 @@
                 <th>Cliente / Contribuyente</th>
                 <th>RTN</th>
                 <th>Cuota Mensual</th>
-                <th>Día de Cobro</th>
+                <th>Avisos Activos</th>
                 <th class="text-right">Acciones</th>
               </tr>
             </thead>
@@ -300,15 +447,23 @@
                   <td><span class="font-bold">{{ c.nombreRazonSocial }}</span></td>
                   <td><span class="font-mono text-xs text-muted">{{ c.rtn }}</span></td>
                   <td><span class="font-bold text-orange">L. {{ c.cuotaMensual | number:'1.2-2' }}</span></td>
-                  <td><span class="text-xs">Día {{ c.diaCobro }}</span></td>
+                  <td>
+                    @if (c.avisos.length > 0) {
+                      <button class="btn-avisos-count" (click)="verAvisosDeCliente(c)">
+                        <span>🔔 {{ c.avisos.length }} aviso(s)</span>
+                      </button>
+                    } @else {
+                      <span class="text-xs text-muted">Sin aviso Cobro</span>
+                    }
+                  </td>
                   <td class="text-right">
                     <div class="row-actions">
-                      <button class="btn-add-queue" (click)="agregarDesdeSugerencia(c, 'Cobro')" title="Agregar a mi lista de avisos">
+                      <button class="btn-add-queue" (click)="agregarDesdeSugerencia(c, 'Cobro')" title="Crear aviso de cobro a la cola">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        <span>Agregar a mi lista</span>
+                        <span>Crear Aviso Cobro</span>
                       </button>
 
-                      @if (c.telefonoWhatsApp) {
+                      @if (c.telefonoWhatsApp || c.telefono) {
                         <button class="btn-whatsapp-action" (click)="openNewReminderModal(c.id, 'Cobro')" title="Personalizar y enviar aviso de cobro">
                           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
                           <span>Avisar Cobro</span>
@@ -324,55 +479,105 @@
       }
     }
 
-    <!-- TAB 4: TODOS LOS CLIENTES -->
-    @if (activeTab() === 'todos') {
-      <div class="tab-intro-bar">
-        <span class="intro-title">Directorio de Clientes Activos ({{ filteredClientes().length }})</span>
-        <span class="intro-desc">Elige un cliente para emitir un aviso personalizado</span>
-      </div>
-
-      <div class="table-responsive">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Cliente / Razón Social</th>
-              <th>RTN</th>
-              <th>Rubro</th>
-              <th>Contacto</th>
-              <th class="text-right">Crear Notificación</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (c of filteredClientes(); track c.id) {
-              <tr>
-                <td><span class="font-bold">{{ c.nombreRazonSocial }}</span></td>
-                <td><span class="font-mono text-xs text-muted">{{ c.rtn }}</span></td>
-                <td><span class="text-xs">{{ c.rubro || 'General' }}</span></td>
-                <td>
-                  <div class="flex items-center gap-1.5">
-                    @if (c.telefonoWhatsApp) {
-                      <span class="contact-chip text-green">WhatsApp</span>
-                    }
-                    @if (c.emailPrincipal) {
-                      <span class="contact-chip text-muted">Email</span>
-                    }
-                  </div>
-                </td>
-                <td class="text-right">
-                  <button class="btn btn-secondary text-xs py-1 px-2.5" (click)="openNewReminderModal(c.id, 'Personalizado')">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5 text-blue"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-                    <span>Crear Aviso</span>
-                  </button>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    }
-
   </div>
 </div>
+
+<!-- MODAL / DRAWER DE DETALLE DE AVISOS POR CLIENTE -->
+@if (clienteDetalleAvisos()) {
+  <div class="modal-backdrop" (click)="cerrarDetalleAvisos()">
+    <div class="modal-card modal-card-lg animate-fade-in" (click)="$event.stopPropagation()">
+      <div class="modal-header bg-slate-50">
+        <div class="modal-title-box">
+          <div class="modal-icon bg-blue-light text-blue">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div>
+            <h3>Avisos Asignados: {{ clienteDetalleAvisos()!.nombreRazonSocial }}</h3>
+            <p class="font-mono text-xs">RTN: {{ clienteDetalleAvisos()!.rtn }} • Cuota: L. {{ clienteDetalleAvisos()!.cuotaMensual | number:'1.2-2' }}</p>
+          </div>
+        </div>
+        <button class="modal-close" (click)="cerrarDetalleAvisos()">✕</button>
+      </div>
+
+      <div class="modal-body-paddings">
+        <!-- Client status banner -->
+        <div class="client-status-summary-bar">
+          <div class="summary-chip">
+            <span class="label">SAR este mes:</span>
+            @if (clienteDetalleAvisos()!.tieneFacturasPendientesSAR) {
+              <span class="val text-red">🚨 Facturas Pendientes</span>
+            } @else {
+              <span class="val text-green">✓ Al Día</span>
+            }
+          </div>
+          <div class="summary-chip">
+            <span class="label">Cobranza:</span>
+            @if (clienteDetalleAvisos()!.tieneCobroPendiente) {
+              <span class="val text-orange">💰 Cuota Pendiente</span>
+            } @else {
+              <span class="val text-green">✓ Al Día</span>
+            }
+          </div>
+          <button class="btn btn-primary text-xs py-1.5 px-3 ml-auto" (click)="openNewReminderModal(clienteDetalleAvisos()!.id)">
+            <span>+ Crear Otro Aviso</span>
+          </button>
+        </div>
+
+        <!-- Lista de avisos del cliente -->
+        @if (clienteDetalleAvisos()!.avisos.length === 0) {
+          <div class="empty-state py-8">
+            <h4>No hay avisos asignados a este cliente</h4>
+            <p>Haz clic en el botón superior para crear el primero.</p>
+          </div>
+        } @else {
+          <div class="client-avisos-list">
+            @for (av of clienteDetalleAvisos()!.avisos; track av.id) {
+              <div class="aviso-card" [class.aviso-card-enviado]="av.estado === 'Enviado' || av.estado === 'Respondido'">
+                <div class="aviso-card-header">
+                  <div class="flex items-center gap-2">
+                    <span class="type-badge" [class.type-sar]="av.tipo === 'SAR'" [class.type-cobro]="av.tipo === 'Cobro'" [class.type-declaracion]="av.tipo === 'Declaracion'" [class.type-custom]="av.tipo === 'Personalizado'">
+                      {{ av.tipo }}
+                    </span>
+                    <span class="font-bold text-xs">{{ av.titulo || ('Aviso ' + av.tipo) }}</span>
+                  </div>
+
+                  <div class="flex items-center gap-2">
+                    <div class="status-select-wrapper" [attr.data-status]="av.estado">
+                      <select class="status-combobox text-xs" [ngModel]="av.estado" (ngModelChange)="cambiarEstado(av.id, $event)">
+                        <option value="Pendiente">⏳ Pendiente</option>
+                        <option value="Enviado">✅ Enviado</option>
+                        <option value="Respondido">💬 Respondido</option>
+                        <option value="Omitido">🛑 Omitido</option>
+                      </select>
+                    </div>
+                    <button class="btn-delete-item" (click)="eliminarRecordatorio(av.id)" title="Eliminar aviso">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="aviso-card-body">
+                  <p class="aviso-text">{{ av.mensaje }}</p>
+                </div>
+
+                <div class="aviso-card-footer">
+                  <span class="text-2xs text-muted">Creado: {{ av.fechaCreacion | date:'medium' }}</span>
+                  
+                  @if (av.telefonoWhatsApp) {
+                    <button (click)="enviarPorWhatsApp(av)" class="btn-whatsapp-action" title="Enviar WhatsApp">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                      <span>Enviar WhatsApp</span>
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}
 
 <!-- MODAL NUEVO RECORDATORIO MANUAL -->
 @if (isModalOpen()) {
@@ -384,8 +589,8 @@
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
           </div>
           <div>
-            <h3>Nuevo Recordatorio Manual</h3>
-            <p>Selecciona el cliente y redacta el mensaje antes de enviar o agregar</p>
+            <h3>Crear y Asignar Aviso a Cliente</h3>
+            <p>El aviso quedará guardado permanentemente en la base de datos del cliente</p>
           </div>
         </div>
         <button class="modal-close" (click)="closeModal()">✕</button>
@@ -400,7 +605,7 @@
       <div class="modal-form">
         <!-- Selector Autocompletable de Cliente -->
         <div class="form-field full-width">
-          <label>Cliente a Notificar *</label>
+          <label>Cliente Asignado *</label>
           <app-client-selector
             [clients]="clientes()"
             [selectedId]="modalClienteId()"
@@ -412,7 +617,7 @@
 
         <!-- Tipo de Mensaje / Plantilla -->
         <div class="form-field full-width">
-          <label>Tipo de Recordatorio / Plantilla</label>
+          <label>Tipo de Aviso / Plantilla Sugerida</label>
           <div class="type-selector-pills">
             <button type="button" class="pill-btn" [class.active]="modalTipo() === 'SAR'" (click)="onModalTipoChange('SAR')">
               📅 Cierre SAR (Día 10)
@@ -431,7 +636,7 @@
 
         <!-- Editor de Mensaje -->
         <div class="form-field full-width">
-          <label>Mensaje a Enviar (Puedes editar el texto)</label>
+          <label>Mensaje del Aviso (Personalizable)</label>
           <textarea rows="4" class="message-textarea" [ngModel]="modalMensaje()" (ngModelChange)="modalMensaje.set($event)"></textarea>
         </div>
 
@@ -440,8 +645,8 @@
           <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
 
           <div class="flex items-center gap-2">
-            <button type="button" class="btn btn-primary" (click)="guardarRecordatorio()">
-              <span>➕ Guardar en mi Lista</span>
+            <button type="button" class="btn btn-primary" [disabled]="isSaving()" (click)="guardarRecordatorio()">
+              <span>➕ Guardar y Asignar Aviso</span>
             </button>
           </div>
         </div>
