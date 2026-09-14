@@ -411,11 +411,6 @@
             <h2>{{ selectedCliente()?.nombreRazonSocial || 'EMPRESA CONTRIBUYENTE' }}</h2>
             <p>RTN: {{ selectedCliente()?.rtn }} • PERÍODO: {{ selectedMesNombre().toUpperCase() }} {{ selectedAnio() }}</p>
           </div>
-          <div class="sheet-actions no-print flex gap-2">
-            <button class="btn btn-pdf-export" (click)="descargarPdfOficial()">📄 Descargar PDF</button>
-            <button class="btn btn-excel-export" (click)="exportarExcelOficial()">📊 Exportar Excel</button>
-            <button class="btn btn-save-all" [disabled]="isSaving()" (click)="guardarTodo()">💾 Guardar Todo</button>
-          </div>
         </div>
       </div>
 
