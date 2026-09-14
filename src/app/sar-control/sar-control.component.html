@@ -45,50 +45,7 @@
     </div>
   }
 
-  <!-- KPIS GRID (SEMÁFORO) -->
-  <section class="kpis-grid">
-    <!-- 🔴 Sin Facturas -->
-    <div class="kpi-card card-rojo">
-      <div class="kpi-header">
-        <span class="kpi-label">Sin Facturas</span>
-        <div class="kpi-icon-box bg-red-light text-red">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        </div>
-      </div>
-      <div class="kpi-body">
-        <h3 class="kpi-value text-red">{{ kpiPendientes() }}</h3>
-        <span class="kpi-subtext text-red">Sin facturas en libros</span>
-      </div>
-    </div>
 
-    <!-- 🟡 Facturas en Libros / En Proceso -->
-    <div class="kpi-card card-amarillo">
-      <div class="kpi-header">
-        <span class="kpi-label">Facturas en Libros</span>
-        <div class="kpi-icon-box bg-orange-light text-orange">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        </div>
-      </div>
-      <div class="kpi-body">
-        <h3 class="kpi-value text-orange">{{ kpiEnProceso() }}</h3>
-        <span class="kpi-subtext text-orange">Listos para liquidar</span>
-      </div>
-    </div>
-
-    <!-- 🟢 Liquidados / Declarados SAR -->
-    <div class="kpi-card card-verde">
-      <div class="kpi-header">
-        <span class="kpi-label">Declarados SAR</span>
-        <div class="kpi-icon-box bg-green-light text-green">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-        </div>
-      </div>
-      <div class="kpi-body">
-        <h3 class="kpi-value text-green">{{ kpiLiquidados() }}</h3>
-        <span class="kpi-subtext text-green">Declaración completada</span>
-      </div>
-    </div>
-  </section>
 
   <!-- TABLE CONTAINER CARD -->
   <div class="table-container-card">
