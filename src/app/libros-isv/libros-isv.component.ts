@@ -177,6 +177,14 @@ export class LibrosIsvComponent implements OnInit {
     });
   }
 
+  onClienteChange(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    const numId = Number(target.value);
+    if (numId) {
+      this.onClienteSeleccionado(numId);
+    }
+  }
+
   onClienteSeleccionado(clienteId: any): void {
     const numId = Number(clienteId);
     if (!numId) return;
@@ -561,9 +569,16 @@ export class LibrosIsvComponent implements OnInit {
   }
 
   descargarPdfOficial(): void {
-    const cli = this.selectedCliente();
+    let cli = this.selectedCliente();
+    if (!cli && this.clientes().length > 0) {
+      cli = this.clientes().find(c => Number(c.id) === Number(this.selectedClienteId())) || this.clientes()[0];
+      if (cli) {
+        this.selectedClienteId.set(cli.id);
+      }
+    }
+
     if (!cli) {
-      this.errorMsg.set('Seleccione un cliente para generar el PDF.');
+      this.errorMsg.set('No se encontró un cliente seleccionado para generar el PDF.');
       return;
     }
 
@@ -589,9 +604,16 @@ export class LibrosIsvComponent implements OnInit {
   }
 
   exportarExcelOficial(): void {
-    const cli = this.selectedCliente();
+    let cli = this.selectedCliente();
+    if (!cli && this.clientes().length > 0) {
+      cli = this.clientes().find(c => Number(c.id) === Number(this.selectedClienteId())) || this.clientes()[0];
+      if (cli) {
+        this.selectedClienteId.set(cli.id);
+      }
+    }
+
     if (!cli) {
-      this.errorMsg.set('Seleccione un cliente para exportar a Excel.');
+      this.errorMsg.set('No se encontró un cliente seleccionado para exportar a Excel.');
       return;
     }
 

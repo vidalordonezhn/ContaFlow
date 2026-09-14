@@ -46,10 +46,10 @@
       <!-- Selector de Cliente -->
       <div class="filter-group client-select-group">
         <label>Contribuyente / Cliente *</label>
-        <select [ngModel]="selectedClienteId()" (ngModelChange)="onClienteSeleccionado($event)" class="form-select">
-          <option [ngValue]="null" disabled>-- Seleccione un Contribuyente --</option>
+        <select class="form-select" [value]="selectedClienteId()" (change)="onClienteChange($event)">
+          <option [value]="null" disabled [selected]="!selectedClienteId()">-- Seleccione un Contribuyente --</option>
           @for (c of clientes(); track c.id) {
-            <option [ngValue]="c.id">{{ c.nombreRazonSocial }} (RTN: {{ c.rtn }})</option>
+            <option [value]="c.id" [selected]="c.id === selectedClienteId()">{{ c.nombreRazonSocial }} (RTN: {{ c.rtn }})</option>
           }
         </select>
       </div>
