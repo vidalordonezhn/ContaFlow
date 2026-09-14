@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -36,6 +36,25 @@ export class LibrosIsvComponent implements OnInit {
 
   // Pestañas principales (Vista Resumen Compacto por defecto)
   readonly activeTab = signal<'vistaDual' | 'ventas' | 'compras' | 'masivo'>('vistaDual');
+
+  @HostListener('window:keydown', ['$event'])
+  handleKeyboardShortcut(event: KeyboardEvent): void {
+    if (event.altKey) {
+      if (event.key === '1') {
+        event.preventDefault();
+        this.activeTab.set('vistaDual');
+      } else if (event.key === '2') {
+        event.preventDefault();
+        this.activeTab.set('ventas');
+      } else if (event.key === '3') {
+        event.preventDefault();
+        this.activeTab.set('compras');
+      } else if (event.key === '4') {
+        event.preventDefault();
+        this.activeTab.set('masivo');
+      }
+    }
+  }
 
   // Selección de Contribuyente & Período
   readonly clientes = signal<ClienteResponse[]>([]);

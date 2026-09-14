@@ -15,26 +15,6 @@
       <h1 class="header-title">Libros Oficiales ISV & Declaración SAR-210</h1>
       <p class="header-subtitle">Libros de compras, ventas, liquidación consolidada y copiado rápido de casillas SAR</p>
     </div>
-    <div class="header-right">
-      <div class="header-nav-tabs">
-        <button class="nav-tab-btn" [class.active]="activeTab() === 'vistaDual'" (click)="activeTab.set('vistaDual')">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><rect width="8" height="18" x="3" y="3" rx="1"/><rect width="8" height="18" x="13" y="3" rx="1"/></svg>
-          <span>📑 Resumen Compacto SAR</span>
-        </button>
-        <button class="nav-tab-btn" [class.active]="activeTab() === 'ventas'" (click)="activeTab.set('ventas')">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4 text-blue"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/></svg>
-          <span>🔵 Libro de Ventas</span>
-        </button>
-        <button class="nav-tab-btn" [class.active]="activeTab() === 'compras'" (click)="activeTab.set('compras')">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4 text-emerald"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-          <span>🟢 Libro de Compras</span>
-        </button>
-        <button class="nav-tab-btn" [class.active]="activeTab() === 'masivo'" (click)="activeTab.set('masivo')">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          <span>⚡ Carga Masiva</span>
-        </button>
-      </div>
-    </div>
   </header>
 
   <!-- ERROR ALERT -->
@@ -186,6 +166,35 @@
         </div>
       </div>
     }
+  </div>
+
+  <!-- BARRA DE NAVEGACIÓN ERGONÓMICA DE PESTAÑAS (ZONA DE TRABAJO CON ATAJOS) -->
+  <div class="views-nav-bar no-print">
+    <div class="tabs-container">
+      <button class="view-tab-btn" [class.active]="activeTab() === 'vistaDual'" (click)="activeTab.set('vistaDual')" title="Atajo de teclado: Alt + 1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><rect width="8" height="18" x="3" y="3" rx="1"/><rect width="8" height="18" x="13" y="3" rx="1"/></svg>
+        <span>📑 Resumen Compacto SAR</span>
+        <kbd class="tab-kbd">Alt+1</kbd>
+      </button>
+
+      <button class="view-tab-btn" [class.active]="activeTab() === 'ventas'" (click)="activeTab.set('ventas')" title="Atajo de teclado: Alt + 2">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4 text-blue"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/></svg>
+        <span>🔵 Libro de Ventas</span>
+        <kbd class="tab-kbd">Alt+2</kbd>
+      </button>
+
+      <button class="view-tab-btn" [class.active]="activeTab() === 'compras'" (click)="activeTab.set('compras')" title="Atajo de teclado: Alt + 3">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4 text-emerald"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <span>🟢 Libro de Compras</span>
+        <kbd class="tab-kbd">Alt+3</kbd>
+      </button>
+
+      <button class="view-tab-btn" [class.active]="activeTab() === 'masivo'" (click)="activeTab.set('masivo')" title="Atajo de teclado: Alt + 4">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4 text-amber"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <span>⚡ Carga Masiva</span>
+        <kbd class="tab-kbd">Alt+4</kbd>
+      </button>
+    </div>
   </div>
 
   <!-- ========================================================================= -->
