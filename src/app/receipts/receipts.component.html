@@ -43,6 +43,16 @@
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
         <span>Archivo e Historial ({{ recibos().length }})</span>
       </button>
+
+      <button 
+        type="button" 
+        class="nav-tab-btn" 
+        [class.active]="currentView() === 'catalogo'"
+        (click)="currentView.set('catalogo')"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+        <span>Catálogo de Precios ({{ serviciosCatalogo().length }})</span>
+      </button>
     </div>
   </header>
 
@@ -157,30 +167,19 @@
         </div>
       </div>
 
-      <!-- 3. TABLA DE PRODUCTOS / SERVICIOS CON SUGERENCIAS RÁPIDAS -->
+      <!-- 3. TABLA DE PRODUCTOS / SERVICIOS CON BUSCADOR Y AUTOLLENADO -->
       <div class="card-box items-box">
         <div class="box-title-row">
           <div>
             <span class="section-label">3. Desglose de Servicios y Productos (Columnas Exactas):</span>
-            <p class="section-desc">Agrega o ajusta las filas con el producto, descripción, cantidad y precio.</p>
+            <p class="section-desc">Selecciona un producto del catálogo para autocompletar su precio. La descripción queda 100% editable.</p>
           </div>
 
-          <!-- Chips de Sugerencia Rápida -->
-          <div class="quick-chips-container">
-            <span class="chips-label">⚡ Sugerencias rápidas:</span>
-            <div class="chips-list">
-              @for (sug of sugerenciasServicios; track sug.producto) {
-                <button 
-                  type="button" 
-                  class="suggestion-chip"
-                  (click)="aplicarSugerenciaRapida(sug)"
-                  title="Agregar {{ sug.producto }} (L. {{ sug.precioDefault }})"
-                >
-                  <span>+ {{ sug.producto }}</span>
-                </button>
-              }
-            </div>
-          </div>
+          <!-- Botón para Registrar Nuevo Producto / Servicio al Catálogo -->
+          <button type="button" class="btn-new-service" (click)="abrirModalNuevoServicio()">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-4 h-4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>+ Registrar nuevo producto / servicio</span>
+          </button>
         </div>
 
         <!-- TABLA DINÁMICA DE ÍTEMS -->
@@ -188,8 +187,8 @@
           <table class="items-table">
             <thead>
               <tr>
-                <th style="width: 25%;">PRODUCTO <span class="required">*</span></th>
-                <th style="width: 35%;">DESCRIPCIÓN</th>
+                <th style="width: 28%;">PRODUCTO <span class="required">*</span></th>
+                <th style="width: 32%;">DESCRIPCIÓN</th>
                 <th style="width: 12%; text-align: center;">CANTIDAD</th>
                 <th style="width: 14%; text-align: right;">PRECIO (LPS)</th>
                 <th style="width: 14%; text-align: right;">TOTAL</th>
@@ -199,23 +198,30 @@
             <tbody>
               @for (item of formItems(); track $index; let i = $index) {
                 <tr>
-                  <!-- PRODUCTO -->
+                  <!-- PRODUCTO (Selector conectado al Catálogo de BD) -->
                   <td>
-                    <input 
-                      type="text" 
-                      class="table-input font-semibold" 
-                      placeholder="Ej: Talonario de Facturas..."
-                      [value]="item.producto"
-                      (input)="actualizarItem(i, 'producto', $any($event.target).value)"
-                    />
+                    <div class="product-selector-wrapper">
+                      <select 
+                        class="table-select font-semibold"
+                        [value]="item.producto"
+                        (change)="onSelectProducto(i, $any($event.target).value)"
+                      >
+                        <option value="" disabled selected>-- Seleccionar producto / servicio --</option>
+                        @for (s of serviciosCatalogo(); track s.id) {
+                          <option [value]="s.nombre">
+                            {{ s.nombre }} (L. {{ s.precioDefault | number:'1.2-2' }})
+                          </option>
+                        }
+                      </select>
+                    </div>
                   </td>
 
-                  <!-- DESCRIPCIÓN -->
+                  <!-- DESCRIPCIÓN (Editable para notas particulares) -->
                   <td>
                     <input 
                       type="text" 
                       class="table-input" 
-                      placeholder="Detalles adicionales del servicio..."
+                      placeholder="Detalles / notas específicas del ítem..."
                       [value]="item.descripcion"
                       (input)="actualizarItem(i, 'descripcion', $any($event.target).value)"
                     />
@@ -233,7 +239,7 @@
                     />
                   </td>
 
-                  <!-- PRECIO -->
+                  <!-- PRECIO (Autocompletado desde BD) -->
                   <td class="text-right">
                     <div class="input-currency-wrapper">
                       <span class="currency-prefix">L.</span>
@@ -241,14 +247,14 @@
                         type="number" 
                         min="0" 
                         step="10"
-                        class="table-input text-right font-mono" 
+                        class="table-input text-right font-mono font-bold" 
                         [value]="item.precio"
                         (input)="actualizarItem(i, 'precio', $any($event.target).value)"
                       />
                     </div>
                   </td>
 
-                  <!-- TOTAL (Calculado) -->
+                  <!-- TOTAL (Calculado en tiempo real) -->
                   <td class="text-right">
                     <span class="item-total-badge">
                       L. {{ item.total | number:'1.2-2' }}
@@ -551,7 +557,166 @@
     </div>
   }
 
+  <!-- ========================================================================= -->
+  <!-- VISTA 3: CATÁLOGO DE PRECIOS Y SERVICIOS -->
+  <!-- ========================================================================= -->
+  @if (currentView() === 'catalogo') {
+    <div class="table-container-card animate-fade-in">
+      <div class="filters-bar">
+        <div class="filter-group">
+          <span class="font-bold text-sm">Catálogo de Servicios y Productos ({{ filteredCatalog().length }})</span>
+          <button type="button" class="btn btn-primary text-xs" (click)="abrirModalNuevoServicio()">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>+ Nuevo Producto / Servicio</span>
+          </button>
+        </div>
+
+        <div class="search-box">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Buscar por nombre o categoría..." [ngModel]="catalogSearchQuery()" (ngModelChange)="catalogSearchQuery.set($event)" />
+        </div>
+      </div>
+
+      @if (filteredCatalog().length === 0) {
+        <div class="empty-state">
+          <h4>No hay servicios en el catálogo</h4>
+          <p>Haz clic en "+ Nuevo Producto / Servicio" para registrar tarifas y productos predeterminados.</p>
+        </div>
+      } @else {
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Producto / Servicio</th>
+                <th>Descripción Predeterminada</th>
+                <th>Categoría</th>
+                <th>Precio Base</th>
+                <th class="text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (s of filteredCatalog(); track s.id) {
+                <tr>
+                  <td>
+                    <span class="font-bold text-slate-800">{{ s.nombre }}</span>
+                  </td>
+                  <td>
+                    <span class="text-muted text-sm">{{ s.descripcionDefault || '—' }}</span>
+                  </td>
+                  <td>
+                    <span class="badge-tag">{{ s.categoria || 'General' }}</span>
+                  </td>
+                  <td>
+                    <span class="font-mono font-bold text-green-dark">L. {{ s.precioDefault | number:'1.2-2' }}</span>
+                  </td>
+                  <td class="text-right">
+                    <div class="row-actions">
+                      <button class="btn-action-view" (click)="abrirModalNuevoServicio(s)" title="Editar producto o precio">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                        <span>Editar</span>
+                      </button>
+
+                      <button class="btn-action-anular" (click)="eliminarServicioDelCatalogo(s)" title="Eliminar del catálogo">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  }
+
 </div>
+
+<!-- ========================================================================= -->
+<!-- MODAL: REGISTRAR / EDITAR PRODUCTO O SERVICIO EN CATÁLOGO -->
+<!-- ========================================================================= -->
+@if (isNewServiceModalOpen()) {
+  <div class="modal-backdrop" (click)="cerrarModalNuevoServicio()">
+    <div class="modal-card modal-card-sm animate-fade-in" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-box">
+          <div class="modal-icon bg-amber-light text-amber">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+          </div>
+          <div>
+            <h3>{{ newServiceEditingId() ? 'Editar Producto o Servicio' : 'Registrar Nuevo Producto / Servicio' }}</h3>
+            <p>Se guardará en la base de datos con su precio base predeterminado</p>
+          </div>
+        </div>
+        <button class="modal-close" (click)="cerrarModalNuevoServicio()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        @if (newServiceError()) {
+          <div class="alert-box alert-error mb-3">{{ newServiceError() }}</div>
+        }
+
+        <div class="form-group mb-3">
+          <label>Nombre del Producto / Servicio <span class="required">*</span></label>
+          <input 
+            type="text" 
+            class="form-control" 
+            placeholder="Ej: Talonario de Facturas, Declaración ISR..." 
+            [ngModel]="newServiceNombre()" 
+            (ngModelChange)="newServiceNombre.set($event)"
+          />
+        </div>
+
+        <div class="form-row mb-3">
+          <div class="form-group flex-1">
+            <label>Precio Base (Lps) <span class="required">*</span></label>
+            <div class="input-currency-wrapper">
+              <span class="currency-prefix">L.</span>
+              <input 
+                type="number" 
+                min="0"
+                step="10"
+                class="form-control font-mono font-bold" 
+                placeholder="0.00" 
+                [ngModel]="newServicePrecio()" 
+                (ngModelChange)="newServicePrecio.set($event)"
+              />
+            </div>
+          </div>
+
+          <div class="form-group flex-1">
+            <label>Categoría</label>
+            <input 
+              type="text" 
+              class="form-control" 
+              placeholder="Ej: Talonarios, SAR, Honorarios..." 
+              [ngModel]="newServiceCategoria()" 
+              (ngModelChange)="newServiceCategoria.set($event)"
+            />
+          </div>
+        </div>
+
+        <div class="form-group mb-3">
+          <label>Descripción Predeterminada</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            placeholder="Ej: Talonario de facturas fiscales de 3 copias..." 
+            [ngModel]="newServiceDescripcion()" 
+            (ngModelChange)="newServiceDescripcion.set($event)"
+          />
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="cerrarModalNuevoServicio()">Cancelar</button>
+        <button type="button" class="btn btn-primary" (click)="guardarNuevoServicio()">
+          {{ newServiceEditingId() ? 'Guardar Cambios' : 'Guardar en Catálogo' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
 
 <!-- ========================================================================= -->
 <!-- MODAL VISOR E IMPRESIÓN DE COMPROBANTE DIGITAL (PDF) -->

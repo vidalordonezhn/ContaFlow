@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ApiRecibosService, ReciboResponse, ReciboCreate, ReciboItem } from '../services/api-recibos.service';
 import { ApiClientsService, ClienteResponse, ClienteCreate } from '../services/api-clients.service';
+import { ApiServiciosCatalogoService, ServicioCatalogoResponse, ServicioCatalogoCreate, ServicioCatalogoUpdate } from '../services/api-servicios-catalogo.service';
 import { PdfGeneratorService, ReciboPdfData } from '../services/pdf-generator.service';
 import { ClientSelectorComponent } from '../shared/client-selector/client-selector.component';
 
@@ -19,12 +20,6 @@ export interface ReciboPreviewModalData {
   safeUrl: SafeResourceUrl;
 }
 
-export interface QuickServiceSuggestion {
-  producto: string;
-  descripcion: string;
-  precioDefault: number;
-}
-
 @Component({
   selector: 'app-receipts',
   standalone: true,
@@ -35,13 +30,17 @@ export interface QuickServiceSuggestion {
 export class ReceiptsComponent implements OnInit {
   readonly recibosService = inject(ApiRecibosService);
   readonly clientsService = inject(ApiClientsService);
+  readonly serviciosCatalogoService = inject(ApiServiciosCatalogoService);
   readonly pdfService = inject(PdfGeneratorService);
   private readonly sanitizer = inject(DomSanitizer);
 
-  // Estados principales
-  readonly currentView = signal<'emitir' | 'historial'>('emitir');
+  // Estados de navegación
+  readonly currentView = signal<'emitir' | 'historial' | 'catalogo'>('emitir');
+
+  // Datos principales
   readonly recibos = signal<ReciboResponse[]>([]);
   readonly clientes = signal<ClienteResponse[]>([]);
+  readonly serviciosCatalogo = signal<ServicioCatalogoResponse[]>([]);
   readonly isLoading = signal(true);
   readonly isSaving = signal(false);
   readonly successMsg = signal<string | null>(null);
@@ -50,6 +49,9 @@ export class ReceiptsComponent implements OnInit {
   // Filtros Historial
   readonly searchQuery = signal('');
   readonly filterTipo = signal<'todos' | 'SinCAI' | 'ConCAI'>('todos');
+
+  // Filtro Catálogo
+  readonly catalogSearchQuery = signal('');
 
   // Modal Visor PDF
   readonly previewModal = signal<ReciboPreviewModalData | null>(null);
@@ -62,16 +64,14 @@ export class ReceiptsComponent implements OnInit {
   readonly newClientCuota = signal<number>(0);
   readonly newClientError = signal<string | null>(null);
 
-  // Catálogo de Servicios Rápidos sugeridos
-  readonly sugerenciasServicios: QuickServiceSuggestion[] = [
-    { producto: 'Talonario de Facturas', descripcion: 'Elaboración y emisión de talonario de facturas fiscales', precioDefault: 350 },
-    { producto: 'Constancia Electrónica', descripcion: 'Emisión de constancia electrónica fiscal ante el SAR', precioDefault: 250 },
-    { producto: 'Pagos a Cuenta SAR', descripcion: 'Cálculo y presentación de cuota trimestral de Pagos a Cuenta', precioDefault: 400 },
-    { producto: 'Impuesto sobre la Renta', descripcion: 'Declaración jurada y liquidación anual de ISR', precioDefault: 800 },
-    { producto: 'Controles Tributarios', descripcion: 'Revisión y auditoría de control tributario mensual', precioDefault: 500 },
-    { producto: 'Honorarios Mensuales', descripcion: 'Asesoría contable y cumplimiento tributario mensual', precioDefault: 600 },
-    { producto: 'Trámites en Línea SAR', descripcion: 'Gestión de solicitudes y trámites en plataforma SAR', precioDefault: 300 }
-  ];
+  // Modal de Nuevo Producto / Servicio del Catálogo
+  readonly isNewServiceModalOpen = signal(false);
+  readonly newServiceEditingId = signal<number | null>(null);
+  readonly newServiceNombre = signal('');
+  readonly newServicePrecio = signal<number>(0);
+  readonly newServiceDescripcion = signal('');
+  readonly newServiceCategoria = signal('General');
+  readonly newServiceError = signal<string | null>(null);
 
   // -------------------------------------------------------------
   // FORMULARIO DE EMISIÓN DE COMPROBANTE
@@ -91,11 +91,11 @@ export class ReceiptsComponent implements OnInit {
   // Lista de Ítems del comprobante
   readonly formItems = signal<ReciboItem[]>([
     {
-      producto: 'Talonario de Facturas',
-      descripcion: 'Talonario de facturas fiscales de 3 copias',
+      producto: '',
+      descripcion: '',
       cantidad: 1,
-      precio: 350,
-      total: 350
+      precio: 0,
+      total: 0
     }
   ]);
 
@@ -134,6 +134,17 @@ export class ReceiptsComponent implements OnInit {
     });
   });
 
+  // Lista filtrada del catálogo de servicios
+  readonly filteredCatalog = computed(() => {
+    const query = this.catalogSearchQuery().toLowerCase().trim();
+    return this.serviciosCatalogo().filter(s => {
+      if (!query) return true;
+      return s.nombre.toLowerCase().includes(query) ||
+             (s.descripcionDefault && s.descripcionDefault.toLowerCase().includes(query)) ||
+             (s.categoria && s.categoria.toLowerCase().includes(query));
+    });
+  });
+
   ngOnInit(): void {
     this.cargarDatos();
     this.generarNumeroSugerido();
@@ -145,11 +156,36 @@ export class ReceiptsComponent implements OnInit {
       next: (data) => {
         this.recibos.set(data);
         this.clientsService.getClientes().subscribe(cls => this.clientes.set(cls.filter(c => c.activo)));
+        this.cargarCatalogoServicios();
         this.isLoading.set(false);
       },
       error: () => {
         this.isLoading.set(false);
       }
+    });
+  }
+
+  cargarCatalogoServicios(): void {
+    this.serviciosCatalogoService.getServicios().subscribe({
+      next: (servicios) => {
+        this.serviciosCatalogo.set(servicios);
+
+        // Si la primera fila de ítems está vacía y hay servicios, inicializar con el primero
+        const items = this.formItems();
+        if (items.length === 1 && !items[0].producto && servicios.length > 0) {
+          const primero = servicios[0];
+          this.formItems.set([
+            {
+              producto: primero.nombre,
+              descripcion: primero.descripcionDefault || primero.nombre,
+              cantidad: 1,
+              precio: primero.precioDefault,
+              total: primero.precioDefault
+            }
+          ]);
+        }
+      },
+      error: () => {}
     });
   }
 
@@ -173,10 +209,10 @@ export class ReceiptsComponent implements OnInit {
     this.formNombreCliente.set(client.nombreRazonSocial);
     this.formRtnCliente.set(client.rtn);
 
-    // Si tiene cuota mensual y sólo hay 1 ítem genérico, podemos ajustar
+    // Si tiene cuota mensual y el ítem es de honorarios, sugerir la cuota
     if (client.cuotaMensual && client.cuotaMensual > 0) {
       const items = this.formItems();
-      if (items.length === 1 && items[0].producto.includes('Honorarios')) {
+      if (items.length === 1 && items[0].producto.toLowerCase().includes('honorarios')) {
         this.actualizarItem(0, 'precio', client.cuotaMensual);
       }
     }
@@ -203,23 +239,25 @@ export class ReceiptsComponent implements OnInit {
     ]);
   }
 
-  aplicarSugerenciaRapida(sug: QuickServiceSuggestion): void {
-    // Si la primera fila está vacía, reemplazarla
-    const current = this.formItems();
-    if (current.length === 1 && !current[0].producto && current[0].precio === 0) {
-      this.formItems.set([
-        {
-          producto: sug.producto,
-          descripcion: sug.descripcion,
-          cantidad: 1,
-          precio: sug.precioDefault,
-          total: sug.precioDefault
-        }
-      ]);
-      return;
-    }
+  onSelectProducto(index: number, selectedValue: string): void {
+    if (!selectedValue) return;
 
-    this.agregarItem(sug.producto, sug.descripcion, sug.precioDefault);
+    // Buscar si es un ID numérico o el nombre del producto
+    const servicio = this.serviciosCatalogo().find(s => s.id === Number(selectedValue) || s.nombre === selectedValue);
+
+    if (servicio) {
+      const items = [...this.formItems()];
+      const item = { ...items[index] };
+      item.producto = servicio.nombre;
+      item.precio = servicio.precioDefault;
+      item.descripcion = servicio.descripcionDefault || servicio.nombre;
+      item.total = Number((item.cantidad * item.precio).toFixed(2));
+      items[index] = item;
+      this.formItems.set(items);
+    } else {
+      // Valor personalizado escrito
+      this.actualizarItem(index, 'producto', selectedValue);
+    }
   }
 
   actualizarItem(index: number, field: keyof ReciboItem, value: any): void {
@@ -257,6 +295,123 @@ export class ReceiptsComponent implements OnInit {
       return;
     }
     this.formItems.set(items.filter((_, idx) => idx !== index));
+  }
+
+  // --- Modal Rápido de Nuevo Producto / Servicio ---
+  abrirModalNuevoServicio(servicioParaEditar?: ServicioCatalogoResponse): void {
+    if (servicioParaEditar) {
+      this.newServiceEditingId.set(servicioParaEditar.id);
+      this.newServiceNombre.set(servicioParaEditar.nombre);
+      this.newServicePrecio.set(servicioParaEditar.precioDefault);
+      this.newServiceDescripcion.set(servicioParaEditar.descripcionDefault || '');
+      this.newServiceCategoria.set(servicioParaEditar.categoria || 'General');
+    } else {
+      this.newServiceEditingId.set(null);
+      this.newServiceNombre.set('');
+      this.newServicePrecio.set(0);
+      this.newServiceDescripcion.set('');
+      this.newServiceCategoria.set('General');
+    }
+    this.newServiceError.set(null);
+    this.isNewServiceModalOpen.set(true);
+  }
+
+  cerrarModalNuevoServicio(): void {
+    this.isNewServiceModalOpen.set(false);
+    this.newServiceEditingId.set(null);
+    this.newServiceError.set(null);
+  }
+
+  guardarNuevoServicio(): void {
+    this.newServiceError.set(null);
+    const nombre = this.newServiceNombre().trim();
+    const precio = Number(this.newServicePrecio()) || 0;
+    const descripcion = this.newServiceDescripcion().trim();
+    const categoria = this.newServiceCategoria().trim() || 'General';
+
+    if (!nombre) {
+      this.newServiceError.set('El nombre del producto o servicio es obligatorio.');
+      return;
+    }
+    if (precio < 0) {
+      this.newServiceError.set('El precio debe ser mayor o igual a 0.');
+      return;
+    }
+
+    const editId = this.newServiceEditingId();
+    if (editId) {
+      // Actualizar existente
+      const updateDto: ServicioCatalogoUpdate = {
+        nombre,
+        precioDefault: precio,
+        descripcionDefault: descripcion,
+        categoria,
+        activo: true
+      };
+
+      this.serviciosCatalogoService.actualizarServicio(editId, updateDto).subscribe({
+        next: (updated) => {
+          this.serviciosCatalogo.update(list => list.map(s => s.id === updated.id ? updated : s));
+          this.cerrarModalNuevoServicio();
+          this.showToast(`Producto "${updated.nombre}" actualizado correctamente.`);
+        },
+        error: (err) => {
+          this.newServiceError.set(err.error?.mensaje || 'Error al actualizar producto.');
+        }
+      });
+    } else {
+      // Crear nuevo
+      const createDto: ServicioCatalogoCreate = {
+        nombre,
+        precioDefault: precio,
+        descripcionDefault: descripcion,
+        categoria
+      };
+
+      this.serviciosCatalogoService.crearServicio(createDto).subscribe({
+        next: (created) => {
+          this.serviciosCatalogo.update(list => [...list, created]);
+
+          // Si estamos en la vista de emisión, añadirlo automáticamente como una fila
+          if (this.currentView() === 'emitir') {
+            const currentItems = this.formItems();
+            if (currentItems.length === 1 && !currentItems[0].producto) {
+              this.formItems.set([
+                {
+                  producto: created.nombre,
+                  descripcion: created.descripcionDefault || created.nombre,
+                  cantidad: 1,
+                  precio: created.precioDefault,
+                  total: created.precioDefault
+                }
+              ]);
+            } else {
+              this.agregarItem(created.nombre, created.descripcionDefault || created.nombre, created.precioDefault);
+            }
+          }
+
+          this.cerrarModalNuevoServicio();
+          this.showToast(`Producto "${created.nombre}" registrado en catálogo y agregado a la factura.`);
+        },
+        error: (err) => {
+          this.newServiceError.set(err.error?.mensaje || 'Error al guardar producto.');
+        }
+      });
+    }
+  }
+
+  eliminarServicioDelCatalogo(s: ServicioCatalogoResponse): void {
+    if (!confirm(`¿Está seguro de eliminar "${s.nombre}" del catálogo de servicios?`)) return;
+
+    this.serviciosCatalogoService.eliminarServicio(s.id).subscribe({
+      next: () => {
+        this.serviciosCatalogo.update(list => list.filter(item => item.id !== s.id));
+        this.showToast(`"${s.nombre}" eliminado del catálogo.`);
+      },
+      error: () => {
+        this.showToast('Error al eliminar producto del catálogo.');
+      }
+    });
   }
 
   // --- Guardar y Emitir Comprobante ---
@@ -301,10 +456,10 @@ export class ReceiptsComponent implements OnInit {
         this.cargarDatos();
 
         if (previsualizarDespues) {
-          this.abrirVisorDesdeRespuesta(resp);
+          this.abrirVisorHistorial(resp);
         }
 
-        // Reiniciar formulario para la siguiente emisión
+        // Reiniciar formulario
         this.reiniciarFormulario();
       },
       error: (err) => {
@@ -319,19 +474,34 @@ export class ReceiptsComponent implements OnInit {
     this.formNombreCliente.set('');
     this.formRtnCliente.set('');
     this.formObservaciones.set('');
-    this.formItems.set([
-      {
-        producto: 'Talonario de Facturas',
-        descripcion: 'Talonario de facturas fiscales de 3 copias',
-        cantidad: 1,
-        precio: 350,
-        total: 350
-      }
-    ]);
+
+    const servicios = this.serviciosCatalogo();
+    if (servicios.length > 0) {
+      this.formItems.set([
+        {
+          producto: servicios[0].nombre,
+          descripcion: servicios[0].descripcionDefault || servicios[0].nombre,
+          cantidad: 1,
+          precio: servicios[0].precioDefault,
+          total: servicios[0].precioDefault
+        }
+      ]);
+    } else {
+      this.formItems.set([
+        {
+          producto: '',
+          descripcion: '',
+          cantidad: 1,
+          precio: 0,
+          total: 0
+        }
+      ]);
+    }
+
     this.generarNumeroSugerido();
   }
 
-  // --- Generación y Descarga Directa de PDF ---
+  // --- Generación y Descarga de PDF ---
   descargarPdfDirecto(): void {
     const pdfData = this.construirDatosPdfActual();
     this.pdfService.generarReciboPdf(pdfData, true);
@@ -384,7 +554,7 @@ export class ReceiptsComponent implements OnInit {
     };
   }
 
-  // --- Visor Modal para Recibos del Historial ---
+  // --- Visor Modal de Historial ---
   abrirVisorHistorial(r: ReciboResponse): void {
     this.recibosService.descargarReciboPdf(r.id).subscribe({
       next: (blob) => {
@@ -407,7 +577,6 @@ export class ReceiptsComponent implements OnInit {
         });
       },
       error: () => {
-        // Generar mediante jsPDF frontend como respaldo
         const pdfData: ReciboPdfData = {
           tipoComprobante: r.tipoComprobante,
           numeroRecibo: r.numeroRecibo,
@@ -440,10 +609,6 @@ export class ReceiptsComponent implements OnInit {
         });
       }
     });
-  }
-
-  private abrirVisorDesdeRespuesta(r: ReciboResponse): void {
-    this.abrirVisorHistorial(r);
   }
 
   cerrarVisor(): void {
@@ -491,7 +656,7 @@ export class ReceiptsComponent implements OnInit {
 
     let detalleMsg = '';
     if (item.items && item.items.length > 0) {
-      detalleMsg = `\n📋 *Detalle de servicios:*\n` + item.items.map(it => ` • ${it.producto}: L. ${Number(it.total).toFixed(2)}`).join('\n');
+      detalleMsg = `\n📋 *Detalle de servicios:*\n` + item.items.filter(it => it.producto).map(it => ` • ${it.producto}: L. ${Number(it.total).toFixed(2)}`).join('\n');
     }
 
     const mensaje = `Estimado(a) *${item.clienteNombre}*,\n\nLe saluda su despacho contable *Líderes Contables Ordóñez y Asociados*.\n\n📄 Le adjuntamos la confirmación de su comprobante *N° ${item.numeroRecibo || 'Oficial'}* por un total de *L. ${montoFormatted}*.${detalleMsg}\n\n¡Muchas gracias por su preferencia y confianza!`;
