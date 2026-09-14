@@ -128,16 +128,53 @@ export class HistoricoIsvComponent implements OnInit {
 
     this.isLoadingHistorico.set(true);
     const anio = this.selectedAnio();
+    const cliente = this.selectedCliente();
+
+    // Inicializar estructura base de 12 meses para que la vista renderice de inmediato
+    const periodosFallback: PeriodoHistoricoCliente[] = this.mesesList.map(m => ({
+      id: 0,
+      mes: m.num,
+      anio: anio,
+      mesNombre: `${m.nombre} ${anio}`,
+      facturasRecibidas: false,
+      cantidadFacturasVenta: 0,
+      cantidadFacturasCompra: 0,
+      totalVentas: 0,
+      totalCompras: 0,
+      totalDebitoFiscal: 0,
+      totalCreditoFiscal: 0,
+      impuestoDeterminadoPagar: 0,
+      saldoAFavorContribuyente: 0,
+      liquidadoSAR: false,
+      estado: 'Pendiente'
+    }));
+
+    if (!this.resumenHistorico() || this.resumenHistorico()?.clienteId !== cid || this.resumenHistorico()?.anio !== anio) {
+      this.resumenHistorico.set({
+        clienteId: cid,
+        clienteNombre: cliente?.nombreRazonSocial || 'Cliente',
+        clienteRtn: cliente?.rtn || '',
+        anio: anio,
+        totalVentasAnuales: 0,
+        totalComprasAnuales: 0,
+        totalImpuestoPagadoAnual: 0,
+        mesesDeclarados: 0,
+        periodos: periodosFallback
+      });
+    }
 
     this.librosService.getHistoricoCliente(cid, anio).subscribe({
       next: (data) => {
-        this.resumenHistorico.set(data);
+        if (data && data.periodos && data.periodos.length > 0) {
+          this.resumenHistorico.set(data);
+        }
         this.isLoadingHistorico.set(false);
         this.cargarDetalleMes(this.selectedMes());
       },
       error: (err) => {
-        console.error('Error al cargar histórico:', err);
+        console.warn('Endpoint historico no respondió, cargando detalles mes a mes:', err);
         this.isLoadingHistorico.set(false);
+        this.cargarDetalleMes(this.selectedMes());
       }
     });
   }
@@ -156,6 +193,42 @@ export class HistoricoIsvComponent implements OnInit {
       next: (data) => {
         this.detalleMensual.set(data);
         this.isLoadingDetalle.set(false);
+
+        // Actualizar el mes en la lista anual de períodos
+        this.resumenHistorico.update(hist => {
+          if (!hist) return hist;
+          const updatedPeriodos = hist.periodos.map(p => {
+            if (p.mes === mes) {
+              const hayFacturas = (data.ventasItems?.length > 0) || (data.comprasItems?.length > 0);
+              return {
+                ...p,
+                facturasRecibidas: hayFacturas,
+                cantidadFacturasVenta: data.ventasItems?.length || 0,
+                cantidadFacturasCompra: data.comprasItems?.length || 0,
+                totalVentas: data.resumenVentas?.totalGeneral || 0,
+                totalCompras: data.resumenCompras?.totalGeneral || 0,
+                totalDebitoFiscal: data.liquidacion?.debitoFiscalVentas || 0,
+                totalCreditoFiscal: data.liquidacion?.creditoFiscalCompras || 0,
+                impuestoDeterminadoPagar: data.liquidacion?.liquidacionFinalPagar || 0,
+                saldoAFavorContribuyente: data.liquidacion?.saldoAFavorContribuyente || 0,
+                liquidadoSAR: data.liquidadoSAR,
+                numeroDeclaracionSAR: data.numeroDeclaracionSAR,
+                fechaLiquidacion: data.fechaLiquidacion,
+                estado: data.estado || (data.liquidadoSAR ? 'Declarado' : (hayFacturas ? 'EnProceso' : 'Pendiente'))
+              };
+            }
+            return p;
+          });
+
+          return {
+            ...hist,
+            totalVentasAnuales: updatedPeriodos.reduce((acc, x) => acc + x.totalVentas, 0),
+            totalComprasAnuales: updatedPeriodos.reduce((acc, x) => acc + x.totalCompras, 0),
+            totalImpuestoPagadoAnual: updatedPeriodos.reduce((acc, x) => acc + x.impuestoDeterminadoPagar, 0),
+            mesesDeclarados: updatedPeriodos.filter(x => x.liquidadoSAR).length,
+            periodos: updatedPeriodos
+          };
+        });
       },
       error: (err) => {
         console.error('Error al cargar detalle del mes:', err);
