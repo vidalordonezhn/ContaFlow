@@ -19,7 +19,7 @@
       <div class="header-nav-tabs">
         <button class="nav-tab-btn" [class.active]="activeTab() === 'vistaDual'" (click)="activeTab.set('vistaDual')">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><rect width="8" height="18" x="3" y="3" rx="1"/><rect width="8" height="18" x="13" y="3" rx="1"/></svg>
-          <span>📑 Vista Dual Completa</span>
+          <span>📑 Resumen Compacto SAR</span>
         </button>
         <button class="nav-tab-btn" [class.active]="activeTab() === 'ventas'" (click)="activeTab.set('ventas')">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4 text-blue"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/></svg>
@@ -28,10 +28,6 @@
         <button class="nav-tab-btn" [class.active]="activeTab() === 'compras'" (click)="activeTab.set('compras')">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4 text-emerald"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
           <span>🟢 Libro de Compras</span>
-        </button>
-        <button class="nav-tab-btn" [class.active]="activeTab() === 'liquidacion'" (click)="activeTab.set('liquidacion')">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4 text-amber"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          <span>📊 Liquidación SAR</span>
         </button>
         <button class="nav-tab-btn" [class.active]="activeTab() === 'masivo'" (click)="activeTab.set('masivo')">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -579,184 +575,7 @@
   }
 
   <!-- ========================================================================= -->
-  <!-- 3. PESTAÑA: LIQUIDACIÓN CONSOLIDADA & DECLARACIÓN SAR-210 -->
-  <!-- ========================================================================= -->
-  @if (activeTab() === 'liquidacion') {
-    <div class="liquidacion-page-wrapper animate-slide-up">
-      
-      <div class="liquidacion-card-official">
-        <div class="liquidation-header">
-          <div class="liq-title-box">
-            <div class="sar-logo-badge">SAR-210</div>
-            <div>
-              <h3>Liquidación Oficial Consolidada del Impuesto Sobre Ventas</h3>
-              <p>Cálculo matemático exacto conforme a la plantilla oficial `EJEMPLO.xlsx`</p>
-            </div>
-          </div>
-          <div class="liq-status-badge" [class.bg-danger]="liveImpuestoPagar() > 0" [class.bg-success]="liveSaldoFavor() > 0">
-            {{ liveImpuestoPagar() > 0 ? 'IMPUESTO A PAGAR' : (liveSaldoFavor() > 0 ? 'SALDO A FAVOR' : 'SALDO CERO') }}
-          </div>
-        </div>
-
-        <div class="liquidation-body-grid">
-          
-          <div class="liq-row-item">
-            <div class="row-label">
-              <span class="icon-circle bg-blue-subtle text-blue">1</span>
-              <span>Débito Fiscal Ventas (ISV 15% + ISV 18%):</span>
-            </div>
-            <div class="row-val-wrap">
-              <strong class="val-mono text-blue">L. {{ sumVentasDebito() | number:'1.2-2' }}</strong>
-              <button type="button" class="btn-copy-inline" [class.copied]="copiedCasilla() === 'liq_deb'" (click)="copiarCasilla(sumVentasDebito(), 'liq_deb')">📋</button>
-            </div>
-          </div>
-
-          <div class="liq-row-item">
-            <div class="row-label">
-              <span class="icon-circle bg-emerald-subtle text-emerald">2</span>
-              <span>(-) Crédito Fiscal Compras (ISV 15% + ISV 18%):</span>
-            </div>
-            <div class="row-val-wrap">
-              <strong class="val-mono text-emerald">L. {{ sumComprasCredito() | number:'1.2-2' }}</strong>
-              <button type="button" class="btn-copy-inline" [class.copied]="copiedCasilla() === 'liq_cred'" (click)="copiarCasilla(sumComprasCredito(), 'liq_cred')">📋</button>
-            </div>
-          </div>
-
-          <div class="liq-row-item">
-            <div class="row-label">
-              <span class="icon-circle bg-gray-subtle">3</span>
-              <span>(-) Saldo a Favor del Período Anterior:</span>
-            </div>
-            <div class="row-input-wrap">
-              <span class="currency-label">L.</span>
-              <input type="number" step="0.01" min="0" class="input-liq-field" [ngModel]="saldoAnterior()" (ngModelChange)="saldoAnterior.set($event)" placeholder="0.00" />
-            </div>
-          </div>
-
-          <div class="liq-row-item">
-            <div class="row-label">
-              <span class="icon-circle bg-gray-subtle">4</span>
-              <span>(-) Retenciones ISV 15% Sufridas:</span>
-            </div>
-            <div class="row-input-wrap">
-              <span class="currency-label">L.</span>
-              <input type="number" step="0.01" min="0" class="input-liq-field" [ngModel]="retenciones15()" (ngModelChange)="retenciones15.set($event)" placeholder="0.00" />
-            </div>
-          </div>
-
-          <div class="liq-row-item">
-            <div class="row-label">
-              <span class="icon-circle bg-gray-subtle">5</span>
-              <span>(-) Retenciones ISV 18% Sufridas:</span>
-            </div>
-            <div class="row-input-wrap">
-              <span class="currency-label">L.</span>
-              <input type="number" step="0.01" min="0" class="input-liq-field" [ngModel]="retenciones18()" (ngModelChange)="retenciones18.set($event)" placeholder="0.00" />
-            </div>
-          </div>
-
-          <!-- RESULTADO LIQUIDACIÓN -->
-          <div class="liq-final-box" [class.has-tax]="liveImpuestoPagar() > 0" [class.has-credit]="liveSaldoFavor() > 0">
-            @if (liveImpuestoPagar() > 0) {
-              <div class="final-result-item">
-                <span class="result-title">(=) LIQUIDACIÓN FINAL A PAGAR AL SAR (Lempiras)</span>
-                <span class="result-amount danger-text">L. {{ liveImpuestoPagar() | number:'1.2-2' }}</span>
-                <span class="result-hint">Monto final para el Recibo Oficial de Pago SAR-210</span>
-                <button type="button" class="btn-copy-large" [class.copied]="copiedCasilla() === 'final_sar'" (click)="copiarCasilla(liveImpuestoPagar(), 'final_sar')">
-                  @if (copiedCasilla() === 'final_sar') {
-                    <span>✓ ¡Monto Copiado!</span>
-                  } @else {
-                    <span>📋 Copiar Monto a Pagar SAR</span>
-                  }
-                </button>
-              </div>
-            } @else if (liveSaldoFavor() > 0) {
-              <div class="final-result-item">
-                <span class="result-title">(=) SALDO A FAVOR DEL CONTRIBUYENTE (Para el próximo mes)</span>
-                <span class="result-amount success-text">L. {{ liveSaldoFavor() | number:'1.2-2' }}</span>
-                <span class="result-hint">Se trasladará automáticamente al período fiscal siguiente.</span>
-                <button type="button" class="btn-copy-large" [class.copied]="copiedCasilla() === 'final_sar'" (click)="copiarCasilla(liveSaldoFavor(), 'final_sar')">
-                  @if (copiedCasilla() === 'final_sar') {
-                    <span>✓ ¡Saldo Copiado!</span>
-                  } @else {
-                    <span>📋 Copiar Saldo a Favor</span>
-                  }
-                </button>
-              </div>
-            } @else {
-              <div class="final-result-item">
-                <span class="result-title">DECLARACIÓN SIN MOVIMIENTO O SALDO CERO</span>
-                <span class="result-amount">L. 0.00</span>
-              </div>
-            }
-          </div>
-
-          <!-- HONORARIOS PROFESIONALES -->
-          <div class="liq-row-item honorarios-row">
-            <div class="row-label">
-              <span class="icon-circle bg-primary-subtle text-primary">+</span>
-              <span class="font-bold">(+) Servicios Profesionales (Honorarios Contables):</span>
-            </div>
-            <div class="row-input-wrap">
-              <span class="currency-label">L.</span>
-              <input type="number" step="0.01" min="0" class="input-liq-field font-bold" [ngModel]="serviciosProfesionales()" (ngModelChange)="serviciosProfesionales.set($event)" placeholder="0.00" />
-            </div>
-          </div>
-
-          <!-- TOTAL LPS -->
-          <div class="liq-total-grand-banner">
-            <div class="grand-left">
-              <span class="grand-label">TOTAL LPS A LIQUIDAR (ISV + Honorarios):</span>
-              <span class="grand-sub">Liquidación tributaria completa del cliente</span>
-            </div>
-            <div class="grand-right">
-              <span class="grand-amount">L. {{ liveTotalLps() | number:'1.2-2' }}</span>
-              <button type="button" class="btn-copy-grand" [class.copied]="copiedCasilla() === 'total_lps'" (click)="copiarCasilla(liveTotalLps(), 'total_lps')">
-                @if (copiedCasilla() === 'total_lps') {
-                  <span>✓ Copiado</span>
-                } @else {
-                  <span>📋 Copiar Total</span>
-                }
-              </button>
-            </div>
-          </div>
-
-        </div>
-
-        <!-- OPCIONES DE ESTADO Y GUARDADO -->
-        <div class="liquidation-footer">
-          <div class="footer-checkbox-group">
-            <label class="checkbox-label">
-              <input type="checkbox" [ngModel]="marcarLiquidado()" (ngModelChange)="marcarLiquidado.set($event)" />
-              <span>Marcar como <strong>Presentada y Liquidada ante el SAR</strong></span>
-            </label>
-            @if (marcarLiquidado()) {
-              <div class="sar-decl-input-wrap">
-                <label>N° Declaración SAR:</label>
-                <input type="text" [ngModel]="numeroDeclaracion()" (ngModelChange)="numeroDeclaracion.set($event)" placeholder="Ej. 210-987654321" class="form-control-decl" />
-              </div>
-            }
-          </div>
-
-          <div class="footer-actions">
-            <button type="button" class="btn btn-save-all" [disabled]="isSaving()" (click)="guardarTodo()">
-              @if (isSaving()) {
-                <span class="spinner-sm"></span>
-                <span>Guardando...</span>
-              } @else {
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                <span>Guardar Liquidación Oficial</span>
-              }
-            </button>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  }
-
-  <!-- ========================================================================= -->
-  <!-- 4. PESTAÑA: VISTA DUAL COMPLETA (AMBAS HOJAS EN SECUENCIA) -->
+  <!-- 3. PESTAÑA: RESUMEN COMPACTO SAR (DECLARACIÓN SAR-210) -->
   <!-- ========================================================================= -->
   @if (activeTab() === 'vistaDual') {
     <div class="vista-dual-wrapper animate-slide-up">
@@ -776,61 +595,15 @@
         </div>
       </div>
 
-      <!-- SECCIÓN 1: LIBRO DE VENTAS -->
+      <!-- SECCIÓN 1: RESUMEN DE VENTAS -->
       <div class="dual-section-block">
         <div class="dual-block-title text-blue">
-          <h3>1. LIBRO DE VENTAS DETALLADO</h3>
+          <h3>1. RESUMEN DE VENTAS (SAR-210)</h3>
           <span class="tag-badge bg-blue-subtle text-blue">Débito Fiscal: L. {{ sumVentasDebito() | number:'1.2-2' }}</span>
-        </div>
-        <div class="table-container">
-          <table class="table-hoja-oficial">
-            <thead>
-              <tr class="thead-cols">
-                <th>#</th>
-                <th>Fecha</th>
-                <th>Factura N°</th>
-                <th>Exonerado</th>
-                <th>Exento</th>
-                <th>Gravado 15%</th>
-                <th>Gravado 18%</th>
-                <th class="col-isv-ventas">ISV 15%</th>
-                <th class="col-isv-ventas">ISV 18%</th>
-                <th>Total Fila</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (v of ventasItems(); track $index) {
-                <tr>
-                  <td class="text-center">{{ v.correlativo }}</td>
-                  <td class="text-center">{{ v.fecha }}</td>
-                  <td class="text-center font-mono">{{ v.factura }}</td>
-                  <td class="text-right">L. {{ v.exonerado | number:'1.2-2' }}</td>
-                  <td class="text-right">L. {{ v.exento | number:'1.2-2' }}</td>
-                  <td class="text-right">L. {{ v.gravado15 | number:'1.2-2' }}</td>
-                  <td class="text-right">L. {{ v.gravado18 | number:'1.2-2' }}</td>
-                  <td class="text-right text-blue font-bold">L. {{ v.isv15 | number:'1.2-2' }}</td>
-                  <td class="text-right text-blue font-bold">L. {{ v.isv18 | number:'1.2-2' }}</td>
-                  <td class="text-right font-bold">L. {{ v.total | number:'1.2-2' }}</td>
-                </tr>
-              }
-            </tbody>
-            <tfoot>
-              <tr class="row-totales">
-                <td colspan="3" class="text-right font-bold">TOTALES VENTAS:</td>
-                <td class="text-right font-bold">L. {{ sumVentasExonerado() | number:'1.2-2' }}</td>
-                <td class="text-right font-bold">L. {{ sumVentasExento() | number:'1.2-2' }}</td>
-                <td class="text-right font-bold">L. {{ sumVentasGravado15() | number:'1.2-2' }}</td>
-                <td class="text-right font-bold">L. {{ sumVentasGravado18() | number:'1.2-2' }}</td>
-                <td class="text-right font-bold text-blue">L. {{ sumVentasIsv15() | number:'1.2-2' }}</td>
-                <td class="text-right font-bold text-blue">L. {{ sumVentasIsv18() | number:'1.2-2' }}</td>
-                <td class="text-right font-bold text-primary">L. {{ sumVentasTotal() | number:'1.2-2' }}</td>
-              </tr>
-            </tfoot>
-          </table>
         </div>
 
         <!-- CUADRO CASILLAS SAR VENTAS CON BOTONES COPIAR EN 1-CLIC -->
-        <div class="resumen-casillas-container mt-3">
+        <div class="resumen-casillas-container">
           <div class="resumen-card-header bg-blue-subtle">
             <div class="header-left-title">
               <span class="sar-badge-mini bg-blue text-white">SAR-210</span>
@@ -893,63 +666,15 @@
         </div>
       </div>
 
-      <!-- SECCIÓN 2: LIBRO DE COMPRAS -->
+      <!-- SECCIÓN 2: RESUMEN DE COMPRAS -->
       <div class="dual-section-block mt-4">
         <div class="dual-block-title text-emerald">
-          <h3>2. LIBRO DE COMPRAS DETALLADO</h3>
+          <h3>2. RESUMEN DE COMPRAS (SAR-210)</h3>
           <span class="tag-badge bg-emerald-subtle text-emerald">Crédito Fiscal: L. {{ sumComprasCredito() | number:'1.2-2' }}</span>
-        </div>
-        <div class="table-container">
-          <table class="table-hoja-oficial">
-            <thead>
-              <tr class="thead-cols">
-                <th>#</th>
-                <th>Fecha</th>
-                <th>Factura N°</th>
-                <th>Proveedor</th>
-                <th>Exonerado</th>
-                <th>Exento</th>
-                <th>Gravado 15%</th>
-                <th>Gravado 18%</th>
-                <th class="col-isv-compras">ISV 15%</th>
-                <th class="col-isv-compras">ISV 18%</th>
-                <th>Total Fila</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (c of comprasItems(); track $index) {
-                <tr>
-                  <td class="text-center">{{ c.correlativo }}</td>
-                  <td class="text-center">{{ c.fecha }}</td>
-                  <td class="text-center font-mono">{{ c.factura }}</td>
-                  <td>{{ c.proveedor }}</td>
-                  <td class="text-right">L. {{ c.exonerado | number:'1.2-2' }}</td>
-                  <td class="text-right">L. {{ c.exento | number:'1.2-2' }}</td>
-                  <td class="text-right">L. {{ c.gravado15 | number:'1.2-2' }}</td>
-                  <td class="text-right">L. {{ c.gravado18 | number:'1.2-2' }}</td>
-                  <td class="text-right text-emerald font-bold">L. {{ c.isv15 | number:'1.2-2' }}</td>
-                  <td class="text-right text-emerald font-bold">L. {{ c.isv18 | number:'1.2-2' }}</td>
-                  <td class="text-right font-bold">L. {{ c.total | number:'1.2-2' }}</td>
-                </tr>
-              }
-            </tbody>
-            <tfoot>
-              <tr class="row-totales">
-                <td colspan="4" class="text-right font-bold">TOTALES COMPRAS:</td>
-                <td class="text-right font-bold">L. {{ sumComprasExonerado() | number:'1.2-2' }}</td>
-                <td class="text-right font-bold">L. {{ sumComprasExento() | number:'1.2-2' }}</td>
-                <td class="text-right font-bold">L. {{ sumComprasGravado15() | number:'1.2-2' }}</td>
-                <td class="text-right font-bold">L. {{ sumComprasGravado18() | number:'1.2-2' }}</td>
-                <td class="text-right font-bold text-emerald">L. {{ sumComprasIsv15() | number:'1.2-2' }}</td>
-                <td class="text-right font-bold text-emerald">L. {{ sumComprasIsv18() | number:'1.2-2' }}</td>
-                <td class="text-right font-bold text-primary">L. {{ sumComprasTotal() | number:'1.2-2' }}</td>
-              </tr>
-            </tfoot>
-          </table>
         </div>
 
         <!-- CUADRO CASILLAS SAR COMPRAS CON BOTONES COPIAR EN 1-CLIC -->
-        <div class="resumen-casillas-container mt-3">
+        <div class="resumen-casillas-container">
           <div class="resumen-card-header bg-emerald-subtle">
             <div class="header-left-title">
               <span class="sar-badge-mini bg-emerald text-white">SAR-210</span>

@@ -32,8 +32,8 @@ export class LibrosIsvComponent implements OnInit {
   private readonly clientsService = inject(ApiClientsService);
   private readonly pdfService = inject(PdfGeneratorService);
 
-  // Pestañas principales (Vista Dual Completa por defecto)
-  readonly activeTab = signal<'vistaDual' | 'ventas' | 'compras' | 'liquidacion' | 'masivo'>('vistaDual');
+  // Pestañas principales (Vista Resumen Compacto por defecto)
+  readonly activeTab = signal<'vistaDual' | 'ventas' | 'compras' | 'masivo'>('vistaDual');
 
   // Selección de Contribuyente & Período
   readonly clientes = signal<ClienteResponse[]>([]);
