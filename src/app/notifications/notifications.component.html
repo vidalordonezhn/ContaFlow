@@ -225,9 +225,9 @@
                 <!-- Acciones -->
                 <td class="text-right">
                   <div class="row-actions">
-                    <button class="btn btn-outline-primary text-xs py-1 px-2.5" (click)="openNewReminderModal(c.id, c.tieneFacturasPendientesSAR ? 'SAR' : (c.tieneCobroPendiente ? 'Cobro' : 'Personalizado'))" title="Crear un aviso para este cliente">
+                    <button class="btn btn-outline-primary text-xs py-1.5 px-3" (click)="openNewReminderModal(c.id, c.tieneFacturasPendientesSAR ? 'SAR' : (c.tieneCobroPendiente ? 'Cobro' : 'Personalizado'))" title="Crear un aviso para este cliente">
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                      <span>+ Crear Aviso</span>
+                      <span>Crear Aviso</span>
                     </button>
                   </div>
                 </td>
@@ -247,7 +247,7 @@
           </div>
           <h4>No hay avisos registrados en la cola</h4>
           <p>Crea avisos personalizados o genera recordatorios desde las pestañas de SAR y Cobros.</p>
-          <button class="btn btn-primary mt-3" (click)="openNewReminderModal()">+ Crear Primer Aviso</button>
+          <button class="btn btn-primary mt-3" (click)="openNewReminderModal()">Crear Primer Aviso</button>
         </div>
       } @else {
         <div class="table-header-action-bar">
@@ -513,7 +513,7 @@
             }
           </div>
           <button class="btn btn-primary text-xs py-1.5 px-3 ml-auto" (click)="openNewReminderModal(clienteDetalleAvisos()!.id)">
-            <span>+ Crear Otro Aviso</span>
+            <span>Crear Otro Aviso</span>
           </button>
         </div>
 
@@ -640,7 +640,7 @@
 
           <div class="flex items-center gap-2">
             <button type="button" class="btn btn-primary" [disabled]="isSaving()" (click)="guardarRecordatorio()">
-              <span>➕ Guardar y Asignar Aviso</span>
+              <span>Guardar y Asignar Aviso</span>
             </button>
           </div>
         </div>

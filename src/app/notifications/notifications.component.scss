@@ -516,14 +516,17 @@
 .btn-outline-primary {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.375rem;
-  padding: 0.375rem 0.75rem;
+  padding: 0.4rem 0.85rem;
   border-radius: var(--radius-md);
   border: 1.5px solid var(--color-blue);
   background-color: transparent;
   color: var(--color-blue);
   font-size: 0.75rem;
   font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
   cursor: pointer;
   transition: all 0.15s ease;
 
