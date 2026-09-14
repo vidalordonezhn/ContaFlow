@@ -2,67 +2,149 @@ import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { ApiPagosService, PagoResponse } from '../services/api-pagos.service';
-import { ApiClientsService, ClienteResponse } from '../services/api-clients.service';
+import { ApiRecibosService, ReciboResponse, ReciboCreate, ReciboItem } from '../services/api-recibos.service';
+import { ApiClientsService, ClienteResponse, ClienteCreate } from '../services/api-clients.service';
+import { PdfGeneratorService, ReciboPdfData } from '../services/pdf-generator.service';
+import { ClientSelectorComponent } from '../shared/client-selector/client-selector.component';
 
-export interface ReciboPreviewData {
-  reciboId: number;
+export interface ReciboPreviewModalData {
+  reciboId?: number;
+  tipoComprobante: 'SinCAI' | 'ConCAI';
   numeroRecibo: string;
   clienteNombre: string;
   clienteRtn: string;
   monto: number;
-  mesAplicado: string;
   telefonoWhatsApp?: string;
   blobUrl: string;
   safeUrl: SafeResourceUrl;
 }
 
+export interface QuickServiceSuggestion {
+  producto: string;
+  descripcion: string;
+  precioDefault: number;
+}
+
 @Component({
   selector: 'app-receipts',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ClientSelectorComponent],
   templateUrl: './receipts.component.html',
   styleUrl: './receipts.component.scss'
 })
 export class ReceiptsComponent implements OnInit {
-  private readonly pagosService = inject(ApiPagosService);
-  private readonly clientsService = inject(ApiClientsService);
+  readonly recibosService = inject(ApiRecibosService);
+  readonly clientsService = inject(ApiClientsService);
+  readonly pdfService = inject(PdfGeneratorService);
   private readonly sanitizer = inject(DomSanitizer);
 
-  readonly recibos = signal<PagoResponse[]>([]);
+  // Estados principales
+  readonly currentView = signal<'emitir' | 'historial'>('emitir');
+  readonly recibos = signal<ReciboResponse[]>([]);
   readonly clientes = signal<ClienteResponse[]>([]);
   readonly isLoading = signal(true);
-  readonly searchQuery = signal('');
+  readonly isSaving = signal(false);
   readonly successMsg = signal<string | null>(null);
+  readonly errorMsg = signal<string | null>(null);
 
-  // Modal de vista previa del recibo
-  readonly previewRecibo = signal<ReciboPreviewData | null>(null);
+  // Filtros Historial
+  readonly searchQuery = signal('');
+  readonly filterTipo = signal<'todos' | 'SinCAI' | 'ConCAI'>('todos');
 
-  readonly recibosValidos = computed(() =>
-    this.recibos().filter(r => r.reciboId && r.numeroRecibo)
-  );
+  // Modal Visor PDF
+  readonly previewModal = signal<ReciboPreviewModalData | null>(null);
 
+  // Modal Rápido de Nuevo Cliente
+  readonly isNewClientModalOpen = signal(false);
+  readonly newClientNombre = signal('');
+  readonly newClientRtn = signal('');
+  readonly newClientTelefono = signal('');
+  readonly newClientCuota = signal<number>(0);
+  readonly newClientError = signal<string | null>(null);
+
+  // Catálogo de Servicios Rápidos sugeridos
+  readonly sugerenciasServicios: QuickServiceSuggestion[] = [
+    { producto: 'Talonario de Facturas', descripcion: 'Elaboración y emisión de talonario de facturas fiscales', precioDefault: 350 },
+    { producto: 'Constancia Electrónica', descripcion: 'Emisión de constancia electrónica fiscal ante el SAR', precioDefault: 250 },
+    { producto: 'Pagos a Cuenta SAR', descripcion: 'Cálculo y presentación de cuota trimestral de Pagos a Cuenta', precioDefault: 400 },
+    { producto: 'Impuesto sobre la Renta', descripcion: 'Declaración jurada y liquidación anual de ISR', precioDefault: 800 },
+    { producto: 'Controles Tributarios', descripcion: 'Revisión y auditoría de control tributario mensual', precioDefault: 500 },
+    { producto: 'Honorarios Mensuales', descripcion: 'Asesoría contable y cumplimiento tributario mensual', precioDefault: 600 },
+    { producto: 'Trámites en Línea SAR', descripcion: 'Gestión de solicitudes y trámites en plataforma SAR', precioDefault: 300 }
+  ];
+
+  // -------------------------------------------------------------
+  // FORMULARIO DE EMISIÓN DE COMPROBANTE
+  // -------------------------------------------------------------
+  readonly formTipoComprobante = signal<'SinCAI' | 'ConCAI'>('SinCAI');
+  readonly formClienteId = signal<number | null>(null);
+  readonly formNombreCliente = signal<string>('');
+  readonly formRtnCliente = signal<string>('');
+  readonly formNumeroComprobante = signal<string>('');
+  readonly formFechaEmision = signal<string>(new Date().toISOString().substring(0, 10));
+  readonly formMetodoPago = signal<string>('Transferencia');
+  readonly formAplicarIsv = signal<boolean>(false);
+  readonly formRegistrarComoPago = signal<boolean>(true);
+  readonly formMesAplicado = signal<string>(`${new Intl.DateTimeFormat('es-HN', { month: 'long' }).format(new Date())} ${new Date().getFullYear()}`);
+  readonly formObservaciones = signal<string>('');
+
+  // Lista de Ítems del comprobante
+  readonly formItems = signal<ReciboItem[]>([
+    {
+      producto: 'Talonario de Facturas',
+      descripcion: 'Talonario de facturas fiscales de 3 copias',
+      cantidad: 1,
+      precio: 350,
+      total: 350
+    }
+  ]);
+
+  // Cálculos reactivos de Totales
+  readonly formSubtotal = computed(() => {
+    return this.formItems().reduce((acc, item) => acc + (Number(item.total) || 0), 0);
+  });
+
+  readonly formImpuesto = computed(() => {
+    if (!this.formAplicarIsv()) return 0;
+    return Number((this.formSubtotal() * 0.15).toFixed(2));
+  });
+
+  readonly formTotal = computed(() => {
+    return Number((this.formSubtotal() + this.formImpuesto()).toFixed(2));
+  });
+
+  // Lista filtrada del historial
   readonly filteredRecibos = computed(() => {
     const query = this.searchQuery().toLowerCase().trim();
-    return this.recibosValidos().filter(r => {
+    const tipo = this.filterTipo();
+
+    return this.recibos().filter(r => {
+      let matchTipo = true;
+      if (tipo !== 'todos') {
+        matchTipo = r.tipoComprobante === tipo;
+      }
+      if (!matchTipo) return false;
+
       if (!query) return true;
       return (r.numeroRecibo && r.numeroRecibo.toLowerCase().includes(query)) ||
-             r.clienteNombre.toLowerCase().includes(query) ||
-             r.clienteRtn.toLowerCase().includes(query) ||
-             r.mesAplicado.toLowerCase().includes(query);
+             (r.numeroFiscal && r.numeroFiscal.toLowerCase().includes(query)) ||
+             r.nombreCliente.toLowerCase().includes(query) ||
+             r.rtnCliente.toLowerCase().includes(query) ||
+             r.concepto.toLowerCase().includes(query);
     });
   });
 
   ngOnInit(): void {
-    this.cargarRecibos();
+    this.cargarDatos();
+    this.generarNumeroSugerido();
   }
 
-  cargarRecibos(): void {
+  cargarDatos(): void {
     this.isLoading.set(true);
-    this.pagosService.getPagos().subscribe({
+    this.recibosService.getRecibos().subscribe({
       next: (data) => {
         this.recibos.set(data);
-        this.clientsService.getClientes().subscribe(cls => this.clientes.set(cls));
+        this.clientsService.getClientes().subscribe(cls => this.clientes.set(cls.filter(c => c.activo)));
         this.isLoading.set(false);
       },
       error: () => {
@@ -71,83 +153,421 @@ export class ReceiptsComponent implements OnInit {
     });
   }
 
-  descargarPdf(reciboId: number, numeroRecibo: string): void {
-    this.pagosService.descargarReciboPdf(reciboId).subscribe(blob => {
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${numeroRecibo}.pdf`;
-      link.click();
-      window.URL.revokeObjectURL(url);
-    });
-  }
-
-  abrirVisorRecibo(r: PagoResponse): void {
-    if (!r.reciboId) return;
-
-    this.pagosService.descargarReciboPdf(r.reciboId).subscribe(blob => {
-      const blobUrl = window.URL.createObjectURL(blob);
-      const safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(blobUrl);
-
-      const cliente = this.clientes().find(c => c.id === r.clienteId);
-      const whatsapp = cliente?.telefonoWhatsApp || cliente?.telefono;
-
-      this.previewRecibo.set({
-        reciboId: r.reciboId!,
-        numeroRecibo: r.numeroRecibo || 'Recibo Oficial',
-        clienteNombre: r.clienteNombre,
-        clienteRtn: r.clienteRtn,
-        monto: Number(r.monto),
-        mesAplicado: r.mesAplicado,
-        telefonoWhatsApp: whatsapp,
-        blobUrl,
-        safeUrl
-      });
-    });
-  }
-
-  cerrarVisorRecibo(): void {
-    const curr = this.previewRecibo();
-    if (curr?.blobUrl) {
-      window.URL.revokeObjectURL(curr.blobUrl);
+  generarNumeroSugerido(): void {
+    const anio = new Date().getFullYear();
+    const count = this.recibos().length + 1;
+    if (this.formTipoComprobante() === 'SinCAI') {
+      this.formNumeroComprobante.set(`REC-${anio}-${String(count).padStart(4, '0')}`);
+    } else {
+      this.formNumeroComprobante.set(`FAC-${anio}-${String(count).padStart(4, '0')}`);
     }
-    this.previewRecibo.set(null);
   }
 
-  imprimirReciboDesdeVisor(): void {
-    const curr = this.previewRecibo();
-    if (curr?.blobUrl) {
-      const win = window.open(curr.blobUrl, '_blank');
-      if (win) {
-        win.focus();
+  setTipoComprobante(tipo: 'SinCAI' | 'ConCAI'): void {
+    this.formTipoComprobante.set(tipo);
+    this.generarNumeroSugerido();
+  }
+
+  onClientSelected(client: ClienteResponse): void {
+    this.formClienteId.set(client.id);
+    this.formNombreCliente.set(client.nombreRazonSocial);
+    this.formRtnCliente.set(client.rtn);
+
+    // Si tiene cuota mensual y sólo hay 1 ítem genérico, podemos ajustar
+    if (client.cuotaMensual && client.cuotaMensual > 0) {
+      const items = this.formItems();
+      if (items.length === 1 && items[0].producto.includes('Honorarios')) {
+        this.actualizarItem(0, 'precio', client.cuotaMensual);
       }
     }
   }
 
-  enviarWhatsAppPago(r: { clienteNombre: string; clienteId?: number; monto: number; mesAplicado: string; numeroRecibo?: string; telefonoWhatsApp?: string }): void {
-    let phone = r.telefonoWhatsApp;
-    if (!phone && r.clienteId) {
-      const cliente = this.clientes().find(c => c.id === r.clienteId);
-      phone = cliente?.telefonoWhatsApp || cliente?.telefono;
+  onClientCleared(): void {
+    this.formClienteId.set(null);
+    this.formNombreCliente.set('');
+    this.formRtnCliente.set('');
+  }
+
+  // --- Manejo de la Tabla de Ítems ---
+  agregarItem(producto: string = '', descripcion: string = '', precio: number = 0): void {
+    const current = this.formItems();
+    this.formItems.set([
+      ...current,
+      {
+        producto: producto || '',
+        descripcion: descripcion || '',
+        cantidad: 1,
+        precio: precio || 0,
+        total: precio || 0
+      }
+    ]);
+  }
+
+  aplicarSugerenciaRapida(sug: QuickServiceSuggestion): void {
+    // Si la primera fila está vacía, reemplazarla
+    const current = this.formItems();
+    if (current.length === 1 && !current[0].producto && current[0].precio === 0) {
+      this.formItems.set([
+        {
+          producto: sug.producto,
+          descripcion: sug.descripcion,
+          cantidad: 1,
+          precio: sug.precioDefault,
+          total: sug.precioDefault
+        }
+      ]);
+      return;
+    }
+
+    this.agregarItem(sug.producto, sug.descripcion, sug.precioDefault);
+  }
+
+  actualizarItem(index: number, field: keyof ReciboItem, value: any): void {
+    const items = [...this.formItems()];
+    const item = { ...items[index] };
+
+    if (field === 'cantidad') {
+      item.cantidad = Math.max(0.01, Number(value) || 1);
+      item.total = Number((item.cantidad * item.precio).toFixed(2));
+    } else if (field === 'precio') {
+      item.precio = Math.max(0, Number(value) || 0);
+      item.total = Number((item.cantidad * item.precio).toFixed(2));
+    } else if (field === 'producto') {
+      item.producto = String(value);
+    } else if (field === 'descripcion') {
+      item.descripcion = String(value);
+    }
+
+    items[index] = item;
+    this.formItems.set(items);
+  }
+
+  eliminarItem(index: number): void {
+    const items = this.formItems();
+    if (items.length <= 1) {
+      this.formItems.set([
+        {
+          producto: '',
+          descripcion: '',
+          cantidad: 1,
+          precio: 0,
+          total: 0
+        }
+      ]);
+      return;
+    }
+    this.formItems.set(items.filter((_, idx) => idx !== index));
+  }
+
+  // --- Guardar y Emitir Comprobante ---
+  guardarComprobante(previsualizarDespues: boolean = false): void {
+    this.errorMsg.set(null);
+
+    const nombre = this.formNombreCliente().trim();
+    if (!nombre) {
+      this.errorMsg.set('Debes seleccionar o escribir el nombre del cliente.');
+      return;
+    }
+
+    const itemsValidos = this.formItems().filter(it => it.producto.trim() || it.total > 0);
+    if (itemsValidos.length === 0) {
+      this.errorMsg.set('Debes agregar al menos un ítem o servicio a la factura.');
+      return;
+    }
+
+    this.isSaving.set(true);
+
+    const createDto: ReciboCreate = {
+      clienteId: this.formClienteId(),
+      nombreCliente: nombre,
+      rtnCliente: this.formRtnCliente().trim() || 'N/A',
+      tipoComprobante: this.formTipoComprobante(),
+      numeroRecibo: this.formNumeroComprobante().trim() || undefined,
+      fechaEmision: new Date(this.formFechaEmision()).toISOString(),
+      subtotal: this.formSubtotal(),
+      impuesto: this.formImpuesto(),
+      monto: this.formTotal(),
+      metodoPago: this.formMetodoPago(),
+      observaciones: this.formObservaciones().trim() || undefined,
+      registrarComoPago: this.formRegistrarComoPago(),
+      mesAplicado: this.formMesAplicado().trim(),
+      items: itemsValidos
+    };
+
+    this.recibosService.crearRecibo(createDto).subscribe({
+      next: (resp) => {
+        this.isSaving.set(false);
+        this.showToast(`¡Comprobante ${resp.numeroRecibo} generado con éxito!`);
+        this.cargarDatos();
+
+        if (previsualizarDespues) {
+          this.abrirVisorDesdeRespuesta(resp);
+        }
+
+        // Reiniciar formulario para la siguiente emisión
+        this.reiniciarFormulario();
+      },
+      error: (err) => {
+        this.isSaving.set(false);
+        this.errorMsg.set(err.error?.mensaje || 'Error al guardar el comprobante.');
+      }
+    });
+  }
+
+  reiniciarFormulario(): void {
+    this.formClienteId.set(null);
+    this.formNombreCliente.set('');
+    this.formRtnCliente.set('');
+    this.formObservaciones.set('');
+    this.formItems.set([
+      {
+        producto: 'Talonario de Facturas',
+        descripcion: 'Talonario de facturas fiscales de 3 copias',
+        cantidad: 1,
+        precio: 350,
+        total: 350
+      }
+    ]);
+    this.generarNumeroSugerido();
+  }
+
+  // --- Generación y Descarga Directa de PDF ---
+  descargarPdfDirecto(): void {
+    const pdfData = this.construirDatosPdfActual();
+    this.pdfService.generarReciboPdf(pdfData, true);
+    this.showToast('Descargando archivo PDF...');
+  }
+
+  previsualizarPdf(): void {
+    const pdfData = this.construirDatosPdfActual();
+    const doc = this.pdfService.generarReciboPdf(pdfData, false);
+    const blob = doc.output('blob');
+    const blobUrl = window.URL.createObjectURL(blob);
+    const safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(blobUrl);
+
+    const cliente = this.clientes().find(c => c.id === this.formClienteId());
+    const whatsapp = cliente?.telefonoWhatsApp || cliente?.telefono;
+
+    this.previewModal.set({
+      tipoComprobante: pdfData.tipoComprobante,
+      numeroRecibo: pdfData.numeroRecibo,
+      clienteNombre: pdfData.clienteNombre,
+      clienteRtn: pdfData.clienteRtn,
+      monto: pdfData.total,
+      telefonoWhatsApp: whatsapp,
+      blobUrl,
+      safeUrl
+    });
+  }
+
+  private construirDatosPdfActual(): ReciboPdfData {
+    const fechaObj = new Date(this.formFechaEmision() + 'T12:00:00');
+    const fechaFormatted = `${String(fechaObj.getDate()).padStart(2, '0')}/${String(fechaObj.getMonth() + 1).padStart(2, '0')}/${fechaObj.getFullYear()}`;
+
+    return {
+      tipoComprobante: this.formTipoComprobante(),
+      numeroRecibo: this.formNumeroComprobante() || 'REC-PROFORMA',
+      fechaEmision: fechaFormatted,
+      clienteNombre: this.formNombreCliente() || 'Cliente General',
+      clienteRtn: this.formRtnCliente() || 'N/A',
+      items: this.formItems().map(i => ({
+        producto: i.producto || 'Servicio',
+        descripcion: i.descripcion || 'Honorarios Contables',
+        cantidad: Number(i.cantidad) || 1,
+        precio: Number(i.precio) || 0,
+        total: Number(i.total) || 0
+      })),
+      subtotal: this.formSubtotal(),
+      impuesto: this.formImpuesto(),
+      total: this.formTotal(),
+      observaciones: this.formObservaciones()
+    };
+  }
+
+  // --- Visor Modal para Recibos del Historial ---
+  abrirVisorHistorial(r: ReciboResponse): void {
+    this.recibosService.descargarReciboPdf(r.id).subscribe({
+      next: (blob) => {
+        const blobUrl = window.URL.createObjectURL(blob);
+        const safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(blobUrl);
+
+        const cliente = this.clientes().find(c => c.id === r.clienteId);
+        const whatsapp = cliente?.telefonoWhatsApp || cliente?.telefono;
+
+        this.previewModal.set({
+          reciboId: r.id,
+          tipoComprobante: r.tipoComprobante,
+          numeroRecibo: r.numeroRecibo,
+          clienteNombre: r.nombreCliente,
+          clienteRtn: r.rtnCliente,
+          monto: r.monto,
+          telefonoWhatsApp: whatsapp,
+          blobUrl,
+          safeUrl
+        });
+      },
+      error: () => {
+        // Generar mediante jsPDF frontend como respaldo
+        const pdfData: ReciboPdfData = {
+          tipoComprobante: r.tipoComprobante,
+          numeroRecibo: r.numeroRecibo,
+          numeroFiscal: r.numeroFiscal,
+          cai: r.cai,
+          rangoAutorizado: r.rangoAutorizado,
+          fechaLimiteEmision: r.fechaLimiteEmision ? new Date(r.fechaLimiteEmision).toLocaleDateString('es-HN') : undefined,
+          fechaEmision: new Date(r.fechaEmision).toLocaleDateString('es-HN'),
+          clienteNombre: r.nombreCliente,
+          clienteRtn: r.rtnCliente,
+          items: r.items && r.items.length > 0 ? r.items : [{ producto: r.concepto, descripcion: r.concepto, cantidad: 1, precio: r.monto, total: r.monto }],
+          subtotal: r.subtotal,
+          impuesto: r.impuesto,
+          total: r.monto
+        };
+        const doc = this.pdfService.generarReciboPdf(pdfData, false);
+        const blob = doc.output('blob');
+        const blobUrl = window.URL.createObjectURL(blob);
+        const safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(blobUrl);
+
+        this.previewModal.set({
+          reciboId: r.id,
+          tipoComprobante: r.tipoComprobante,
+          numeroRecibo: r.numeroRecibo,
+          clienteNombre: r.nombreCliente,
+          clienteRtn: r.rtnCliente,
+          monto: r.monto,
+          blobUrl,
+          safeUrl
+        });
+      }
+    });
+  }
+
+  private abrirVisorDesdeRespuesta(r: ReciboResponse): void {
+    this.abrirVisorHistorial(r);
+  }
+
+  cerrarVisor(): void {
+    const cur = this.previewModal();
+    if (cur?.blobUrl) {
+      window.URL.revokeObjectURL(cur.blobUrl);
+    }
+    this.previewModal.set(null);
+  }
+
+  imprimirDesdeVisor(): void {
+    const cur = this.previewModal();
+    if (cur?.blobUrl) {
+      const w = window.open(cur.blobUrl, '_blank');
+      if (w) w.focus();
+    }
+  }
+
+  descargarDesdeVisor(): void {
+    const cur = this.previewModal();
+    if (cur?.blobUrl) {
+      const link = document.createElement('a');
+      link.href = cur.blobUrl;
+      link.download = `${cur.numeroRecibo}.pdf`;
+      link.click();
+    }
+  }
+
+  // --- Envío por WhatsApp ---
+  enviarWhatsAppComprobante(item: { clienteNombre: string; clienteId?: number; monto: number; numeroRecibo?: string; telefonoWhatsApp?: string; items?: ReciboItem[] }): void {
+    let phone = item.telefonoWhatsApp;
+    if (!phone && item.clienteId) {
+      const c = this.clientes().find(cl => cl.id === item.clienteId);
+      phone = c?.telefonoWhatsApp || c?.telefono;
     }
 
     if (!phone) {
-      this.showToast(`El cliente "${r.clienteNombre}" no tiene número de WhatsApp registrado.`);
+      this.showToast(`El cliente "${item.clienteNombre}" no tiene número de WhatsApp registrado.`);
       return;
     }
 
     const cleanPhone = phone.replace(/[^0-9]/g, '');
     const fullPhone = cleanPhone.startsWith('504') ? cleanPhone : `504${cleanPhone}`;
-    const montoFormatted = Number(r.monto).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const montoFormatted = Number(item.monto).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-    const mensaje = `Estimado(a) ${r.clienteNombre},\n\nLe saluda su despacho contable. Le confirmamos con agrado la recepción de su pago de honorarios correspondiente al mes de ${r.mesAplicado} por un valor de L. ${montoFormatted}.\n\n📄 Recibo Oficial N°: ${r.numeroRecibo || 'Generado'}.\n\n¡Muchas gracias por su puntualidad y confianza!`;
+    let detalleMsg = '';
+    if (item.items && item.items.length > 0) {
+      detalleMsg = `\n📋 *Detalle de servicios:*\n` + item.items.map(it => ` • ${it.producto}: L. ${Number(it.total).toFixed(2)}`).join('\n');
+    }
+
+    const mensaje = `Estimado(a) *${item.clienteNombre}*,\n\nLe saluda su despacho contable *Líderes Contables Ordóñez y Asociados*.\n\n📄 Le adjuntamos la confirmación de su comprobante *N° ${item.numeroRecibo || 'Oficial'}* por un total de *L. ${montoFormatted}*.${detalleMsg}\n\n¡Muchas gracias por su preferencia y confianza!`;
 
     const url = `https://wa.me/${fullPhone}?text=${encodeURIComponent(mensaje)}`;
     window.open(url, '_blank');
   }
 
+  // --- Modal Rápido de Nuevo Cliente ---
+  abrirModalNuevoCliente(): void {
+    this.newClientNombre.set('');
+    this.newClientRtn.set('');
+    this.newClientTelefono.set('');
+    this.newClientCuota.set(0);
+    this.newClientError.set(null);
+    this.isNewClientModalOpen.set(true);
+  }
+
+  cerrarModalNuevoCliente(): void {
+    this.isNewClientModalOpen.set(false);
+    this.newClientError.set(null);
+  }
+
+  crearNuevoClienteRapido(): void {
+    this.newClientError.set(null);
+    const nombre = this.newClientNombre().trim();
+    const rtn = this.newClientRtn().trim();
+
+    if (!nombre) {
+      this.newClientError.set('La Razón Social / Nombre es obligatorio.');
+      return;
+    }
+    if (!rtn || rtn.length < 14) {
+      this.newClientError.set('El RTN debe tener al menos 14 dígitos.');
+      return;
+    }
+
+    const dto: ClienteCreate = {
+      rtn,
+      nombreRazonSocial: nombre,
+      tipoPersona: 'Natural',
+      telefono: this.newClientTelefono().trim() || undefined,
+      telefonoWhatsApp: this.newClientTelefono().trim() || undefined,
+      cuotaMensual: Number(this.newClientCuota()) || 0,
+      diaCobro: 10
+    };
+
+    this.clientsService.crearCliente(dto).subscribe({
+      next: (nuevo) => {
+        this.clientes.update(cls => [...cls, nuevo]);
+        this.onClientSelected(nuevo);
+        this.cerrarModalNuevoCliente();
+        this.showToast(`Cliente "${nuevo.nombreRazonSocial}" añadido y seleccionado con éxito.`);
+      },
+      error: (err) => {
+        this.newClientError.set(err.error?.mensaje || 'Error al guardar cliente.');
+      }
+    });
+  }
+
+  anularComprobante(recibo: ReciboResponse): void {
+    if (!confirm(`¿Está seguro de anular el comprobante ${recibo.numeroRecibo}?`)) return;
+
+    this.recibosService.anularRecibo(recibo.id, 'Anulado desde el sistema').subscribe({
+      next: () => {
+        this.showToast(`Comprobante ${recibo.numeroRecibo} anulado correctamente.`);
+        this.cargarDatos();
+      },
+      error: () => {
+        this.showToast('Error al anular el comprobante.');
+      }
+    });
+  }
+
   private showToast(msg: string): void {
     this.successMsg.set(msg);
-    setTimeout(() => this.successMsg.set(null), 3500);
+    setTimeout(() => this.successMsg.set(null), 3800);
   }
 }

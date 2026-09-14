@@ -43,6 +43,32 @@ export interface LibroDetalleResumenPdf {
   totalLps: number;
 }
 
+export interface ReciboPdfItem {
+  producto: string;
+  descripcion: string;
+  cantidad: number;
+  precio: number;
+  total: number;
+}
+
+export interface ReciboPdfData {
+  tipoComprobante: 'SinCAI' | 'ConCAI';
+  numeroRecibo: string;
+  numeroFiscal?: string;
+  cai?: string;
+  rangoAutorizado?: string;
+  fechaLimiteEmision?: string;
+  fechaEmision: string;
+  clienteNombre: string;
+  clienteRtn: string;
+  items: ReciboPdfItem[];
+  subtotal: number;
+  impuesto: number;
+  total: number;
+  montoEnLetras?: string;
+  observaciones?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -1088,4 +1114,434 @@ export class PdfGeneratorService {
     XLSX.utils.book_append_sheet(wb, ws, `ISV_${data.mesNombre}_${data.anio}`);
     XLSX.writeFile(wb, `Libro_Ventas_Compras_${data.cliente.rtn}_${data.mesNombre}_${data.anio}.xlsx`);
   }
+
+  // =========================================================================
+  // 6. GENERADOR DE RECIBOS Y FACTURAS (DUAL: INFORMAL IMAGE 3 Y FORMAL SAR)
+  // =========================================================================
+  generarReciboPdf(data: ReciboPdfData, autoDownload: boolean = true): jsPDF {
+    if (data.tipoComprobante === 'ConCAI') {
+      return this.generarReciboFiscalPdf(data, autoDownload);
+    } else {
+      return this.generarReciboInformalPdf(data, autoDownload);
+    }
+  }
+
+  // --- 6A. DISEÑO INFORMAL (IMAGE 3 - LÍDERES CONTABLES ORDOÑEZ Y ASOCIADOS) ---
+  generarReciboInformalPdf(data: ReciboPdfData, autoDownload: boolean = true): jsPDF {
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'letter'
+    });
+
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const cfg = this.despachoConfig;
+
+    const nombreDespacho = cfg?.nombreDespacho || 'LIDERES CONTABLES ORDOÑEZ Y ASOCIADOS';
+    const titular = cfg?.nombreContadorTitular || 'JOSE VIDAL ORDOÑEZ GALO';
+    const rtn = cfg?.rtnDespacho || '06011969003369';
+    const direccion = cfg?.direccion || 'BARRIO LA LIBERTAD ANTIGUAS OFICINAS EEH, 3 CDR AL OESTE';
+    const email = cfg?.email || 'JOSEVIDAL.ORDONEZGALO@GMAIL.COM';
+    const tel = cfg?.telefono || '9279-5295';
+
+    // 1. ENCABEZADO SUPERIOR
+    // Logo circular amarillo/dorado
+    doc.setFillColor(254, 240, 138); // Yellow 200
+    doc.setDrawColor(234, 179, 8); // Yellow 500
+    doc.setLineWidth(0.8);
+    doc.circle(22, 20, 8, 'FD');
+
+    // Emoji/Icono en el centro del logo
+    doc.setFontSize(11);
+    doc.text('🦅', 19.5, 23.5);
+
+    // Nombre del Despacho y Datos de Cabecera
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.setTextColor(15, 23, 42); // Slate 900
+    doc.text(nombreDespacho.toUpperCase(), 34, 18);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(6.2);
+    doc.setTextColor(71, 85, 105); // Slate 600
+    const subheaderText = `PROP. ${titular.toUpperCase()} | RTN: ${rtn} | ${direccion.toUpperCase()} | EMAIL: ${email.toUpperCase()} | TEL. ${tel}`;
+    doc.text(subheaderText, 34, 23, { maxWidth: pageWidth - 48 });
+
+    // 2. BARRA AMARILLA DE DATOS DEL CLIENTE (#FEF9C3)
+    const cardY = 30;
+    const cardHeight = 14;
+    doc.setFillColor(254, 249, 195); // Yellow 100
+    doc.setDrawColor(250, 204, 21); // Yellow 400
+    doc.setLineWidth(0.5);
+    doc.roundedRect(14, cardY, pageWidth - 28, cardHeight, 1.5, 1.5, 'FD');
+
+    // Cuadrantes dentro de la barra
+    // RTN
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(6.5);
+    doc.setTextColor(113, 63, 18); // Amber 900
+    doc.text('RTN:', 18, cardY + 5);
+    doc.setFont('courier', 'bold');
+    doc.setFontSize(8.5);
+    doc.setTextColor(15, 23, 42);
+    doc.text(data.clienteRtn || 'N/A', 18, cardY + 10.5);
+
+    // CLIENTE
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(6.5);
+    doc.setTextColor(113, 63, 18);
+    doc.text('CLIENTE:', 64, cardY + 5);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(15, 23, 42);
+    doc.text(data.clienteNombre || 'Cliente General', 64, cardY + 10.5, { maxWidth: 62 });
+
+    // # FACTURA / RECIBO
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(6.5);
+    doc.setTextColor(113, 63, 18);
+    doc.text('# FACTURA / RECIBO:', 130, cardY + 5);
+    doc.setFont('courier', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(180, 83, 9); // Amber 700
+    doc.text(data.numeroRecibo, 130, cardY + 10.5);
+
+    // FECHA EMISIÓN
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(6.5);
+    doc.setTextColor(113, 63, 18);
+    doc.text('FECHA EMISIÓN:', 172, cardY + 5);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(15, 23, 42);
+    doc.text(data.fechaEmision, 172, cardY + 10.5);
+
+    // 3. TABLA DE ITEMS CON COLUMNAS EXACTAS: PRODUCTO | DESCRIPCIÓN | CANTIDAD | PRECIO | TOTAL
+    const headers = [
+      [
+        { content: 'PRODUCTO', styles: { halign: 'left' } },
+        { content: 'DESCRIPCIÓN', styles: { halign: 'left' } },
+        { content: 'CANTIDAD', styles: { halign: 'center' } },
+        { content: 'PRECIO', styles: { halign: 'right' } },
+        { content: 'TOTAL', styles: { halign: 'right' } }
+      ]
+    ];
+
+    const rows = data.items.map(it => [
+      it.producto || 'Servicio Profesional',
+      it.descripcion || 'Honorarios Contables',
+      it.cantidad ? it.cantidad.toString() : '1',
+      this.formatLps(it.precio),
+      this.formatLps(it.total)
+    ]);
+
+    autoTable(doc, {
+      startY: 48,
+      head: headers as any,
+      body: rows,
+      theme: 'grid',
+      headStyles: {
+        fillColor: [15, 23, 42], // Slate 900
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        fontSize: 8,
+        cellPadding: 3
+      },
+      bodyStyles: {
+        fontSize: 8,
+        textColor: [30, 41, 59],
+        cellPadding: 3,
+        lineColor: [226, 232, 240],
+        lineWidth: 0.2
+      },
+      alternateRowStyles: {
+        fillColor: [248, 250, 252]
+      },
+      columnStyles: {
+        0: { cellWidth: 42, fontStyle: 'bold' },
+        1: { cellWidth: 'auto' },
+        2: { cellWidth: 20, halign: 'center' },
+        3: { cellWidth: 28, halign: 'right' },
+        4: { cellWidth: 32, halign: 'right', fontStyle: 'bold', textColor: [15, 23, 42] }
+      },
+      margin: { left: 14, right: 14 }
+    });
+
+    const finalY = (doc as any).lastAutoTable?.finalY || 100;
+    const bottomY = finalY + 8;
+
+    // 4. SECCIÓN INFERIOR: CITA TRIBUTARIA AMARILLA (IZQUIERDA) Y TOTALES (DERECHA)
+    const quoteWidth = 106;
+    const totalsWidth = 72;
+    const totalsX = pageWidth - 14 - totalsWidth;
+
+    // Cita Tributaria Amarilla
+    doc.setFillColor(254, 249, 195); // Yellow 100
+    doc.setDrawColor(250, 204, 21); // Yellow 400
+    doc.setLineWidth(0.4);
+    doc.roundedRect(14, bottomY, quoteWidth, 30, 1.5, 1.5, 'FD');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(22);
+    doc.setTextColor(202, 138, 4); // Yellow 600
+    doc.text('“', 17, bottomY + 7);
+
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(6.8);
+    doc.setTextColor(113, 63, 18); // Amber 900
+    const quoteText = 'La tributación no es solo una obligación, es una herramienta clave para el desarrollo de un país y la sostenibilidad de las empresas; conocer y aplicar correctamente las normas fiscales permite tomar decisiones inteligentes, evitar sanciones y contribuir al bienestar colectivo.';
+    doc.text(quoteText, 24, bottomY + 6, { maxWidth: quoteWidth - 12, lineHeightFactor: 1.25 });
+
+    // Cuadro de Totales
+    doc.setFillColor(248, 250, 252);
+    doc.setDrawColor(203, 213, 225);
+    doc.setLineWidth(0.4);
+    doc.roundedRect(totalsX, bottomY, totalsWidth, 30, 1.5, 1.5, 'FD');
+
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(71, 85, 105);
+    doc.text('SUBTOTAL:', totalsX + 4, bottomY + 6.5);
+    doc.setFont('courier', 'bold');
+    doc.setTextColor(15, 23, 42);
+    doc.text(this.formatLps(data.subtotal), totalsX + totalsWidth - 4, bottomY + 6.5, { align: 'right' });
+
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(71, 85, 105);
+    doc.text('IMPUESTO:', totalsX + 4, bottomY + 13);
+    doc.setFont('courier', 'bold');
+    doc.setTextColor(15, 23, 42);
+    doc.text(this.formatLps(data.impuesto), totalsX + totalsWidth - 4, bottomY + 13, { align: 'right' });
+
+    doc.setDrawColor(203, 213, 225);
+    doc.line(totalsX + 4, bottomY + 17, totalsX + totalsWidth - 4, bottomY + 17);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(15, 23, 42);
+    doc.text('TOTAL:', totalsX + 4, bottomY + 24);
+    doc.setFont('courier', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(5, 150, 105); // Green 600
+    doc.text(this.formatLps(data.total), totalsX + totalsWidth - 4, bottomY + 24, { align: 'right' });
+
+    // 5. FIRMA Y SELLO
+    const sigY = bottomY + 45;
+    const sigWidth = 65;
+    const sigX = (pageWidth - sigWidth) / 2;
+
+    doc.setDrawColor(148, 163, 184);
+    doc.setLineWidth(0.3);
+    doc.line(sigX, sigY, sigX + sigWidth, sigY);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(15, 23, 42);
+    doc.text('FIRMA Y SELLO', pageWidth / 2, sigY + 4, { align: 'center' });
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(71, 85, 105);
+    doc.text(titular, pageWidth / 2, sigY + 8, { align: 'center' });
+    if (cfg?.colegiacionCAH) {
+      doc.text(cfg.colegiacionCAH, pageWidth / 2, sigY + 11.5, { align: 'center' });
+    }
+
+    if (autoDownload) {
+      const cleanNum = data.numeroRecibo.replace(/[^a-zA-Z0-9-_]/g, '_');
+      doc.save(`Recibo_${cleanNum}.pdf`);
+    }
+
+    return doc;
+  }
+
+  // --- 6B. DISEÑO FISCAL OFICIAL CON CAI (SAR) ---
+  generarReciboFiscalPdf(data: ReciboPdfData, autoDownload: boolean = true): jsPDF {
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'letter'
+    });
+
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const cfg = this.despachoConfig;
+
+    // Encabezado
+    doc.setFillColor(15, 23, 42);
+    doc.rect(14, 10, pageWidth - 28, 1.5, 'F');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.setTextColor(15, 23, 42);
+    doc.text((cfg?.nombreDespacho || 'DESPACHO CONTABLE Y FISCAL').toUpperCase(), 14, 18);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139);
+    doc.text(`Titular: ${cfg?.nombreContadorTitular || 'Contador'} • RTN: ${cfg?.rtnDespacho || '08011980123456'} • ${cfg?.colegiacionCAH || 'CAH'}`, 14, 23);
+    doc.text(`Tel: ${cfg?.telefono || '+504 2235-0000'} • Email: ${cfg?.email || 'contacto@despacho.hn'}`, 14, 27);
+
+    // Caja de Número de Factura / CAI
+    doc.setFillColor(248, 250, 252);
+    doc.setDrawColor(203, 213, 225);
+    doc.roundedRect(pageWidth - 80, 14, 66, 16, 1.5, 1.5, 'FD');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(15, 23, 42);
+    doc.text('FACTURA / RECIBO FISCAL', pageWidth - 47, 19, { align: 'center' });
+
+    doc.setFont('courier', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(37, 99, 235);
+    doc.text(data.numeroFiscal || data.numeroRecibo, pageWidth - 47, 24.5, { align: 'center' });
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(100, 116, 139);
+    doc.text(`Fecha: ${data.fechaEmision}`, pageWidth - 47, 28.5, { align: 'center' });
+
+    // Bloque CAI
+    const caiY = 33;
+    doc.setFillColor(248, 250, 252);
+    doc.setDrawColor(203, 213, 225);
+    doc.roundedRect(14, caiY, pageWidth - 28, 12, 1.5, 1.5, 'FD');
+
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(71, 85, 105);
+    doc.text('CAI (SAR):', 18, caiY + 5);
+    doc.setFont('courier', 'bold');
+    doc.setTextColor(15, 23, 42);
+    doc.text(data.cai || 'N/A', 35, caiY + 5);
+
+    if (data.rangoAutorizado) {
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(71, 85, 105);
+      doc.text('Rango Autorizado:', 18, caiY + 9.5);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(15, 23, 42);
+      doc.text(data.rangoAutorizado, 44, caiY + 9.5);
+    }
+
+    if (data.fechaLimiteEmision) {
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(71, 85, 105);
+      doc.text('Fecha Límite:', pageWidth - 65, caiY + 5);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(220, 38, 38);
+      doc.text(data.fechaLimiteEmision, pageWidth - 45, caiY + 5);
+    }
+
+    // Datos Cliente
+    const cliY = caiY + 15;
+    doc.setFillColor(255, 255, 255);
+    doc.setDrawColor(226, 232, 240);
+    doc.roundedRect(14, cliY, pageWidth - 28, 11, 1.5, 1.5, 'FD');
+
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(71, 85, 105);
+    doc.text('CLIENTE:', 18, cliY + 7);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(15, 23, 42);
+    doc.text(data.clienteNombre, 35, cliY + 7);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(71, 85, 105);
+    doc.text('RTN:', pageWidth - 70, cliY + 7);
+    doc.setFont('courier', 'bold');
+    doc.setTextColor(15, 23, 42);
+    doc.text(data.clienteRtn, pageWidth - 55, cliY + 7);
+
+    // Tabla de Ítems
+    const headers = [['PRODUCTO', 'DESCRIPCIÓN', 'CANTIDAD', 'PRECIO', 'TOTAL']];
+    const rows = data.items.map(it => [
+      it.producto || 'Servicio Profesional',
+      it.descripcion || 'Honorarios',
+      it.cantidad ? it.cantidad.toString() : '1',
+      this.formatLps(it.precio),
+      this.formatLps(it.total)
+    ]);
+
+    autoTable(doc, {
+      startY: cliY + 14,
+      head: headers,
+      body: rows,
+      theme: 'grid',
+      headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.5 },
+      bodyStyles: { fontSize: 7.5, cellPadding: 2.5 },
+      columnStyles: {
+        0: { cellWidth: 40, fontStyle: 'bold' },
+        1: { cellWidth: 'auto' },
+        2: { cellWidth: 20, halign: 'center' },
+        3: { cellWidth: 28, halign: 'right' },
+        4: { cellWidth: 32, halign: 'right', fontStyle: 'bold' }
+      },
+      margin: { left: 14, right: 14 }
+    });
+
+    const finalY = (doc as any).lastAutoTable?.finalY || 110;
+    const totalsY = finalY + 6;
+
+    // Totales
+    const totWidth = 75;
+    const totX = pageWidth - 14 - totWidth;
+
+    doc.setFillColor(248, 250, 252);
+    doc.setDrawColor(203, 213, 225);
+    doc.roundedRect(totX, totalsY, totWidth, 26, 1.5, 1.5, 'FD');
+
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(71, 85, 105);
+    doc.text('SUBTOTAL:', totX + 4, totalsY + 6);
+    doc.setFont('courier', 'bold');
+    doc.setTextColor(15, 23, 42);
+    doc.text(this.formatLps(data.subtotal), totX + totWidth - 4, totalsY + 6, { align: 'right' });
+
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(71, 85, 105);
+    doc.text('ISV 15%:', totX + 4, totalsY + 12);
+    doc.setFont('courier', 'bold');
+    doc.setTextColor(15, 23, 42);
+    doc.text(this.formatLps(data.impuesto), totX + totWidth - 4, totalsY + 12, { align: 'right' });
+
+    doc.setDrawColor(203, 213, 225);
+    doc.line(totX + 4, totalsY + 15.5, totX + totWidth - 4, totalsY + 15.5);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    doc.setTextColor(15, 23, 42);
+    doc.text('TOTAL LPS:', totX + 4, totalsY + 21.5);
+    doc.setFont('courier', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(5, 150, 105);
+    doc.text(this.formatLps(data.total), totX + totWidth - 4, totalsY + 21.5, { align: 'right' });
+
+    // Firma
+    const sigY = totalsY + 38;
+    doc.setDrawColor(148, 163, 184);
+    doc.line(pageWidth / 2 - 30, sigY, pageWidth / 2 + 30, sigY);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.5);
+    doc.setTextColor(15, 23, 42);
+    doc.text('FIRMA AUTORIZADA', pageWidth / 2, sigY + 4, { align: 'center' });
+
+    // Pie de página oficial
+    doc.setFontSize(6.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(148, 163, 184);
+    doc.text('ORIGINAL: CLIENTE   •   COPIA: OBLIGADO TRIBUTARIO EMISOR', pageWidth / 2, pageHeight - 8, { align: 'center' });
+
+    if (autoDownload) {
+      const cleanNum = data.numeroRecibo.replace(/[^a-zA-Z0-9-_]/g, '_');
+      doc.save(`Factura_SAR_${cleanNum}.pdf`);
+    }
+
+    return doc;
+  }
 }
+

@@ -8,125 +8,675 @@
     </div>
   }
 
+  @if (errorMsg()) {
+    <div class="toast-error">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span>{{ errorMsg() }}</span>
+    </div>
+  }
+
+  <!-- HEADER PRINCIPAL CON PESTAÑAS DE VISTA -->
   <header class="page-header">
     <div class="header-left">
-      <div class="header-badge bg-purple-light text-purple">Comprobantes Fiscales</div>
-      <h1 class="header-title">Emisión y Archivo de Recibos</h1>
-      <p class="header-subtitle">Historial de recibos correlativos generados para los clientes del despacho</p>
+      <div class="header-badge bg-amber-light text-amber">Módulo de Facturación & Cobranza</div>
+      <h1 class="header-title">Facturación y Emisión de Recibos</h1>
+      <p class="header-subtitle">Genera recibos de honorarios informales y facturas fiscales con CAI oficial del SAR</p>
+    </div>
+
+    <div class="header-nav-tabs">
+      <button 
+        type="button" 
+        class="nav-tab-btn" 
+        [class.active]="currentView() === 'emitir'"
+        (click)="currentView.set('emitir')"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        <span>Emitir Comprobante</span>
+      </button>
+
+      <button 
+        type="button" 
+        class="nav-tab-btn" 
+        [class.active]="currentView() === 'historial'"
+        (click)="currentView.set('historial')"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span>Archivo e Historial ({{ recibos().length }})</span>
+      </button>
     </div>
   </header>
 
-  <div class="table-container-card">
-    <div class="filters-bar">
-      <span class="font-bold text-sm">Recibos Emitidos ({{ recibosValidos().length }})</span>
-      <div class="search-box">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" placeholder="Buscar por N° Recibo, cliente o RTN..." [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" />
-      </div>
-    </div>
+  <!-- ========================================================================= -->
+  <!-- VISTA 1: ESPACIO DE EMISIÓN DE RECIBO / FACTURA -->
+  <!-- ========================================================================= -->
+  @if (currentView() === 'emitir') {
+    <div class="invoice-workspace animate-fade-in">
+      
+      <!-- 1. SELECTOR DE MODO: CON CAI (SAR) vs SIN CAI (INFORMAL) -->
+      <div class="mode-selector-card">
+        <span class="section-label">1. Selecciona el Tipo de Comprobante:</span>
+        <div class="mode-grid">
+          
+          <!-- Opción Sin CAI (Informal) -->
+          <div 
+            class="mode-card" 
+            [class.selected]="formTipoComprobante() === 'SinCAI'"
+            (click)="setTipoComprobante('SinCAI')"
+          >
+            <div class="mode-radio">
+              <span class="radio-dot" [class.checked]="formTipoComprobante() === 'SinCAI'"></span>
+            </div>
+            <div class="mode-info">
+              <div class="mode-header">
+                <span class="badge-informal">🟢 Recibo Sin CAI (Informal)</span>
+                <span class="badge-tag">Recomendado para cobro ágil</span>
+              </div>
+              <h4>Comprobante de Honorarios & Servicios</h4>
+              <p>Formato con desglose de ítems, cita tributaria oficial y diseño de Líderes Contables Ordóñez y Asociados.</p>
+            </div>
+          </div>
 
-    @if (isLoading()) {
-      <div class="loading-state"><div class="spinner"></div><p>Cargando archivo de recibos...</p></div>
-    } @else if (filteredRecibos().length === 0) {
-      <div class="empty-state"><h4>No hay recibos generados</h4><p>Los recibos se generan automáticamente al registrar pagos de honorarios.</p></div>
-    } @else {
-      <div class="table-responsive">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>N° Correlativo</th>
-              <th>Contribuyente / Cliente</th>
-              <th>Concepto / Mes</th>
-              <th>Monto Emitido</th>
-              <th>Fecha de Emisión</th>
-              <th class="text-right">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (r of filteredRecibos(); track r.id) {
+          <!-- Opción Con CAI (SAR) -->
+          <div 
+            class="mode-card" 
+            [class.selected]="formTipoComprobante() === 'ConCAI'"
+            (click)="setTipoComprobante('ConCAI')"
+          >
+            <div class="mode-radio">
+              <span class="radio-dot" [class.checked]="formTipoComprobante() === 'ConCAI'"></span>
+            </div>
+            <div class="mode-info">
+              <div class="mode-header">
+                <span class="badge-cai">🏛️ Factura Fiscal con CAI (SAR)</span>
+                <span class="badge-tag-sar">Oficial SAR</span>
+              </div>
+              <h4>Facturación Tributaria con Rango Autorizado</h4>
+              <p>Comprobante fiscal con CAI, número correlativo oficial SAR y fecha límite de emisión.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 2. CABECERA: CLIENTE, RTN, NÚMERO Y FECHA -->
+      <div class="card-box client-header-box">
+        <div class="box-title-row">
+          <span class="section-label">2. Datos del Cliente y Comprobante:</span>
+          <button type="button" class="btn-quick-client" (click)="abrirModalNuevoCliente()">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-4 h-4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>+ Añadir nuevo cliente</span>
+          </button>
+        </div>
+
+        <div class="form-grid-header">
+          <!-- Selector con Autocomplete -->
+          <div class="form-group flex-2">
+            <label>Contribuyente / Cliente <span class="required">*</span></label>
+            <app-client-selector
+              [clients]="clientes()"
+              [selectedId]="formClienteId()"
+              placeholder="Buscar por RTN, nombre o empresa..."
+              (clientSelected)="onClientSelected($event)"
+              (clientCleared)="onClientCleared()"
+            ></app-client-selector>
+          </div>
+
+          <!-- RTN Cliente -->
+          <div class="form-group flex-1">
+            <label>RTN del Cliente</label>
+            <input 
+              type="text" 
+              class="form-control font-mono" 
+              placeholder="00000000000000"
+              [ngModel]="formRtnCliente()" 
+              (ngModelChange)="formRtnCliente.set($event)"
+            />
+          </div>
+
+          <!-- N° Factura / Recibo -->
+          <div class="form-group flex-1">
+            <label>N° Factura / Recibo</label>
+            <input 
+              type="text" 
+              class="form-control font-mono font-bold text-amber-dark" 
+              [ngModel]="formNumeroComprobante()" 
+              (ngModelChange)="formNumeroComprobante.set($event)"
+            />
+          </div>
+
+          <!-- Fecha de Emisión -->
+          <div class="form-group flex-1">
+            <label>Fecha de Emisión</label>
+            <input 
+              type="date" 
+              class="form-control font-semibold" 
+              [ngModel]="formFechaEmision()" 
+              (ngModelChange)="formFechaEmision.set($event)"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. TABLA DE PRODUCTOS / SERVICIOS CON SUGERENCIAS RÁPIDAS -->
+      <div class="card-box items-box">
+        <div class="box-title-row">
+          <div>
+            <span class="section-label">3. Desglose de Servicios y Productos (Columnas Exactas):</span>
+            <p class="section-desc">Agrega o ajusta las filas con el producto, descripción, cantidad y precio.</p>
+          </div>
+
+          <!-- Chips de Sugerencia Rápida -->
+          <div class="quick-chips-container">
+            <span class="chips-label">⚡ Sugerencias rápidas:</span>
+            <div class="chips-list">
+              @for (sug of sugerenciasServicios; track sug.producto) {
+                <button 
+                  type="button" 
+                  class="suggestion-chip"
+                  (click)="aplicarSugerenciaRapida(sug)"
+                  title="Agregar {{ sug.producto }} (L. {{ sug.precioDefault }})"
+                >
+                  <span>+ {{ sug.producto }}</span>
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- TABLA DINÁMICA DE ÍTEMS -->
+        <div class="items-table-container">
+          <table class="items-table">
+            <thead>
               <tr>
-                <td><span class="font-mono font-bold text-blue-dark">{{ r.numeroRecibo }}</span></td>
-                <td>
-                  <div class="flex flex-col">
-                    <span class="font-semibold">{{ r.clienteNombre }}</span>
-                    <span class="text-xs text-muted font-mono">{{ r.clienteRtn }}</span>
-                  </div>
-                </td>
-                <td><span class="mes-badge">{{ r.mesAplicado }}</span></td>
-                <td><span class="font-bold text-green-dark">L. {{ r.monto | number:'1.2-2' }}</span></td>
-                <td><span class="text-xs">{{ r.fechaPago | date:'dd/MM/yyyy' }}</span></td>
-                <td class="text-right">
-                  <div class="row-actions">
-                    <!-- Enviar por WhatsApp -->
-                    <button class="btn-action-wa" (click)="enviarWhatsAppPago(r)" title="Enviar comprobante por WhatsApp">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                      <span>WhatsApp</span>
-                    </button>
-
-                    <!-- Ver e Imprimir -->
-                    <button class="btn-action-view" (click)="abrirVisorRecibo(r)" title="Visualizar e Imprimir Recibo">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                      <span>Ver / Imprimir</span>
-                    </button>
-
-                    <!-- Descargar PDF -->
-                    <button class="btn-action-dl" (click)="descargarPdf(r.reciboId!, r.numeroRecibo!)" title="Descargar PDF">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    </button>
-                  </div>
-                </td>
+                <th style="width: 25%;">PRODUCTO <span class="required">*</span></th>
+                <th style="width: 35%;">DESCRIPCIÓN</th>
+                <th style="width: 12%; text-align: center;">CANTIDAD</th>
+                <th style="width: 14%; text-align: right;">PRECIO (LPS)</th>
+                <th style="width: 14%; text-align: right;">TOTAL</th>
+                <th style="width: 5%;"></th>
               </tr>
-            }
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              @for (item of formItems(); track $index; let i = $index) {
+                <tr>
+                  <!-- PRODUCTO -->
+                  <td>
+                    <input 
+                      type="text" 
+                      class="table-input font-semibold" 
+                      placeholder="Ej: Talonario de Facturas..."
+                      [value]="item.producto"
+                      (input)="actualizarItem(i, 'producto', $any($event.target).value)"
+                    />
+                  </td>
+
+                  <!-- DESCRIPCIÓN -->
+                  <td>
+                    <input 
+                      type="text" 
+                      class="table-input" 
+                      placeholder="Detalles adicionales del servicio..."
+                      [value]="item.descripcion"
+                      (input)="actualizarItem(i, 'descripcion', $any($event.target).value)"
+                    />
+                  </td>
+
+                  <!-- CANTIDAD -->
+                  <td class="text-center">
+                    <input 
+                      type="number" 
+                      min="1" 
+                      step="1"
+                      class="table-input text-center font-bold" 
+                      [value]="item.cantidad"
+                      (input)="actualizarItem(i, 'cantidad', $any($event.target).value)"
+                    />
+                  </td>
+
+                  <!-- PRECIO -->
+                  <td class="text-right">
+                    <div class="input-currency-wrapper">
+                      <span class="currency-prefix">L.</span>
+                      <input 
+                        type="number" 
+                        min="0" 
+                        step="10"
+                        class="table-input text-right font-mono" 
+                        [value]="item.precio"
+                        (input)="actualizarItem(i, 'precio', $any($event.target).value)"
+                      />
+                    </div>
+                  </td>
+
+                  <!-- TOTAL (Calculado) -->
+                  <td class="text-right">
+                    <span class="item-total-badge">
+                      L. {{ item.total | number:'1.2-2' }}
+                    </span>
+                  </td>
+
+                  <!-- ACCIÓN ELIMINAR -->
+                  <td class="text-center">
+                    <button 
+                      type="button" 
+                      class="btn-delete-row" 
+                      (click)="eliminarItem(i)" 
+                      title="Eliminar fila"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+
+          <div class="table-footer-actions">
+            <button type="button" class="btn-add-item" (click)="agregarItem()">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-4 h-4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>+ Agregar otro ítem o servicio</span>
+            </button>
+          </div>
+        </div>
       </div>
-    }
-  </div>
+
+      <!-- 4. RESUMEN DE TOTALES Y OPCIONES COMPLEMENTARIAS -->
+      <div class="summary-and-options-grid">
+        
+        <!-- Opciones de pago y registro -->
+        <div class="card-box options-box">
+          <span class="section-label">4. Condiciones y Registro:</span>
+          
+          <div class="form-row-compact">
+            <div class="form-group flex-1">
+              <label>Método de Pago</label>
+              <select class="form-control" [ngModel]="formMetodoPago()" (ngModelChange)="formMetodoPago.set($event)">
+                <option value="Transferencia">Transferencia Bancaria</option>
+                <option value="Efectivo">Efectivo</option>
+                <option value="Depósito">Depósito Bancario</option>
+                <option value="Cheque">Cheque</option>
+              </select>
+            </div>
+
+            <div class="form-group flex-1">
+              <label>Período / Mes Aplicado</label>
+              <input type="text" class="form-control" [ngModel]="formMesAplicado()" (ngModelChange)="formMesAplicado.set($event)" />
+            </div>
+          </div>
+
+          <div class="checkbox-group-modern">
+            <label class="custom-checkbox-label">
+              <input type="checkbox" [ngModel]="formAplicarIsv()" (ngModelChange)="formAplicarIsv.set($event)" />
+              <span class="checkbox-box"></span>
+              <span class="checkbox-text">Aplicar Impuesto sobre Ventas (ISV 15%)</span>
+            </label>
+
+            <label class="custom-checkbox-label">
+              <input type="checkbox" [ngModel]="formRegistrarComoPago()" (ngModelChange)="formRegistrarComoPago.set($event)" />
+              <span class="checkbox-box"></span>
+              <span class="checkbox-text">Registrar simultáneamente en historial de cobros</span>
+            </label>
+          </div>
+
+          <div class="form-group mt-2">
+            <label>Observaciones / Nota adicional</label>
+            <input 
+              type="text" 
+              class="form-control" 
+              placeholder="Nota visible o aclaratoria en el comprobante..." 
+              [ngModel]="formObservaciones()" 
+              (ngModelChange)="formObservaciones.set($event)"
+            />
+          </div>
+        </div>
+
+        <!-- Tarjeta de Totales Finales -->
+        <div class="card-box totals-summary-box">
+          <span class="section-label">Totales de Liquidación:</span>
+
+          <div class="totals-lines">
+            <div class="tot-line">
+              <span class="tot-label">SUBTOTAL:</span>
+              <span class="tot-val">L. {{ formSubtotal() | number:'1.2-2' }}</span>
+            </div>
+
+            <div class="tot-line">
+              <span class="tot-label">IMPUESTO (ISV):</span>
+              <span class="tot-val">L. {{ formImpuesto() | number:'1.2-2' }}</span>
+            </div>
+
+            <div class="tot-divider"></div>
+
+            <div class="tot-line tot-grand-total">
+              <span class="tot-label-large">TOTAL A EMITIR:</span>
+              <span class="tot-val-large">L. {{ formTotal() | number:'1.2-2' }}</span>
+            </div>
+          </div>
+
+          <!-- Barra de Cita Tributaria Preview -->
+          <div class="quote-preview-snippet">
+            <span class="quote-icon">“</span>
+            <p>La tributación no es solo una obligación, es una herramienta clave para el desarrollo del país...</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 5. BARRA PRINCIPAL DE ACCIONES DE FACTURACIÓN -->
+      <div class="action-footer-bar">
+        <div class="action-left">
+          <button type="button" class="btn btn-secondary" (click)="reiniciarFormulario()">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+            <span>Limpiar</span>
+          </button>
+        </div>
+
+        <div class="action-right">
+          <!-- Previsualizar e Imprimir PDF -->
+          <button type="button" class="btn btn-secondary" (click)="previsualizarPdf()" title="Ver e imprimir diseño final">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            <span>Previsualizar / Imprimir</span>
+          </button>
+
+          <!-- Descargar PDF Directo -->
+          <button type="button" class="btn btn-secondary" (click)="descargarPdfDirecto()" title="Descargar archivo PDF al instante">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>Descargar PDF</span>
+          </button>
+
+          <!-- Enviar por WhatsApp -->
+          <button 
+            type="button" 
+            class="btn btn-whatsapp font-bold" 
+            (click)="enviarWhatsAppComprobante({ clienteNombre: formNombreCliente(), clienteId: formClienteId() || undefined, monto: formTotal(), numeroRecibo: formNumeroComprobante(), items: formItems() })"
+            title="Compartir comprobante y detalle por WhatsApp"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            <span>WhatsApp</span>
+          </button>
+
+          <!-- Guardar y Emitir -->
+          <button 
+            type="button" 
+            class="btn btn-primary btn-emitir" 
+            [disabled]="isSaving()"
+            (click)="guardarComprobante(true)"
+          >
+            @if (isSaving()) {
+              <div class="spinner-sm"></div>
+              <span>Emitiendo...</span>
+            } @else {
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              <span>Guardar y Emitir Comprobante</span>
+            }
+          </button>
+        </div>
+      </div>
+
+    </div>
+  }
+
+  <!-- ========================================================================= -->
+  <!-- VISTA 2: ARCHIVO E HISTORIAL DE COMPROBANTES EMITIDOS -->
+  <!-- ========================================================================= -->
+  @if (currentView() === 'historial') {
+    <div class="table-container-card animate-fade-in">
+      <div class="filters-bar">
+        <div class="filter-group">
+          <span class="font-bold text-sm">Comprobantes Emitidos ({{ filteredRecibos().length }})</span>
+          
+          <div class="type-filter-pills">
+            <button 
+              type="button" 
+              class="pill-btn" 
+              [class.active]="filterTipo() === 'todos'"
+              (click)="filterTipo.set('todos')"
+            >
+              Todos
+            </button>
+            <button 
+              type="button" 
+              class="pill-btn" 
+              [class.active]="filterTipo() === 'SinCAI'"
+              (click)="filterTipo.set('SinCAI')"
+            >
+              🟢 Sin CAI
+            </button>
+            <button 
+              type="button" 
+              class="pill-btn" 
+              [class.active]="filterTipo() === 'ConCAI'"
+              (click)="filterTipo.set('ConCAI')"
+            >
+              🏛️ Con CAI (SAR)
+            </button>
+          </div>
+        </div>
+
+        <div class="search-box">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Buscar por N° Recibo, cliente o RTN..." [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" />
+        </div>
+      </div>
+
+      @if (isLoading()) {
+        <div class="loading-state"><div class="spinner"></div><p>Cargando archivo de comprobantes...</p></div>
+      } @else if (filteredRecibos().length === 0) {
+        <div class="empty-state">
+          <h4>No se encontraron comprobantes</h4>
+          <p>Utiliza la pestaña "Emitir Comprobante" para crear facturas y recibos con desglose de servicios.</p>
+        </div>
+      } @else {
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>N° Comprobante</th>
+                <th>Tipo</th>
+                <th>Contribuyente / Cliente</th>
+                <th>Concepto / Ítems</th>
+                <th>Total Lps</th>
+                <th>Fecha Emisión</th>
+                <th class="text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of filteredRecibos(); track r.id) {
+                <tr [class.row-anulado]="r.anulado">
+                  <td>
+                    <div class="flex flex-col">
+                      <span class="font-mono font-bold text-blue-dark">{{ r.numeroRecibo }}</span>
+                      @if (r.numeroFiscal && r.numeroFiscal !== r.numeroRecibo) {
+                        <span class="text-xs text-muted font-mono">Fiscal: {{ r.numeroFiscal }}</span>
+                      }
+                    </div>
+                  </td>
+                  <td>
+                    @if (r.tipoComprobante === 'ConCAI') {
+                      <span class="badge-cai-sm">🏛️ SAR CAI</span>
+                    } @else {
+                      <span class="badge-informal-sm">🟢 Sin CAI</span>
+                    }
+                  </td>
+                  <td>
+                    <div class="flex flex-col">
+                      <span class="font-semibold">{{ r.nombreCliente }}</span>
+                      <span class="text-xs text-muted font-mono">{{ r.rtnCliente }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="text-sm">{{ r.concepto }}</span>
+                    @if (r.items && r.items.length > 1) {
+                      <span class="text-xs text-muted block">({{ r.items.length }} ítems facturados)</span>
+                    }
+                  </td>
+                  <td>
+                    <span class="font-bold text-green-dark">L. {{ r.monto | number:'1.2-2' }}</span>
+                  </td>
+                  <td>
+                    <span class="text-xs">{{ r.fechaEmision | date:'dd/MM/yyyy' }}</span>
+                  </td>
+                  <td class="text-right">
+                    <div class="row-actions">
+                      <!-- Enviar por WhatsApp -->
+                      <button class="btn-action-wa" (click)="enviarWhatsAppComprobante({ clienteNombre: r.nombreCliente, clienteId: r.clienteId, monto: r.monto, numeroRecibo: r.numeroRecibo, items: r.items })" title="Enviar comprobante por WhatsApp">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                        <span>WhatsApp</span>
+                      </button>
+
+                      <!-- Ver e Imprimir -->
+                      <button class="btn-action-view" (click)="abrirVisorHistorial(r)" title="Visualizar e Imprimir Recibo">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                        <span>Ver</span>
+                      </button>
+
+                      <!-- Descargar PDF -->
+                      <button class="btn-action-dl" (click)="recibosService.descargarReciboPdf(r.id)" title="Descargar PDF">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                      </button>
+
+                      @if (!r.anulado) {
+                        <button class="btn-action-anular" (click)="anularComprobante(r)" title="Anular comprobante">
+                          ✕
+                        </button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  }
+
 </div>
 
-<!-- MODAL VISOR E IMPRESIÓN DE RECIBO DIGITAL -->
-@if (previewRecibo(); as pr) {
-  <div class="modal-backdrop" (click)="cerrarVisorRecibo()">
+<!-- ========================================================================= -->
+<!-- MODAL VISOR E IMPRESIÓN DE COMPROBANTE DIGITAL (PDF) -->
+<!-- ========================================================================= -->
+@if (previewModal(); as pm) {
+  <div class="modal-backdrop" (click)="cerrarVisor()">
     <div class="modal-card modal-card-pdf animate-fade-in" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div class="modal-title-box">
-          <div class="modal-icon bg-purple-light text-purple">
+          <div class="modal-icon bg-amber-light text-amber">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
           </div>
           <div>
-            <h3>Recibo Digital N° {{ pr.numeroRecibo }}</h3>
-            <p>{{ pr.clienteNombre }} &bull; RTN: {{ pr.clienteRtn }} &bull; Mes: {{ pr.mesAplicado }}</p>
+            <h3>Comprobante {{ pm.tipoComprobante === 'ConCAI' ? 'Fiscal SAR' : 'Informal' }} N° {{ pm.numeroRecibo }}</h3>
+            <p>{{ pm.clienteNombre }} &bull; RTN: {{ pm.clienteRtn }} &bull; Total: L. {{ pm.monto | number:'1.2-2' }}</p>
           </div>
         </div>
 
         <div class="modal-header-actions">
           <!-- Botón WhatsApp -->
-          @if (pr.telefonoWhatsApp) {
-            <button class="btn btn-secondary text-green font-bold text-xs" (click)="enviarWhatsAppPago(pr)" title="Enviar comprobante por WhatsApp">
+          @if (pm.telefonoWhatsApp) {
+            <button class="btn btn-whatsapp text-xs" (click)="enviarWhatsAppComprobante(pm)" title="Enviar comprobante por WhatsApp">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-              <span>Enviar WhatsApp</span>
+              <span>WhatsApp</span>
             </button>
           }
 
           <!-- Botón Imprimir -->
-          <button class="btn btn-secondary text-xs" (click)="imprimirReciboDesdeVisor()" title="Imprimir Recibo Oficial">
+          <button class="btn btn-secondary text-xs" (click)="imprimirDesdeVisor()" title="Imprimir Comprobante">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
             <span>Imprimir</span>
           </button>
 
           <!-- Botón Descargar -->
-          <button class="btn btn-primary text-xs" (click)="descargarPdf(pr.reciboId, pr.numeroRecibo)" title="Descargar archivo PDF">
+          <button class="btn btn-primary text-xs" (click)="descargarDesdeVisor()" title="Descargar archivo PDF">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             <span>Descargar</span>
           </button>
 
-          <button class="modal-close" (click)="cerrarVisorRecibo()">✕</button>
+          <button class="modal-close" (click)="cerrarVisor()">✕</button>
         </div>
       </div>
 
-      <!-- Iframe para ver el PDF generado por QuestPDF -->
+      <!-- Iframe para ver el PDF -->
       <div class="pdf-viewer-container">
-        <iframe [src]="pr.safeUrl" class="pdf-iframe" title="Visor de Recibo PDF"></iframe>
+        <iframe [src]="pm.safeUrl" class="pdf-iframe" title="Visor de Recibo PDF"></iframe>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ========================================================================= -->
+<!-- MODAL RÁPIDO: + AÑADIR NUEVO CLIENTE -->
+<!-- ========================================================================= -->
+@if (isNewClientModalOpen()) {
+  <div class="modal-backdrop" (click)="cerrarModalNuevoCliente()">
+    <div class="modal-card modal-card-sm animate-fade-in" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-box">
+          <div class="modal-icon bg-blue-light text-blue">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+          </div>
+          <div>
+            <h3>Registrar Nuevo Cliente</h3>
+            <p>Se creará y seleccionará automáticamente en la factura</p>
+          </div>
+        </div>
+        <button class="modal-close" (click)="cerrarModalNuevoCliente()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        @if (newClientError()) {
+          <div class="alert-box alert-error mb-3">{{ newClientError() }}</div>
+        }
+
+        <div class="form-group mb-3">
+          <label>Nombre / Razón Social <span class="required">*</span></label>
+          <input 
+            type="text" 
+            class="form-control" 
+            placeholder="Ej: Inversiones Martinez S. de R.L." 
+            [ngModel]="newClientNombre()" 
+            (ngModelChange)="newClientNombre.set($event)"
+          />
+        </div>
+
+        <div class="form-group mb-3">
+          <label>RTN (14 dígitos) <span class="required">*</span></label>
+          <input 
+            type="text" 
+            class="form-control font-mono" 
+            placeholder="Ej: 08011990123456" 
+            [ngModel]="newClientRtn()" 
+            (ngModelChange)="newClientRtn.set($event)"
+          />
+        </div>
+
+        <div class="form-row mb-3">
+          <div class="form-group flex-1">
+            <label>Teléfono / WhatsApp</label>
+            <input 
+              type="text" 
+              class="form-control" 
+              placeholder="Ej: 9988-7766" 
+              [ngModel]="newClientTelefono()" 
+              (ngModelChange)="newClientTelefono.set($event)"
+            />
+          </div>
+
+          <div class="form-group flex-1">
+            <label>Cuota Mensual (Lps)</label>
+            <input 
+              type="number" 
+              class="form-control font-mono" 
+              placeholder="0.00" 
+              [ngModel]="newClientCuota()" 
+              (ngModelChange)="newClientCuota.set($event)"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="cerrarModalNuevoCliente()">Cancelar</button>
+        <button type="button" class="btn btn-primary" (click)="crearNuevoClienteRapido()">Guardar y Seleccionar</button>
       </div>
     </div>
   </div>
