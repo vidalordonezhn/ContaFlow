@@ -54,8 +54,8 @@
     <div class="filters-bar">
       <!-- Tabs -->
       <div class="tabs-nav">
-        <button class="tab-btn" [class.active]="activeTab() === 'todos'" (click)="activeTab.set('todos')">
-          Todos <span class="tab-badge">{{ kpiTotal() }}</span>
+        <button class="tab-btn tab-pendientes" [class.active]="activeTab() === 'pendientes'" (click)="activeTab.set('pendientes')">
+          ⚡ Pendientes <span class="tab-badge">{{ kpiPendientesTotal() }}</span>
         </button>
         <button class="tab-btn tab-rojo" [class.active]="activeTab() === 'rojo'" (click)="activeTab.set('rojo')">
           🔴 Sin Facturas <span class="tab-badge">{{ kpiPendientes() }}</span>
@@ -65,6 +65,9 @@
         </button>
         <button class="tab-btn tab-verde" [class.active]="activeTab() === 'verde'" (click)="activeTab.set('verde')">
           🟢 Declarados SAR <span class="tab-badge">{{ kpiLiquidados() }}</span>
+        </button>
+        <button class="tab-btn" [class.active]="activeTab() === 'todos'" (click)="activeTab.set('todos')">
+          Todos <span class="tab-badge">{{ kpiTotal() }}</span>
         </button>
       </div>
 
@@ -87,8 +90,26 @@
         <p>Cargando información del período fiscal...</p>
       </div>
     } @else {
-      <div class="table-responsive">
-        <table class="data-table">
+      @if (filteredPeriodos().length === 0) {
+        <div class="empty-state">
+          @if (activeTab() === 'pendientes' && kpiLiquidados() > 0 && kpiTotal() > 0) {
+            <div class="empty-icon bg-green-light text-green">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-8 h-8"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+            <h3>¡Excelente trabajo! Todo al día</h3>
+            <p>No tienes clientes pendientes por declarar en este período fiscal. Todos los contribuyentes han sido declarados ante el SAR.</p>
+            <button class="btn btn-sm btn-secondary mt-3" (click)="activeTab.set('verde')">Ver clientes declarados</button>
+          } @else {
+            <div class="empty-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-8 h-8"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </div>
+            <h3>No se encontraron clientes</h3>
+            <p>No hay registros que coincidan con el filtro seleccionado o la búsqueda ingresada.</p>
+          }
+        </div>
+      } @else {
+        <div class="table-responsive">
+          <table class="data-table">
           <thead>
             <tr>
               <th>Contribuyente / RTN</th>
@@ -180,6 +201,6 @@
         </table>
       </div>
     }
-  </div>
+  }
 </div>
 

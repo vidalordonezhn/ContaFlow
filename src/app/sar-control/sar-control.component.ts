@@ -26,7 +26,7 @@ export class SARControlComponent implements OnInit {
   readonly selectedAnio = signal<number>(new Date().getFullYear());
 
   // Filtros
-  readonly activeTab = signal<'todos' | 'rojo' | 'amarillo' | 'verde'>('todos');
+  readonly activeTab = signal<'pendientes' | 'rojo' | 'amarillo' | 'verde' | 'todos'>('pendientes');
   readonly searchQuery = signal('');
 
   // Lista de Meses
@@ -49,6 +49,7 @@ export class SARControlComponent implements OnInit {
 
   // KPIs
   readonly kpiTotal = computed(() => this.periodos().length);
+  readonly kpiPendientesTotal = computed(() => this.periodos().filter(p => !p.liquidadoSAR).length);
   readonly kpiPendientes = computed(() => this.periodos().filter(p => !p.facturasRecibidas && !p.liquidadoSAR).length);
   readonly kpiEnProceso = computed(() => this.periodos().filter(p => p.facturasRecibidas && !p.liquidadoSAR).length);
   readonly kpiLiquidados = computed(() => this.periodos().filter(p => p.liquidadoSAR).length);
@@ -60,9 +61,11 @@ export class SARControlComponent implements OnInit {
 
     return this.periodos().filter(p => {
       let matchTab = true;
-      if (tab === 'rojo') matchTab = !p.facturasRecibidas && !p.liquidadoSAR;
+      if (tab === 'pendientes') matchTab = !p.liquidadoSAR;
+      else if (tab === 'rojo') matchTab = !p.facturasRecibidas && !p.liquidadoSAR;
       else if (tab === 'amarillo') matchTab = p.facturasRecibidas && !p.liquidadoSAR;
       else if (tab === 'verde') matchTab = p.liquidadoSAR;
+      else if (tab === 'todos') matchTab = true;
 
       if (!matchTab) return false;
 
