@@ -1,6 +1,7 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { ApiSARService, PeriodoSARResponse, SARResumenMensual, MarcarRecepcion, RegistrarLiquidacionSAR } from '../services/api-sar.service';
 
 @Component({
@@ -12,6 +13,7 @@ import { ApiSARService, PeriodoSARResponse, SARResumenMensual, MarcarRecepcion, 
 })
 export class SARControlComponent implements OnInit {
   private readonly sarService = inject(ApiSARService);
+  private readonly router = inject(Router);
 
   readonly periodos = signal<PeriodoSARResponse[]>([]);
   readonly resumen = signal<SARResumenMensual | null>(null);
@@ -113,6 +115,16 @@ export class SARControlComponent implements OnInit {
 
   cambiarPeriodo(): void {
     this.cargarDatos();
+  }
+
+  irAPresentacionFacturas(periodo: PeriodoSARResponse): void {
+    this.router.navigate(['/libros-isv'], {
+      queryParams: {
+        clienteId: periodo.clienteId,
+        mes: this.selectedMes(),
+        anio: this.selectedAnio()
+      }
+    });
   }
 
   openRecepcionModal(periodo: PeriodoSARResponse): void {

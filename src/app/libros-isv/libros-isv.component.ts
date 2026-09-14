@@ -1,6 +1,7 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import * as XLSX from 'xlsx';
 import {
   ApiLibrosIsvService,
@@ -31,6 +32,7 @@ export class LibrosIsvComponent implements OnInit {
   private readonly librosService = inject(ApiLibrosIsvService);
   private readonly clientsService = inject(ApiClientsService);
   private readonly pdfService = inject(PdfGeneratorService);
+  private readonly route = inject(ActivatedRoute);
 
   // Pestañas principales (Vista Resumen Compacto por defecto)
   readonly activeTab = signal<'vistaDual' | 'ventas' | 'compras' | 'masivo'>('vistaDual');
@@ -178,18 +180,38 @@ export class LibrosIsvComponent implements OnInit {
   readonly importResult = signal<LibroIsvImportResponse | null>(null);
 
   ngOnInit(): void {
-    this.cargarClientes();
+    this.route.queryParams.subscribe(params => {
+      if (params['clienteId']) {
+        this.selectedClienteId.set(Number(params['clienteId']));
+      }
+      if (params['mes']) {
+        this.selectedMes.set(Number(params['mes']));
+      }
+      if (params['anio']) {
+        this.selectedAnio.set(Number(params['anio']));
+      }
+      this.cargarClientes();
+    });
   }
 
   cargarClientes(): void {
     this.clientsService.getClientes().subscribe({
       next: (data) => {
         this.clientes.set(data || []);
-        if (data && data.length > 0 && !this.selectedClienteId()) {
-          const primerCliente = data.find(c => c.activo) || data[0];
-          this.selectedClienteId.set(Number(primerCliente.id));
-          this.serviciosProfesionales.set(primerCliente.cuotaMensual || 0);
-          this.cargarDatosPeriodo();
+        if (data && data.length > 0) {
+          const cid = this.selectedClienteId();
+          if (cid) {
+            const found = data.find(c => Number(c.id) === Number(cid));
+            if (found) {
+              this.serviciosProfesionales.set(found.cuotaMensual || 0);
+            }
+            this.cargarDatosPeriodo();
+          } else {
+            const primerCliente = data.find(c => c.activo) || data[0];
+            this.selectedClienteId.set(Number(primerCliente.id));
+            this.serviciosProfesionales.set(primerCliente.cuotaMensual || 0);
+            this.cargarDatosPeriodo();
+          }
         }
       },
       error: (err) => {

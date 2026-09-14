@@ -207,15 +207,13 @@
                 <!-- Acciones -->
                 <td class="text-right">
                   <div class="actions-group">
-                    <!-- Marcar Recepción -->
-                    <button class="btn btn-sm btn-secondary" (click)="openRecepcionModal(p)" title="Registrar recepción de facturas">
-                      {{ p.facturasRecibidas ? 'Editar Facturas' : '📥 Recibir Facturas' }}
+                    <!-- Presentación de Facturas (Módulo Libros ISV) -->
+                    <button class="btn btn-sm btn-secondary" (click)="irAPresentacionFacturas(p)" title="Ir a Libros ISV y Presentación de facturas para este contribuyente">
+                      📥 Presentación de facturas
                     </button>
-                    <!-- Registrar Liquidación -->
-                    @if (p.facturasRecibidas) {
-                      <button class="btn btn-sm btn-primary" (click)="openLiquidacionModal(p)">
-                        {{ p.liquidadoSAR ? 'Ver Declaración' : '🏛️ Declarar SAR' }}
-                      </button>
+                    <!-- Registrar Liquidación / Declarar SAR -->
+                    @if (p.liquidadoSAR) {
+                      <span class="badge-al-dia text-emerald text-xs font-bold">✓ Declarado</span>
                     }
                   </div>
                 </td>
