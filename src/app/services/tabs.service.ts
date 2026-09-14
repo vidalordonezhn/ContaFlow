@@ -62,6 +62,16 @@ export class TabsService {
       closable: true
     },
     {
+      id: 'historico-isv',
+      title: 'Histórico & Auditoría ISV (SAR)',
+      shortTitle: 'Histórico ISV',
+      description: 'Consulta histórica anual de libros de compras, ventas y liquidaciones SAR por cliente.',
+      category: 'Dashboard & SAR',
+      route: '/historico-isv',
+      iconPath: 'history',
+      closable: true
+    },
+    {
       id: 'calendario-fiscal',
       title: 'Calendario Fiscal Anual (SAR)',
       shortTitle: 'Calendario SAR',

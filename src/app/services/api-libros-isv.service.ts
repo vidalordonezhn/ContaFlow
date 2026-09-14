@@ -311,4 +311,41 @@ export class ApiLibrosIsvService {
   exportarResumenMesUrl(anio: number, mes: number): string {
     return `${environment.apiUrl}/api/librosisv/exportar/${anio}/${mes}`;
   }
+
+  getHistoricoCliente(clienteId: number, anio: number): Observable<ResumenHistoricoCliente> {
+    return this.http.get<ResumenHistoricoCliente>(`${environment.apiUrl}/api/librosisv/cliente/${clienteId}/historico/${anio}`);
+  }
 }
+
+export interface PeriodoHistoricoCliente {
+  id: number;
+  mes: number;
+  anio: number;
+  mesNombre: string;
+  facturasRecibidas: boolean;
+  cantidadFacturasVenta: number;
+  cantidadFacturasCompra: number;
+  totalVentas: number;
+  totalCompras: number;
+  totalDebitoFiscal: number;
+  totalCreditoFiscal: number;
+  impuestoDeterminadoPagar: number;
+  saldoAFavorContribuyente: number;
+  liquidadoSAR: boolean;
+  fechaLiquidacion?: string;
+  numeroDeclaracionSAR?: string;
+  estado: string;
+}
+
+export interface ResumenHistoricoCliente {
+  clienteId: number;
+  clienteNombre: string;
+  clienteRtn: string;
+  anio: number;
+  totalVentasAnuales: number;
+  totalComprasAnuales: number;
+  totalImpuestoPagadoAnual: number;
+  mesesDeclarados: number;
+  periodos: PeriodoHistoricoCliente[];
+}
+

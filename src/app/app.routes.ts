@@ -13,6 +13,7 @@ import { ImportExportComponent } from './import-export/import-export.component';
 import { ConfiguracionComponent } from './configuracion/configuracion.component';
 import { CalendarioFiscalComponent } from './calendario-fiscal/calendario-fiscal.component';
 import { LibrosIsvComponent } from './libros-isv/libros-isv.component';
+import { HistoricoIsvComponent } from './historico-isv/historico-isv.component';
 import { authGuard, loginGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
@@ -31,6 +32,7 @@ export const routes: Routes = [
       { path: 'clientes', component: ClientsComponent },
       { path: 'sar-control', component: SARControlComponent },
       { path: 'libros-isv', component: LibrosIsvComponent },
+      { path: 'historico-isv', component: HistoricoIsvComponent },
       { path: 'calendario-fiscal', component: CalendarioFiscalComponent },
       { path: 'pagos', component: PaymentsComponent },
       { path: 'recibos', component: ReceiptsComponent },
