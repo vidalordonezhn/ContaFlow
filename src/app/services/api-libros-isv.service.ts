@@ -8,6 +8,8 @@ export interface LibroIsvDetalle {
   clienteId: number;
   clienteNombre: string;
   clienteRtn: string;
+  clienteContrasenaSAR?: string;
+  cuotaHonorarios?: number;
   mes: number;
   anio: number;
   mesNombre: string;
@@ -45,6 +47,64 @@ export interface LibroIsvDetalle {
   fechaLiquidacion?: string;
   numeroDeclaracionSAR?: string;
   estado: string;
+}
+
+export interface LibroPartidaItem {
+  id?: number;
+  correlativo: number;
+  fecha?: string; // yyyy-MM-dd
+  proveedor?: string;
+
+  // Compras
+  comprasExentas: number;
+  comprasGravadas: number;
+  isvCompras15: number;
+  facturaNumero?: string;
+
+  // Ventas
+  ventasExentas: number;
+  ventasGravadas: number;
+  isvVentas15: number;
+  notas?: string;
+}
+
+export interface LibroDetalleCompleto {
+  periodoFiscalId: number;
+  clienteId: number;
+  clienteNombre: string;
+  clienteRtn: string;
+  clienteContrasenaSAR?: string;
+  cuotaHonorarios: number;
+  mes: number;
+  anio: number;
+  mesNombre: string;
+
+  items: LibroPartidaItem[];
+
+  // Totales
+  totalComprasExentas: number;
+  totalComprasGravadas: number;
+  totalIsvCompras15: number;
+
+  totalVentasExentas: number;
+  totalVentasGravadas: number;
+  totalIsvVentas15: number;
+
+  // Resumen
+  impuestoCompras: number;
+  impuestoVentas: number;
+  impuestoAPagar: number;
+  saldoAFavor: number;
+  serviciosProfesionales: number;
+  totalAPagarLps: number;
+}
+
+export interface GuardarLibroDetallePartidas {
+  clienteId: number;
+  mes: number;
+  anio: number;
+  serviciosProfesionales?: number;
+  items: LibroPartidaItem[];
 }
 
 export interface LibroIsvGuardar {
@@ -99,6 +159,28 @@ export class ApiLibrosIsvService {
 
   guardarLibroIsv(dto: LibroIsvGuardar): Observable<LibroIsvDetalle> {
     return this.http.post<LibroIsvDetalle>(`${environment.apiUrl}/api/librosisv/guardar`, dto);
+  }
+
+  // Endpoints Hoja de Trabajo Detallada (Partida por Partida)
+  getLibroDetalle(clienteId: number, anio: number, mes: number): Observable<LibroDetalleCompleto> {
+    return this.http.get<LibroDetalleCompleto>(`${environment.apiUrl}/api/librosisv/detalle/${clienteId}/${anio}/${mes}`);
+  }
+
+  guardarLibroDetalle(dto: GuardarLibroDetallePartidas): Observable<LibroDetalleCompleto> {
+    return this.http.post<LibroDetalleCompleto>(`${environment.apiUrl}/api/librosisv/detalle/guardar`, dto);
+  }
+
+  descargarPlantillaDetalleUrl(): string {
+    return `${environment.apiUrl}/api/librosisv/detalle/plantilla`;
+  }
+
+  importarDetalleCsv(clienteId: number, anio: number, mes: number, csvContent: string): Observable<LibroDetalleCompleto> {
+    return this.http.post<LibroDetalleCompleto>(`${environment.apiUrl}/api/librosisv/detalle/importar-csv`, {
+      clienteId,
+      anio,
+      mes,
+      csvContent
+    });
   }
 
   descargarPlantillaUrl(): string {

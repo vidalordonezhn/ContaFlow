@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiConfiguracionService, ConfiguracionDespacho } from '../services/api-configuracion.service';
 import { ApiCAIService, CAIResponse, CAICreate } from '../services/api-cai.service';
+import { ApiRubrosService, RubroResponse } from '../services/api-rubros.service';
 
 @Component({
   selector: 'app-configuracion',
@@ -14,6 +15,7 @@ import { ApiCAIService, CAIResponse, CAICreate } from '../services/api-cai.servi
 export class ConfiguracionComponent implements OnInit {
   private readonly configService = inject(ApiConfiguracionService);
   private readonly caiService = inject(ApiCAIService);
+  private readonly rubrosService = inject(ApiRubrosService);
 
   readonly loading = signal<boolean>(true);
   readonly saving = signal<boolean>(false);
@@ -24,6 +26,12 @@ export class ConfiguracionComponent implements OnInit {
   // CAI Activo del SAR
   readonly caiActivo = signal<CAIResponse | null>(null);
   readonly mostrarFormNuevoCAI = signal<boolean>(false);
+
+  // Catálogo de Rubros Dinámico
+  readonly rubros = signal<RubroResponse[]>([]);
+  readonly nuevoRubroNombre = signal<string>('');
+  readonly nuevoRubroDesc = signal<string>('');
+  readonly guardandoRubro = signal<boolean>(false);
 
   // Modelo Formulario CAI
   caiForm: CAICreate = {
@@ -86,12 +94,62 @@ export class ConfiguracionComponent implements OnInit {
       next: (data) => {
         this.config = { ...data };
         this.cargarCAI();
+        this.cargarRubros();
       },
       error: (err) => {
         console.error('Error al cargar configuración:', err);
         this.cargarCAI();
+        this.cargarRubros();
       }
     });
+  }
+
+  cargarRubros(): void {
+    this.rubrosService.getRubros().subscribe({
+      next: (rbs) => this.rubros.set(rbs),
+      error: () => {}
+    });
+  }
+
+  crearRubro(): void {
+    const nombre = this.nuevoRubroNombre().trim();
+    if (!nombre) return;
+
+    this.guardandoRubro.set(true);
+    this.rubrosService.crearRubro({
+      nombre,
+      descripcion: this.nuevoRubroDesc().trim() || undefined
+    }).subscribe({
+      next: (nuevo) => {
+        this.rubros.update(list => [...list, nuevo].sort((a, b) => a.nombre.localeCompare(b.nombre)));
+        this.nuevoRubroNombre.set('');
+        this.nuevoRubroDesc.set('');
+        this.guardandoRubro.set(false);
+        this.successMessage.set(`Rubro "${nuevo.nombre}" agregado exitosamente.`);
+        setTimeout(() => this.successMessage.set(null), 4000);
+      },
+      error: (err) => {
+        this.guardandoRubro.set(false);
+        this.errorMessage.set(err.error?.message || 'Error al crear el rubro.');
+        setTimeout(() => this.errorMessage.set(null), 4000);
+      }
+    });
+  }
+
+  eliminarRubro(id: number, nombre: string): void {
+    if (confirm(`¿Estás seguro de eliminar el rubro "${nombre}" del catálogo?`)) {
+      this.rubrosService.eliminarRubro(id).subscribe({
+        next: () => {
+          this.rubros.update(list => list.filter(r => r.id !== id));
+          this.successMessage.set(`Rubro "${nombre}" eliminado.`);
+          setTimeout(() => this.successMessage.set(null), 3000);
+        },
+        error: () => {
+          this.errorMessage.set('Error al eliminar el rubro.');
+          setTimeout(() => this.errorMessage.set(null), 3000);
+        }
+      });
+    }
   }
 
   cargarCAI(): void {

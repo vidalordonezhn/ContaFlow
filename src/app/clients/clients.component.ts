@@ -2,6 +2,7 @@ import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiClientsService, ClienteResponse, ClienteCreate, ClienteUpdate, ExpedienteFiscal } from '../services/api-clients.service';
+import { ApiRubrosService, RubroResponse } from '../services/api-rubros.service';
 
 @Component({
   selector: 'app-clients',
@@ -12,8 +13,10 @@ import { ApiClientsService, ClienteResponse, ClienteCreate, ClienteUpdate, Exped
 })
 export class ClientsComponent implements OnInit {
   private readonly clientsService = inject(ApiClientsService);
+  private readonly rubrosService = inject(ApiRubrosService);
 
   readonly clientes = signal<ClienteResponse[]>([]);
+  readonly rubros = signal<RubroResponse[]>([]);
   readonly isLoading = signal(true);
   readonly errorMsg = signal<string | null>(null);
   readonly successMsg = signal<string | null>(null);
@@ -31,9 +34,15 @@ export class ClientsComponent implements OnInit {
 
   // Modal Expediente Fiscal Digital 360°
   readonly isExpedienteModalOpen = signal(false);
-  readonly selectedExpediente = signal<import('../services/api-clients.service').ExpedienteFiscal | null>(null);
+  readonly selectedExpediente = signal<ExpedienteFiscal | null>(null);
   readonly loadingExpediente = signal(false);
   readonly expedienteTab = signal<'anuales' | 'mensuales' | 'recibos'>('anuales');
+
+  // Modal Nuevo Rubro Rápido
+  readonly isRubroModalOpen = signal(false);
+  readonly nuevoRubroNombre = signal('');
+  readonly nuevoRubroDesc = signal('');
+  readonly rubroModalError = signal<string | null>(null);
 
   // Formulario
   readonly formRtn = signal('');
@@ -41,6 +50,8 @@ export class ClientsComponent implements OnInit {
   readonly formNombreComercial = signal('');
   readonly formTipoPersona = signal('Juridica');
   readonly formRubro = signal('Comercio General');
+  readonly formContrasenaSAR = signal('');
+  readonly showPassword = signal(false);
   readonly formEmailPrincipal = signal('');
   readonly formEmailSecundario = signal('');
   readonly formTelefono = signal('');
@@ -51,19 +62,8 @@ export class ClientsComponent implements OnInit {
   readonly formActivo = signal(true);
   readonly formNotas = signal('');
 
-  // Rubros disponibles en Honduras
-  readonly rubrosList = [
-    'Comercio General',
-    'Servicios Profesionales',
-    'Restaurante / Alimentos',
-    'Construcción e Ingeniería',
-    'Salud y Farmacia',
-    'Transporte y Logística',
-    'Tecnología e Informática',
-    'Bienes Raíces',
-    'Taller / Automotriz',
-    'Otro Rubro'
-  ];
+  // Copiado rápido
+  readonly copiedField = signal<string | null>(null);
 
   // KPIs Computados
   readonly kpiTotal = computed(() => this.clientes().length);
@@ -106,6 +106,7 @@ export class ClientsComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarClientes();
+    this.cargarRubros();
   }
 
   cargarClientes(): void {
@@ -122,6 +123,18 @@ export class ClientsComponent implements OnInit {
     });
   }
 
+  cargarRubros(): void {
+    this.rubrosService.getRubros().subscribe({
+      next: (rbs) => {
+        this.rubros.set(rbs);
+        if (rbs.length > 0 && !this.formRubro()) {
+          this.formRubro.set(rbs[0].nombre);
+        }
+      },
+      error: () => {}
+    });
+  }
+
   openCreateModal(): void {
     this.isEditing.set(false);
     this.selectedClienteId.set(null);
@@ -129,7 +142,9 @@ export class ClientsComponent implements OnInit {
     this.formNombreRazonSocial.set('');
     this.formNombreComercial.set('');
     this.formTipoPersona.set('Juridica');
-    this.formRubro.set('Comercio General');
+    this.formRubro.set(this.rubros().length > 0 ? this.rubros()[0].nombre : 'Comercio General');
+    this.formContrasenaSAR.set('');
+    this.showPassword.set(false);
     this.formEmailPrincipal.set('');
     this.formEmailSecundario.set('');
     this.formTelefono.set('');
@@ -150,7 +165,9 @@ export class ClientsComponent implements OnInit {
     this.formNombreRazonSocial.set(c.nombreRazonSocial);
     this.formNombreComercial.set(c.nombreComercial || '');
     this.formTipoPersona.set(c.tipoPersona);
-    this.formRubro.set(c.rubro || 'Comercio General');
+    this.formRubro.set(c.rubro || (this.rubros().length > 0 ? this.rubros()[0].nombre : 'Comercio General'));
+    this.formContrasenaSAR.set(c.contrasenaSAR || '');
+    this.showPassword.set(false);
     this.formEmailPrincipal.set(c.emailPrincipal || '');
     this.formEmailSecundario.set(c.emailSecundario || '');
     this.formTelefono.set(c.telefono || '');
@@ -169,6 +186,51 @@ export class ClientsComponent implements OnInit {
     this.formError.set(null);
   }
 
+  copiarAlPortapapeles(texto: string, label: string): void {
+    if (!texto) return;
+    navigator.clipboard.writeText(texto).then(() => {
+      this.copiedField.set(label);
+      this.showToast(`¡${label} copiado al portapapeles!`);
+      setTimeout(() => this.copiedField.set(null), 2500);
+    });
+  }
+
+  // Modal Nuevo Rubro
+  openNuevoRubroModal(): void {
+    this.nuevoRubroNombre.set('');
+    this.nuevoRubroDesc.set('');
+    this.rubroModalError.set(null);
+    this.isRubroModalOpen.set(true);
+  }
+
+  closeNuevoRubroModal(): void {
+    this.isRubroModalOpen.set(false);
+    this.rubroModalError.set(null);
+  }
+
+  guardarNuevoRubro(): void {
+    const nombre = this.nuevoRubroNombre().trim();
+    if (!nombre) {
+      this.rubroModalError.set('Ingresa el nombre del rubro.');
+      return;
+    }
+
+    this.rubrosService.crearRubro({
+      nombre: nombre,
+      descripcion: this.nuevoRubroDesc().trim() || undefined
+    }).subscribe({
+      next: (nuevo) => {
+        this.rubros.update(list => [...list, nuevo].sort((a, b) => a.nombre.localeCompare(b.nombre)));
+        this.formRubro.set(nuevo.nombre);
+        this.showToast(`Rubro "${nuevo.nombre}" agregado al catálogo.`);
+        this.closeNuevoRubroModal();
+      },
+      error: (err) => {
+        this.rubroModalError.set(err.error?.message || 'Error al crear el rubro.');
+      }
+    });
+  }
+
   saveCliente(): void {
     this.formError.set(null);
 
@@ -177,18 +239,19 @@ export class ClientsComponent implements OnInit {
       return;
     }
 
-    if (!this.isEditing()) {
-      if (!this.formRtn().trim()) {
-        this.formError.set('El RTN fiscal es obligatorio.');
-        return;
-      }
+    if (!this.formRtn().trim()) {
+      this.formError.set('El RTN fiscal es obligatorio.');
+      return;
+    }
 
+    if (!this.isEditing()) {
       const createDto: ClienteCreate = {
         rtn: this.formRtn().trim(),
         nombreRazonSocial: this.formNombreRazonSocial().trim(),
         nombreComercial: this.formNombreComercial().trim() || undefined,
         tipoPersona: this.formTipoPersona(),
         rubro: this.formRubro(),
+        contrasenaSAR: this.formContrasenaSAR().trim() || undefined,
         emailPrincipal: this.formEmailPrincipal().trim() || undefined,
         emailSecundario: this.formEmailSecundario().trim() || undefined,
         telefono: this.formTelefono().trim() || undefined,
@@ -211,10 +274,12 @@ export class ClientsComponent implements OnInit {
       });
     } else {
       const updateDto: ClienteUpdate = {
+        rtn: this.formRtn().trim(),
         nombreRazonSocial: this.formNombreRazonSocial().trim(),
         nombreComercial: this.formNombreComercial().trim() || undefined,
         tipoPersona: this.formTipoPersona(),
         rubro: this.formRubro(),
+        contrasenaSAR: this.formContrasenaSAR().trim() || undefined,
         emailPrincipal: this.formEmailPrincipal().trim() || undefined,
         emailSecundario: this.formEmailSecundario().trim() || undefined,
         telefono: this.formTelefono().trim() || undefined,
@@ -226,9 +291,12 @@ export class ClientsComponent implements OnInit {
         notas: this.formNotas().trim() || undefined
       };
 
-      this.clientsService.actualizarCliente(this.selectedClienteId()!, updateDto).subscribe({
+      const id = this.selectedClienteId();
+      if (!id) return;
+
+      this.clientsService.actualizarCliente(id, updateDto).subscribe({
         next: () => {
-          this.showToast('Datos del cliente actualizados correctamente.');
+          this.showToast('Cliente actualizado correctamente.');
           this.closeModal();
           this.cargarClientes();
         },
@@ -240,30 +308,23 @@ export class ClientsComponent implements OnInit {
   }
 
   toggleStatus(c: ClienteResponse): void {
-    this.clientsService.toggleStatus(c.id).subscribe({
-      next: () => {
-        this.showToast(`Estado de ${c.nombreRazonSocial} actualizado.`);
-        this.cargarClientes();
-      },
-      error: () => {
-        this.errorMsg.set('No se pudo cambiar el estado.');
-      }
-    });
+    const accion = c.activo ? 'desactivar' : 'activar';
+    if (confirm(`¿Estás seguro de que deseas ${accion} al cliente "${c.nombreRazonSocial}"?`)) {
+      this.clientsService.toggleStatus(c.id).subscribe({
+        next: () => {
+          this.showToast(`Cliente ${c.activo ? 'desactivado' : 'activado'} correctamente.`);
+          this.cargarClientes();
+        },
+        error: () => {
+          this.showToast('Error al cambiar el estado del cliente.');
+        }
+      });
+    }
   }
 
-  getWhatsAppLink(phone?: string, clientName?: string): string {
-    if (!phone) return '#';
-    const cleanPhone = phone.replace(/[^0-9]/g, '');
-    const fullPhone = cleanPhone.startsWith('504') ? cleanPhone : `504${cleanPhone}`;
-    const msg = encodeURIComponent(`Hola estimado ${clientName}, le saluda su despacho contable para darle seguimiento a su cuenta y documentación.`);
-    return `https://wa.me/${fullPhone}?text=${msg}`;
-  }
-
-  // Expediente Fiscal Digital 360°
   openExpediente(clienteId: number): void {
     this.loadingExpediente.set(true);
     this.selectedExpediente.set(null);
-    this.expedienteTab.set('anuales');
     this.isExpedienteModalOpen.set(true);
 
     this.clientsService.getExpedienteFiscal(clienteId).subscribe({
@@ -272,8 +333,9 @@ export class ClientsComponent implements OnInit {
         this.loadingExpediente.set(false);
       },
       error: () => {
-        this.errorMsg.set('No se pudo cargar el expediente fiscal del contribuyente.');
         this.loadingExpediente.set(false);
+        this.showToast('No se pudo cargar el expediente fiscal.');
+        this.closeExpediente();
       }
     });
   }
@@ -283,24 +345,25 @@ export class ClientsComponent implements OnInit {
     this.selectedExpediente.set(null);
   }
 
-  imprimirExpediente(): void {
-    window.print();
+  getWhatsAppLink(telefono?: string, nombre?: string): string {
+    if (!telefono) return '#';
+    const cleanPhone = telefono.replace(/[^0-9]/g, '');
+    const fullPhone = cleanPhone.startsWith('504') ? cleanPhone : `504${cleanPhone}`;
+    const msg = encodeURIComponent(`Hola ${nombre || 'Estimado Cliente'}, le saluda su despacho contable.`);
+    return `https://wa.me/${fullPhone}?text=${msg}`;
   }
 
   getWhatsAppExpediente(exp: ExpedienteFiscal): string {
-    const phone = exp.cliente.telefonoWhatsApp || exp.cliente.telefono;
-    if (!phone) return '#';
-    const cleanPhone = phone.replace(/[^0-9]/g, '');
+    const tel = exp.cliente.telefonoWhatsApp || exp.cliente.telefono;
+    if (!tel) return '#';
+    const cleanPhone = tel.replace(/[^0-9]/g, '');
     const fullPhone = cleanPhone.startsWith('504') ? cleanPhone : `504${cleanPhone}`;
-    const msg = encodeURIComponent(
-      `Estimado contribuyente *${exp.cliente.nombreRazonSocial}* (RTN: ${exp.cliente.rtn}):\n\n` +
-      `Le compartimos el resumen consolidado de su *Expediente Fiscal Digital*:\n` +
-      `📌 Total Declaraciones SAR Presentadas: *${exp.totalDeclaracionesPresentadas}*\n` +
-      `💰 Impuesto Liquidado ante SAR: *L. ${exp.totalImpuestoLiquidadoSAR.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}*\n` +
-      `🧾 Comprobantes Fiscales Emitidos: *${exp.comprobantesEmitidos.length} recibos*\n\n` +
-      `Su expediente se encuentra al día en los registros de nuestro Despacho Contable.`
-    );
+    const msg = encodeURIComponent(`Estimado(a) ${exp.cliente.nombreRazonSocial}, le compartimos un resumen de su Expediente Fiscal: Declaraciones SAR presentadas: ${exp.totalDeclaracionesPresentadas}. Quedamos a sus órdenes.`);
     return `https://wa.me/${fullPhone}?text=${msg}`;
+  }
+
+  imprimirExpediente(): void {
+    window.print();
   }
 
   private showToast(msg: string): void {

@@ -1,7 +1,7 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ApiLibrosIsvService, LibroIsvDetalle, LibroIsvGuardar, LibroIsvImportItem, LibroIsvImportResponse } from '../services/api-libros-isv.service';
+import { ApiLibrosIsvService, LibroIsvDetalle, LibroIsvGuardar, LibroIsvImportItem, LibroIsvImportResponse, LibroPartidaItem, LibroDetalleCompleto, GuardarLibroDetallePartidas } from '../services/api-libros-isv.service';
 import { ApiClientsService, ClienteResponse } from '../services/api-clients.service';
 
 @Component({
@@ -15,7 +15,7 @@ export class LibrosIsvComponent implements OnInit {
   private readonly librosService = inject(ApiLibrosIsvService);
   private readonly clientsService = inject(ApiClientsService);
 
-  readonly activeTab = signal<'individual' | 'masivo'>('individual');
+  readonly activeTab = signal<'detalle' | 'declaracion' | 'masivo'>('detalle');
   readonly clientes = signal<ClienteResponse[]>([]);
   readonly selectedClienteId = signal<number | null>(null);
   readonly selectedCliente = computed(() => this.clientes().find(c => c.id === this.selectedClienteId()));
@@ -28,7 +28,57 @@ export class LibrosIsvComponent implements OnInit {
   readonly successMsg = signal<string | null>(null);
   readonly errorMsg = signal<string | null>(null);
 
-  // Formulario Individual
+  // Copiado y Seguridad SAR
+  readonly mostrarSARPassword = signal(false);
+  readonly copiedField = signal<string | null>(null);
+
+  // ==========================================
+  // ESTADO HOJA DE TRABAJO DETALLADA (PARTIDAS)
+  // ==========================================
+  readonly detalleItems = signal<LibroPartidaItem[]>([]);
+  readonly serviciosProfesionales = signal<number>(0);
+  readonly isSavingDetalle = signal(false);
+  readonly isImportingDetalle = signal(false);
+
+  // Cálculos en Vivo de la Hoja Detallada
+  readonly sumComprasExentas = computed(() => 
+    Math.round(this.detalleItems().reduce((acc, it) => acc + (Number(it.comprasExentas) || 0), 0) * 100) / 100
+  );
+  readonly sumComprasGravadas = computed(() => 
+    Math.round(this.detalleItems().reduce((acc, it) => acc + (Number(it.comprasGravadas) || 0), 0) * 100) / 100
+  );
+  readonly sumIsvCompras = computed(() => 
+    Math.round(this.detalleItems().reduce((acc, it) => acc + (Number(it.isvCompras15) || 0), 0) * 100) / 100
+  );
+
+  readonly sumVentasExentas = computed(() => 
+    Math.round(this.detalleItems().reduce((acc, it) => acc + (Number(it.ventasExentas) || 0), 0) * 100) / 100
+  );
+  readonly sumVentasGravadas = computed(() => 
+    Math.round(this.detalleItems().reduce((acc, it) => acc + (Number(it.ventasGravadas) || 0), 0) * 100) / 100
+  );
+  readonly sumIsvVentas = computed(() => 
+    Math.round(this.detalleItems().reduce((acc, it) => acc + (Number(it.isvVentas15) || 0), 0) * 100) / 100
+  );
+
+  readonly liveImpuestoAPagarDetalle = computed(() => {
+    const diff = Math.round((this.sumIsvVentas() - this.sumIsvCompras()) * 100) / 100;
+    return diff > 0 ? diff : 0;
+  });
+
+  readonly liveSaldoAFavorDetalle = computed(() => {
+    const diff = Math.round((this.sumIsvCompras() - this.sumIsvVentas()) * 100) / 100;
+    return diff > 0 ? diff : 0;
+  });
+
+  readonly liveTotalLpsDetalle = computed(() => {
+    const honorarios = Number(this.serviciosProfesionales()) || 0;
+    return Math.round((this.liveImpuestoAPagarDetalle() + honorarios) * 100) / 100;
+  });
+
+  // ==========================================
+  // ESTADO FORMULARIO DECLARACIÓN RESUMEN SAR-210
+  // ==========================================
   readonly formVentas15 = signal<number>(0);
   readonly formVentas18 = signal<number>(0);
   readonly formVentasExentas = signal<number>(0);
@@ -64,7 +114,7 @@ export class LibrosIsvComponent implements OnInit {
 
   readonly aniosList = [2024, 2025, 2026, 2027];
 
-  // Cálculos en vivo (Reactivos en tiempo real)
+  // Cálculos en vivo SAR-210
   readonly liveDebito15 = computed(() => Math.round((Number(this.formVentas15()) || 0) * 0.15 * 100) / 100);
   readonly liveDebito18 = computed(() => Math.round((Number(this.formVentas18()) || 0) * 0.18 * 100) / 100);
   readonly liveTotalDebito = computed(() => Math.round((this.liveDebito15() + this.liveDebito18()) * 100) / 100);
@@ -93,7 +143,7 @@ export class LibrosIsvComponent implements OnInit {
   readonly liveImpuestoPagar = computed(() => this.liveNeto() > 0 ? this.liveNeto() : 0);
   readonly liveSaldoFavor = computed(() => this.liveNeto() < 0 ? Math.abs(this.liveNeto()) : 0);
 
-  // Carga Masiva
+  // Carga Masiva Resumen
   readonly selectedFile = signal<File | null>(null);
   readonly parsedRows = signal<LibroIsvImportItem[]>([]);
   readonly parseError = signal<string | null>(null);
@@ -111,19 +161,51 @@ export class LibrosIsvComponent implements OnInit {
         this.clientes.set(activos);
         if (activos.length > 0 && !this.selectedClienteId()) {
           this.selectedClienteId.set(activos[0].id);
-          this.cargarPeriodo();
+          this.serviciosProfesionales.set(activos[0].cuotaMensual || 0);
+          this.cargarDatosPeriodo();
         }
       }
     });
   }
 
-  cargarPeriodo(): void {
+  onClienteSeleccionado(clienteId: number): void {
+    this.selectedClienteId.set(clienteId);
+    const cli = this.clientes().find(c => c.id === clienteId);
+    if (cli) {
+      this.serviciosProfesionales.set(cli.cuotaMensual || 0);
+    }
+    this.cargarDatosPeriodo();
+  }
+
+  cargarDatosPeriodo(): void {
     const cid = this.selectedClienteId();
     if (!cid) return;
 
     this.isLoading.set(true);
     this.errorMsg.set(null);
 
+    // Cargar Detalle de Partidas
+    this.librosService.getLibroDetalle(cid, this.selectedAnio(), this.selectedMes()).subscribe({
+      next: (det) => {
+        if (det.items && det.items.length > 0) {
+          this.detalleItems.set(det.items);
+        } else {
+          // Inicializar con al menos 1 fila vacía
+          this.detalleItems.set([this.crearFilaVacia(1)]);
+        }
+        if (det.serviciosProfesionales) {
+          this.serviciosProfesionales.set(det.serviciosProfesionales);
+        } else {
+          const cli = this.selectedCliente();
+          if (cli) this.serviciosProfesionales.set(cli.cuotaMensual || 0);
+        }
+      },
+      error: () => {
+        this.detalleItems.set([this.crearFilaVacia(1)]);
+      }
+    });
+
+    // Cargar Resumen SAR-210
     this.librosService.getLibroIsv(cid, this.selectedAnio(), this.selectedMes()).subscribe({
       next: (data) => {
         this.currentLibro.set(data);
@@ -141,12 +223,167 @@ export class LibrosIsvComponent implements OnInit {
         this.isLoading.set(false);
       },
       error: () => {
-        this.errorMsg.set('No se pudo cargar el período fiscal.');
         this.isLoading.set(false);
       }
     });
   }
 
+  // ==========================================
+  // OPERACIONES HOJA DE TRABAJO PARTIDA POR PARTIDA
+  // ==========================================
+  crearFilaVacia(correlativo: number): LibroPartidaItem {
+    const today = new Date().toISOString().split('T')[0];
+    return {
+      correlativo,
+      fecha: today,
+      proveedor: '',
+      comprasExentas: 0,
+      comprasGravadas: 0,
+      isvCompras15: 0,
+      facturaNumero: '',
+      ventasExentas: 0,
+      ventasGravadas: 0,
+      isvVentas15: 0,
+      notas: ''
+    };
+  }
+
+  agregarFila(): void {
+    const current = this.detalleItems();
+    const nextCorrelativo = current.length + 1;
+    this.detalleItems.update(list => [...list, this.crearFilaVacia(nextCorrelativo)]);
+  }
+
+  eliminarFila(index: number): void {
+    const current = this.detalleItems();
+    if (current.length <= 1) {
+      this.detalleItems.set([this.crearFilaVacia(1)]);
+      return;
+    }
+    const updated = current.filter((_, i) => i !== index).map((item, idx) => ({
+      ...item,
+      correlativo: idx + 1
+    }));
+    this.detalleItems.set(updated);
+  }
+
+  onComprasGravadasChange(item: LibroPartidaItem): void {
+    const grav = Number(item.comprasGravadas) || 0;
+    item.isvCompras15 = Math.round(grav * 0.15 * 100) / 100;
+    this.notificarCambioDetalle();
+  }
+
+  onVentasGravadasChange(item: LibroPartidaItem): void {
+    const grav = Number(item.ventasGravadas) || 0;
+    item.isvVentas15 = Math.round(grav * 0.15 * 100) / 100;
+    this.notificarCambioDetalle();
+  }
+
+  notificarCambioDetalle(): void {
+    this.detalleItems.update(list => [...list]);
+  }
+
+  guardarDetalle(): void {
+    const cid = this.selectedClienteId();
+    if (!cid) return;
+
+    this.isSavingDetalle.set(true);
+    this.errorMsg.set(null);
+
+    const dto: GuardarLibroDetallePartidas = {
+      clienteId: cid,
+      anio: this.selectedAnio(),
+      mes: this.selectedMes(),
+      serviciosProfesionales: Number(this.serviciosProfesionales()) || 0,
+      items: this.detalleItems()
+    };
+
+    this.librosService.guardarLibroDetalle(dto).subscribe({
+      next: (res) => {
+        this.detalleItems.set(res.items);
+        this.isSavingDetalle.set(false);
+        this.showToast('¡Hoja de Trabajo y Detalle de Facturas guardados exitosamente!');
+        // Actualizar resumen SAR-210 sincronizado
+        this.cargarDatosPeriodo();
+      },
+      error: (err) => {
+        this.isSavingDetalle.set(false);
+        this.errorMsg.set(err.error?.message || 'Error al guardar la hoja de trabajo.');
+      }
+    });
+  }
+
+  descargarPlantillaDetalle(): void {
+    window.location.href = this.librosService.descargarPlantillaDetalleUrl();
+  }
+
+  onDetalleCsvSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+
+    const file = input.files[0];
+    const cid = this.selectedClienteId();
+    if (!cid) {
+      this.errorMsg.set('Seleccione un cliente antes de importar.');
+      return;
+    }
+
+    this.isImportingDetalle.set(true);
+    this.errorMsg.set(null);
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const csvText = e.target?.result as string;
+      this.librosService.importarDetalleCsv(cid, this.selectedAnio(), this.selectedMes(), csvText).subscribe({
+        next: (res) => {
+          this.detalleItems.set(res.items && res.items.length > 0 ? res.items : [this.crearFilaVacia(1)]);
+          this.isImportingDetalle.set(false);
+          this.showToast(`¡Se importaron ${res.items.length} partidas correctamente desde el CSV!`);
+          input.value = '';
+          this.cargarDatosPeriodo();
+        },
+        error: (err) => {
+          this.isImportingDetalle.set(false);
+          this.errorMsg.set(err.error?.message || 'Error al importar archivo CSV.');
+          input.value = '';
+        }
+      });
+    };
+    reader.readAsText(file);
+  }
+
+  // ==========================================
+  // SEGURIDAD SAR Y COPIADO EN 1-CLIC
+  // ==========================================
+  copiarTexto(texto: string | undefined | null, campo: string): void {
+    if (!texto) return;
+    navigator.clipboard.writeText(texto).then(() => {
+      this.copiedField.set(campo);
+      setTimeout(() => {
+        if (this.copiedField() === campo) {
+          this.copiedField.set(null);
+        }
+      }, 2500);
+    }).catch(() => {
+      // Fallback
+      const input = document.createElement('textarea');
+      input.value = texto;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand('copy');
+      document.body.removeChild(input);
+      this.copiedField.set(campo);
+      setTimeout(() => this.copiedField.set(null), 2500);
+    });
+  }
+
+  togglePasswordSAR(): void {
+    this.mostrarSARPassword.update(v => !v);
+  }
+
+  // ==========================================
+  // OPERACIONES DECLARACIÓN SAR-210 GLOBAL
+  // ==========================================
   guardarIndividual(): void {
     const cid = this.selectedClienteId();
     if (!cid) return;
@@ -184,17 +421,15 @@ export class LibrosIsvComponent implements OnInit {
     });
   }
 
-  // Descarga de Plantilla
   descargarPlantilla(): void {
     window.location.href = this.librosService.descargarPlantillaUrl();
   }
 
-  // Exportar Resumen Mensual
   exportarResumen(): void {
     window.location.href = this.librosService.exportarResumenMesUrl(this.selectedAnio(), this.selectedMes());
   }
 
-  // Manejo de Archivos Masivos
+  // Carga Masiva Resumen
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
@@ -305,7 +540,7 @@ export class LibrosIsvComponent implements OnInit {
         this.parsedRows.set([]);
         this.selectedFile.set(null);
         this.showToast(`Se procesaron ${res.totalGuardados} períodos exitosamente.`);
-        this.cargarPeriodo();
+        this.cargarDatosPeriodo();
       },
       error: () => {
         this.parseError.set('Error al enviar la importación masiva al servidor.');

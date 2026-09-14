@@ -17,6 +17,7 @@ export interface ClienteResponse {
   direccion?: string;
   cuotaMensual: number;
   diaCobro: number;
+  contrasenaSAR?: string;
   activo: boolean;
   notas?: string;
   fechaCreacion: string;
@@ -31,6 +32,7 @@ export interface ClienteCreate {
   nombreComercial?: string;
   tipoPersona: string;
   rubro?: string;
+  contrasenaSAR?: string;
   emailPrincipal?: string;
   emailSecundario?: string;
   telefono?: string;
@@ -42,10 +44,12 @@ export interface ClienteCreate {
 }
 
 export interface ClienteUpdate {
+  rtn?: string;
   nombreRazonSocial: string;
   nombreComercial?: string;
   tipoPersona: string;
   rubro?: string;
+  contrasenaSAR?: string;
   emailPrincipal?: string;
   emailSecundario?: string;
   telefono?: string;

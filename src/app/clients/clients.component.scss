@@ -960,3 +960,144 @@
   }
 }
 
+/* CREDENTIALS STACK & QUICK COPY */
+.credentials-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.credential-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+
+  &.sar-pass-item {
+    .sar-pass-badge {
+      background-color: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fde68a;
+      padding: 0.15rem 0.45rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.6875rem;
+      font-weight: 700;
+      font-family: monospace;
+    }
+  }
+}
+
+.btn-copy-chip {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  border-radius: 4px;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background-color: var(--color-blue);
+    color: #ffffff;
+    border-color: var(--color-blue);
+  }
+
+  &.btn-copy-sar:hover {
+    background-color: #d97706;
+    border-color: #d97706;
+    color: #ffffff;
+  }
+
+  &.btn-copy-inline {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.sar-badge-compact {
+  background-color: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+  padding: 0.15rem 0.4rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+
+.field-label-with-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+
+  label {
+    margin-bottom: 0 !important;
+  }
+
+  .btn-text-copy {
+    background: transparent;
+    border: none;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-blue);
+    cursor: pointer;
+    padding: 0;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  .btn-text-action {
+    background: transparent;
+    border: none;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-purple);
+    cursor: pointer;
+    padding: 0;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  input {
+    width: 100%;
+    padding-right: 2.5rem !important;
+  }
+
+  .toggle-password-btn {
+    position: absolute;
+    right: 0.625rem;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      color: var(--text-primary);
+    }
+  }
+}
+
+.modal-card-sm {
+  max-width: 460px;
+}
+
+.rubro-backdrop {
+  z-index: 10005;
+}
+

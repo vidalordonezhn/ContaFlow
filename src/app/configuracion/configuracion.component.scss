@@ -912,3 +912,114 @@
     margin: 0;
   }
 }
+
+// Rubros Catalog Styles
+.rubro-add-box {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+
+  .rubro-add-inputs {
+    flex: 1;
+    min-width: 280px;
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .btn-add-rubro {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.6rem 1rem;
+    background: #f59e0b;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.85rem;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    white-space: nowrap;
+
+    &:hover:not(:disabled) {
+      background: #d97706;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.rubros-chip-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  padding: 0.75rem;
+  background: var(--bg-card, #f8fafc);
+  border: 1px dashed var(--border-color, #cbd5e1);
+  border-radius: 0.5rem;
+  min-height: 70px;
+  align-items: center;
+
+  .rubros-empty {
+    color: #94a3b8;
+    font-size: 0.85rem;
+    width: 100%;
+    text-align: center;
+  }
+
+  .rubro-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.75rem;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    transition: all 0.15s ease;
+
+    &:hover {
+      border-color: #cbd5e1;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    }
+
+    .rubro-chip-info {
+      display: flex;
+      flex-direction: column;
+
+      .rubro-chip-title {
+        font-size: 0.825rem;
+        font-weight: 600;
+        color: #1e293b;
+      }
+
+      .rubro-chip-sub {
+        font-size: 0.7rem;
+        color: #64748b;
+      }
+    }
+
+    .btn-delete-chip {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2px;
+      border-radius: 4px;
+      transition: all 0.15s;
+
+      &:hover {
+        background: #fee2e2;
+        color: #ef4444;
+      }
+    }
+  }
+}

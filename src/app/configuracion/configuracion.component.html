@@ -527,6 +527,80 @@
           </div>
         </div>
 
+        <!-- TARJETA 6: CATÁLOGO DINÁMICO DE RUBROS -->
+        <div class="card-section">
+          <div class="card-header">
+            <div class="card-icon amber">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M20 7h-7"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>
+            </div>
+            <div>
+              <h2 class="card-title">Catálogo de Rubros y Giros Comerciales</h2>
+              <p class="card-desc">Administra los giros de negocio disponibles para asignar a los clientes.</p>
+            </div>
+          </div>
+
+          <div class="card-body">
+            <div class="rubro-add-box">
+              <div class="rubro-add-inputs">
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  placeholder="Nombre del nuevo rubro (ej. Farmacias y Salud)" 
+                  [ngModel]="nuevoRubroNombre()"
+                  (ngModelChange)="nuevoRubroNombre.set($event)"
+                  (keydown.enter)="crearRubro()"
+                />
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  placeholder="Descripción opcional" 
+                  [ngModel]="nuevoRubroDesc()"
+                  (ngModelChange)="nuevoRubroDesc.set($event)"
+                  (keydown.enter)="crearRubro()"
+                />
+              </div>
+              <button 
+                type="button" 
+                class="btn-add-rubro" 
+                [disabled]="!nuevoRubroNombre().trim() || guardandoRubro()"
+                (click)="crearRubro()"
+              >
+                @if (guardandoRubro()) {
+                  <span class="spinner-sm"></span>
+                } @else {
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <span>Agregar Rubro</span>
+                }
+              </button>
+            </div>
+
+            <div class="rubros-chip-container">
+              @if (rubros().length === 0) {
+                <div class="rubros-empty">No hay rubros registrados aún.</div>
+              } @else {
+                @for (rub of rubros(); track rub.id) {
+                  <div class="rubro-chip">
+                    <div class="rubro-chip-info">
+                      <span class="rubro-chip-title">{{ rub.nombre }}</span>
+                      @if (rub.descripcion) {
+                        <span class="rubro-chip-sub">{{ rub.descripcion }}</span>
+                      }
+                    </div>
+                    <button 
+                      type="button" 
+                      class="btn-delete-chip" 
+                      title="Eliminar rubro" 
+                      (click)="eliminarRubro(rub.id, rub.nombre)"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </div>
+                }
+              }
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <!-- COLUMNA DERECHA: VISTA PREVIA EN VIVO DEL RECIBO PDF CON BLOQUE CAI -->

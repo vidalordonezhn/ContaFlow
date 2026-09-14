@@ -1,5 +1,5 @@
 <div class="page-container animate-fade-in">
-
+  
   <!-- TOAST NOTIFICATION -->
   @if (successMsg()) {
     <div class="toast-success">
@@ -11,86 +11,86 @@
   <!-- HEADER -->
   <header class="page-header">
     <div class="header-left">
-      <div class="header-badge">Directorio Fiscal</div>
-      <h1 class="header-title">Gestión de Clientes</h1>
-      <p class="header-subtitle">Control de contribuyentes, RTN, régimen SAR y cuotas de honorarios</p>
+      <div class="header-badge bg-blue-light text-blue">Directorio Fiscal</div>
+      <h1 class="header-title">Cartera de Clientes & Contribuyentes</h1>
+      <p class="header-subtitle">Gestiona la información tributaria, credenciales SAR, cuotas mensuales y expedientes fiscales</p>
     </div>
     <div class="header-right">
       <button class="btn btn-primary" (click)="openCreateModal()">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-4 h-4"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-        <span>Nuevo Cliente</span>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-4 h-4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span>+ Registrar Nuevo Cliente</span>
       </button>
     </div>
   </header>
 
-  <!-- KPIS GRID -->
+  <!-- KPIS / STATS -->
   <section class="kpis-grid">
     <!-- Total Clientes -->
-    <div class="kpi-card">
+    <div class="kpi-card" [class.active-kpi]="activeTab() === 'todos'" (click)="activeTab.set('todos')">
       <div class="kpi-header">
-        <span class="kpi-label">Cartera Total</span>
+        <span class="kpi-label">Total Clientes</span>
         <div class="kpi-icon-box bg-blue-light text-blue">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         </div>
       </div>
       <div class="kpi-body">
-        <h3 class="kpi-value">{{ kpiTotal() }}</h3>
-        <span class="kpi-subtext text-blue">{{ kpiActivos() }} clientes activos</span>
+        <h3 class="kpi-value text-blue">{{ kpiTotal() }}</h3>
+        <span class="kpi-subtext text-blue">En cartera de clientes</span>
       </div>
     </div>
 
-    <!-- Facturación Mensual Proyectada -->
-    <div class="kpi-card">
+    <!-- Sociedades (Jurídicas) -->
+    <div class="kpi-card" [class.active-kpi]="activeTab() === 'juridicas'" (click)="activeTab.set('juridicas')">
       <div class="kpi-header">
-        <span class="kpi-label">Honorarios / Mes</span>
-        <div class="kpi-icon-box bg-green-light text-green">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-        </div>
-      </div>
-      <div class="kpi-body">
-        <h3 class="kpi-value text-green">L. {{ kpiCuotaTotal() | number:'1.2-2' }}</h3>
-        <span class="kpi-subtext text-green">Ingreso mensual despacho</span>
-      </div>
-    </div>
-
-    <!-- Personas Jurídicas (Empresas) -->
-    <div class="kpi-card">
-      <div class="kpi-header">
-        <span class="kpi-label">Sociedades (S.A. / S. de R.L.)</span>
+        <span class="kpi-label">Personas Jurídicas</span>
         <div class="kpi-icon-box bg-purple-light text-purple">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M8 14h.01"/><path d="M16 14h.01"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>
         </div>
       </div>
       <div class="kpi-body">
         <h3 class="kpi-value text-purple">{{ kpiJuridicas() }}</h3>
-        <span class="kpi-subtext text-purple">Declarantes ISV / Retenciones</span>
+        <span class="kpi-subtext text-purple">Sociedades S.A. / S. de R.L.</span>
       </div>
     </div>
 
-    <!-- Personas Naturales / Profesionales -->
-    <div class="kpi-card">
+    <!-- Personas Naturales -->
+    <div class="kpi-card" [class.active-kpi]="activeTab() === 'naturales'" (click)="activeTab.set('naturales')">
       <div class="kpi-header">
         <span class="kpi-label">Personas Naturales</span>
-        <div class="kpi-icon-box bg-orange-light text-orange">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+        <div class="kpi-icon-box bg-green-light text-green">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         </div>
       </div>
       <div class="kpi-body">
-        <h3 class="kpi-value text-orange">{{ kpiNaturales() }}</h3>
-        <span class="kpi-subtext text-orange">Comerciantes y servicios</span>
+        <h3 class="kpi-value text-green">{{ kpiNaturales() }}</h3>
+        <span class="kpi-subtext text-green">Comerciantes / Profesionales</span>
+      </div>
+    </div>
+
+    <!-- Honorarios Mensuales Estimados -->
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-label">Honorarios Mensuales</span>
+        <div class="kpi-icon-box bg-orange-light text-orange">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+      </div>
+      <div class="kpi-body">
+        <h3 class="kpi-value text-orange">L. {{ kpiCuotaTotal() | number:'1.2-2' }}</h3>
+        <span class="kpi-subtext text-orange">Facturación recurrente activa</span>
       </div>
     </div>
   </section>
 
-  <!-- CONTROLS: TABS & SEARCH BAR -->
+  <!-- MAIN TABLE CONTAINER CARD -->
   <div class="table-container-card">
     
-    <!-- TABS BAR & SEARCH -->
+    <!-- FILTERS BAR -->
     <div class="filters-bar">
-      <!-- Tabs -->
+      <!-- Tabs Nav -->
       <div class="tabs-nav">
         <button class="tab-btn" [class.active]="activeTab() === 'todos'" (click)="activeTab.set('todos')">
-          Todos <span class="tab-badge">{{ kpiTotal() }}</span>
+          Todos los Clientes <span class="tab-badge">{{ kpiTotal() }}</span>
         </button>
         <button class="tab-btn" [class.active]="activeTab() === 'juridicas'" (click)="activeTab.set('juridicas')">
           Jurídicas <span class="tab-badge">{{ kpiJuridicas() }}</span>
@@ -101,20 +101,21 @@
         <button class="tab-btn" [class.active]="activeTab() === 'activos'" (click)="activeTab.set('activos')">
           Activos <span class="tab-badge">{{ kpiActivos() }}</span>
         </button>
-        <button class="tab-btn" [class.active]="activeTab() === 'inactivos'" (click)="activeTab.set('inactivos')">
-          Inactivos
-        </button>
       </div>
 
-      <!-- Rubro Dropdown & Search Input -->
-      <div class="filter-actions">
-        <select [ngModel]="selectedRubro()" (ngModelChange)="selectedRubro.set($event)" class="rubro-select">
-          <option value="todos">Todos los Rubros</option>
-          @for (r of rubrosList; track r) {
-            <option [value]="r">{{ r }}</option>
-          }
-        </select>
+      <!-- Search & Rubro Filters -->
+      <div class="filters-right">
+        <!-- Rubro Filter -->
+        <div class="select-filter">
+          <select [ngModel]="selectedRubro()" (ngModelChange)="selectedRubro.set($event)">
+            <option value="todos">Todos los Rubros</option>
+            @for (r of rubros(); track r.id) {
+              <option [value]="r.nombre">{{ r.nombre }}</option>
+            }
+          </select>
+        </div>
 
+        <!-- Search Input -->
         <div class="search-box">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input 
@@ -130,11 +131,11 @@
       </div>
     </div>
 
-    <!-- DATA TABLE -->
+    <!-- TABLE CONTENT -->
     @if (isLoading()) {
       <div class="loading-state">
         <div class="spinner"></div>
-        <p>Cargando directorio de clientes...</p>
+        <p>Cargando catálogo de clientes...</p>
       </div>
     } @else if (filteredClientes().length === 0) {
       <div class="empty-state">
@@ -150,7 +151,7 @@
           <thead>
             <tr>
               <th>Cliente / Razón Social</th>
-              <th>RTN Fiscal</th>
+              <th>RTN & Clave SAR</th>
               <th>Rubro / Giro</th>
               <th>Honorarios (Cuota)</th>
               <th>Contacto Rápido</th>
@@ -176,12 +177,30 @@
                   </div>
                 </td>
 
-                <!-- RTN -->
+                <!-- RTN & Contraseña SAR con Botones de Copiado Rápido -->
                 <td>
-                  <span class="rtn-badge">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-                    {{ c.rtn }}
-                  </span>
+                  <div class="credentials-stack">
+                    <div class="credential-item">
+                      <span class="rtn-badge">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                        {{ c.rtn }}
+                      </span>
+                      <button class="btn-copy-chip" (click)="copiarAlPortapapeles(c.rtn, 'RTN')" title="Copiar RTN al portapapeles">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3 h-3"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                      </button>
+                    </div>
+
+                    @if (c.contrasenaSAR) {
+                      <div class="credential-item sar-pass-item">
+                        <span class="sar-pass-badge" title="Clave Oficina Virtual SAR">
+                          🔑 SAR: ••••••••
+                        </span>
+                        <button class="btn-copy-chip btn-copy-sar" (click)="copiarAlPortapapeles(c.contrasenaSAR, 'Clave SAR')" title="Copiar contraseña SAR">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3 h-3"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                        </button>
+                      </div>
+                    }
+                  </div>
                 </td>
 
                 <!-- Rubro -->
@@ -252,7 +271,7 @@
 
 <!-- MODAL EXPEDIENTE FISCAL DIGITAL 360° -->
 @if (isExpedienteModalOpen()) {
-  <div class="modal-backdrop expediente-backdrop" (click)="closeExpediente()">
+  <div class="modal-backdrop expediente-backdrop">
     <div class="modal-card expediente-modal-card animate-fade-in" (click)="$event.stopPropagation()">
       
       @if (loadingExpediente()) {
@@ -275,6 +294,19 @@
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3 h-3"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
                   RTN: {{ exp.cliente.rtn }}
                 </span>
+                <button class="btn-copy-chip btn-copy-inline" (click)="copiarAlPortapapeles(exp.cliente.rtn, 'RTN')" title="Copiar RTN">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-2.5 h-2.5"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                </button>
+
+                @if (exp.cliente.contrasenaSAR) {
+                  <span class="sar-badge-compact">
+                    🔑 SAR: {{ exp.cliente.contrasenaSAR }}
+                  </span>
+                  <button class="btn-copy-chip btn-copy-inline" (click)="copiarAlPortapapeles(exp.cliente.contrasenaSAR, 'Clave SAR')" title="Copiar clave SAR">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-2.5 h-2.5"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                  </button>
+                }
+
                 <span class="rubro-tag-sm">{{ exp.cliente.rubro || 'General' }}</span>
                 <span class="tipo-tag-sm">{{ exp.cliente.tipoPersona === 'Juridica' ? 'Sociedad' : 'Natural' }}</span>
               </div>
@@ -358,7 +390,6 @@
                     <th>Formulario</th>
                     <th>Estado</th>
                     <th>N° Declaración</th>
-                    <th>Fecha</th>
                     <th class="text-right">Monto</th>
                   </tr>
                 </thead>
@@ -369,16 +400,17 @@
                       <td>{{ d.titulo }}</td>
                       <td><span class="form-sar-badge">{{ d.formularioSAR }}</span></td>
                       <td>
-                        @if (d.estado === 'Declarado') {
-                          <span class="status-pill status-active"><span class="dot"></span> Declarado</span>
-                        } @else {
-                          <span class="status-pill status-pending"><span class="dot"></span> Pendiente</span>
-                        }
+                        <span class="status-chip-compact" [class.chip-success]="d.estado === 'Declarado'" [class.chip-warning]="d.estado === 'Pendiente'">
+                          {{ d.estado }}
+                        </span>
                       </td>
                       <td class="font-mono text-xs">{{ d.numeroDeclaracionSAR || '—' }}</td>
-                      <td class="text-xs">{{ d.fechaCumplimiento ? (d.fechaCumplimiento | date:'dd/MM/yyyy') : '—' }}</td>
-                      <td class="text-right font-bold text-green text-xs">
-                        {{ d.montoDeclarado != null ? ('L. ' + (d.montoDeclarado | number:'1.2-2')) : '—' }}
+                      <td class="text-right font-bold text-xs">
+                        @if (d.montoDeclarado) {
+                          L. {{ d.montoDeclarado | number:'1.2-2' }}
+                        } @else {
+                          <span class="text-muted">—</span>
+                        }
                       </td>
                     </tr>
                   }
@@ -393,19 +425,18 @@
           <div class="expediente-tab-body-compact">
             @if (exp.declaracionesMensualesISV.length === 0) {
               <div class="empty-tab-box-compact">
-                <p>No hay periodos mensuales ISV registrados aún para este cliente.</p>
+                <p>No hay períodos de ISV registrados aún para este cliente.</p>
               </div>
             } @else {
               <table class="expediente-subtable-compact">
                 <thead>
                   <tr>
                     <th>Período</th>
-                    <th>Docs Recibidos</th>
-                    <th>Facturas (V/C)</th>
+                    <th>Facturas Recibidas</th>
+                    <th>Ventas / Compras</th>
                     <th>Estado SAR</th>
-                    <th>N° Formulario</th>
-                    <th>Fecha</th>
-                    <th class="text-right">ISV</th>
+                    <th>N° Declaración</th>
+                    <th class="text-right">ISV Pagado</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -414,23 +445,26 @@
                       <td class="font-bold">{{ m.mesNombre }} {{ m.anio }}</td>
                       <td>
                         @if (m.facturasRecibidas) {
-                          <span class="text-green text-xs font-semibold">✓ Recibidas</span>
+                          <span class="text-green text-xs font-semibold">✓ Entregadas</span>
                         } @else {
-                          <span class="text-muted text-xs">Pendientes</span>
+                          <span class="text-red text-xs font-semibold">✗ Pendientes</span>
                         }
                       </td>
-                      <td class="text-xs">{{ m.cantidadFacturasVenta || 0 }} V / {{ m.cantidadFacturasCompra || 0 }} C</td>
+                      <td class="text-xs">
+                        V: {{ m.cantidadFacturasVenta }} | C: {{ m.cantidadFacturasCompra }}
+                      </td>
                       <td>
-                        @if (m.liquidadoSAR) {
-                          <span class="status-pill status-active"><span class="dot"></span> Presentado</span>
-                        } @else {
-                          <span class="status-pill status-pending"><span class="dot"></span> No Liquidado</span>
-                        }
+                        <span class="status-chip-compact" [class.chip-success]="m.liquidadoSAR" [class.chip-warning]="!m.liquidadoSAR">
+                          {{ m.liquidadoSAR ? 'Liquidado SAR' : 'Pendiente' }}
+                        </span>
                       </td>
                       <td class="font-mono text-xs">{{ m.numeroDeclaracionSAR || '—' }}</td>
-                      <td class="text-xs">{{ m.fechaLiquidacion ? (m.fechaLiquidacion | date:'dd/MM/yyyy') : '—' }}</td>
-                      <td class="text-right font-bold text-purple text-xs">
-                        {{ m.montoImpuestoISV != null ? ('L. ' + (m.montoImpuestoISV | number:'1.2-2')) : '—' }}
+                      <td class="text-right font-bold text-xs">
+                        @if (m.montoImpuestoISV) {
+                          L. {{ m.montoImpuestoISV | number:'1.2-2' }}
+                        } @else {
+                          <span class="text-muted">—</span>
+                        }
                       </td>
                     </tr>
                   }
@@ -501,9 +535,9 @@
   </div>
 }
 
-<!-- MODAL CREAR / EDITAR CLIENTE -->
+<!-- MODAL CREAR / EDITAR CLIENTE (PROTEGIDO CONTRA CIERRE ACCIDENTAL) -->
 @if (isModalOpen()) {
-  <div class="modal-backdrop" (click)="closeModal()">
+  <div class="modal-backdrop">
     <div class="modal-card animate-fade-in" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div class="modal-title-box">
@@ -512,10 +546,10 @@
           </div>
           <div>
             <h3>{{ isEditing() ? 'Editar Cliente' : 'Registrar Nuevo Cliente' }}</h3>
-            <p>{{ isEditing() ? 'Actualiza los datos fiscales y de contacto' : 'Ingresa la información tributaria y de cobro del cliente' }}</p>
+            <p>{{ isEditing() ? 'Actualiza los datos fiscales, credenciales SAR y cuota' : 'Ingresa la información tributaria y de cobro del cliente' }}</p>
           </div>
         </div>
-        <button class="modal-close" (click)="closeModal()">✕</button>
+        <button class="modal-close" (click)="closeModal()" title="Cerrar formulario">✕</button>
       </div>
 
       @if (formError()) {
@@ -532,13 +566,48 @@
             <input type="text" [ngModel]="formNombreRazonSocial()" (ngModelChange)="formNombreRazonSocial.set($event)" name="formNombreRazonSocial" placeholder="Ej: Inversiones Los Andes S. de R.L." required />
           </div>
 
-          <!-- RTN (Solo creación) -->
-          @if (!isEditing()) {
-            <div class="form-field">
+          <!-- RTN (Siempre visible en creación y edición) con Copiado Rápido -->
+          <div class="form-field">
+            <div class="field-label-with-action">
               <label>RTN Fiscal (14 dígitos) *</label>
+              @if (formRtn()) {
+                <button type="button" class="btn-text-copy" (click)="copiarAlPortapapeles(formRtn(), 'RTN')">
+                  📋 Copiar
+                </button>
+              }
+            </div>
+            <div class="input-with-icon">
               <input type="text" [ngModel]="formRtn()" (ngModelChange)="formRtn.set($event)" name="formRtn" placeholder="08011990123456" required maxlength="16" />
             </div>
-          }
+          </div>
+
+          <!-- Contraseña SAR con Ver/Ocultar y Copiado Rápido -->
+          <div class="form-field">
+            <div class="field-label-with-action">
+              <label>Contraseña Oficina Virtual SAR</label>
+              @if (formContrasenaSAR()) {
+                <button type="button" class="btn-text-copy" (click)="copiarAlPortapapeles(formContrasenaSAR(), 'Clave SAR')">
+                  📋 Copiar
+                </button>
+              }
+            </div>
+            <div class="password-input-wrapper">
+              <input 
+                [type]="showPassword() ? 'text' : 'password'" 
+                [ngModel]="formContrasenaSAR()" 
+                (ngModelChange)="formContrasenaSAR.set($event)" 
+                name="formContrasenaSAR" 
+                placeholder="Clave para declaraciones SAR" 
+              />
+              <button type="button" class="toggle-password-btn" (click)="showPassword.set(!showPassword())" [title]="showPassword() ? 'Ocultar contraseña' : 'Ver contraseña'">
+                @if (showPassword()) {
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+                } @else {
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                }
+              </button>
+            </div>
+          </div>
 
           <!-- Nombre Comercial -->
           <div class="form-field">
@@ -555,12 +624,15 @@
             </select>
           </div>
 
-          <!-- Rubro -->
+          <!-- Rubro Dinámico con botón de Agregar Rápido -->
           <div class="form-field">
-            <label>Rubro / Actividad Económica *</label>
+            <div class="field-label-with-action">
+              <label>Rubro / Actividad Económica *</label>
+              <button type="button" class="btn-text-action" (click)="openNuevoRubroModal()">+ Nuevo Rubro</button>
+            </div>
             <select [ngModel]="formRubro()" (ngModelChange)="formRubro.set($event)" name="formRubro">
-              @for (r of rubrosList; track r) {
-                <option [value]="r">{{ r }}</option>
+              @for (r of rubros(); track r.id) {
+                <option [value]="r.nombre">{{ r.nombre }}</option>
               }
             </select>
           </div>
@@ -597,7 +669,7 @@
 
           <!-- Estado (Solo edición) -->
           @if (isEditing()) {
-            <div class="form-field checkbox-field">
+            <div class="form-field checkbox-field full-width">
               <label class="switch-label">
                 <input type="checkbox" [checked]="formActivo()" (change)="formActivo.set(!formActivo())" />
                 <span>Cliente Activo en Cartera</span>
@@ -613,6 +685,49 @@
           </button>
         </div>
       </form>
+    </div>
+  </div>
+}
+
+<!-- MODAL CREACIÓN RÁPIDA DE NUEVO RUBRO -->
+@if (isRubroModalOpen()) {
+  <div class="modal-backdrop rubro-backdrop">
+    <div class="modal-card modal-card-sm animate-fade-in" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-box">
+          <div class="modal-icon bg-purple-light text-purple">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+          </div>
+          <div>
+            <h3>Agregar Nuevo Rubro</h3>
+            <p>Registra una nueva actividad económica en el catálogo</p>
+          </div>
+        </div>
+        <button class="modal-close" (click)="closeNuevoRubroModal()" title="Cerrar">✕</button>
+      </div>
+
+      @if (rubroModalError()) {
+        <div class="error-alert">
+          <span>{{ rubroModalError() }}</span>
+        </div>
+      }
+
+      <div class="modal-form">
+        <div class="form-field full-width">
+          <label>Nombre del Rubro *</label>
+          <input type="text" [ngModel]="nuevoRubroNombre()" (ngModelChange)="nuevoRubroNombre.set($event)" placeholder="Ej: Gimnasio y Fitness" required />
+        </div>
+
+        <div class="form-field full-width">
+          <label>Descripción / Observación (Opcional)</label>
+          <input type="text" [ngModel]="nuevoRubroDesc()" (ngModelChange)="nuevoRubroDesc.set($event)" placeholder="Ej: Centros de acondicionamiento físico" />
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeNuevoRubroModal()">Cancelar</button>
+          <button type="button" class="btn btn-primary" (click)="guardarNuevoRubro()">Guardar Rubro</button>
+        </div>
+      </div>
     </div>
   </div>
 }
