@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { ApiLibrosIsvService, LibroIsvDetalle, LibroIsvGuardar, LibroIsvImportItem, LibroIsvImportResponse, LibroPartidaItem, LibroDetalleCompleto, GuardarLibroDetallePartidas } from '../services/api-libros-isv.service';
 import { ApiClientsService, ClienteResponse } from '../services/api-clients.service';
 import { PdfGeneratorService } from '../services/pdf-generator.service';
+import { ClientSelectorComponent } from '../shared/client-selector/client-selector.component';
 
 @Component({
   selector: 'app-libros-isv',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ClientSelectorComponent],
   templateUrl: './libros-isv.component.html',
   styleUrl: './libros-isv.component.scss'
 })
@@ -175,6 +176,20 @@ export class LibrosIsvComponent implements OnInit {
         console.error('Error al cargar clientes:', err);
       }
     });
+  }
+
+  onClientAutocompleteSelected(client: ClienteResponse): void {
+    if (!client) return;
+    this.selectedClienteId.set(Number(client.id));
+    this.serviciosProfesionales.set(client.cuotaMensual || 0);
+    this.cargarDatosPeriodo();
+  }
+
+  onClientAutocompleteCleared(): void {
+    if (this.clientes().length > 0) {
+      this.selectedClienteId.set(Number(this.clientes()[0].id));
+      this.cargarDatosPeriodo();
+    }
   }
 
   onClienteChange(event: Event): void {
