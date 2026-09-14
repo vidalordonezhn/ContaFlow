@@ -62,7 +62,7 @@ export class ClientsComponent implements OnInit {
   readonly formTipoPersona = signal('Juridica');
   readonly formRubro = signal('Comercio General');
   readonly formContrasenaSAR = signal('');
-  readonly showPassword = signal(false);
+  readonly showPassword = signal(true);
   readonly formEmailPrincipal = signal('');
   readonly formEmailSecundario = signal('');
   readonly formTelefono = signal('');
@@ -178,7 +178,7 @@ export class ClientsComponent implements OnInit {
     this.formTipoPersona.set(c.tipoPersona);
     this.formRubro.set(c.rubro || (this.rubros().length > 0 ? this.rubros()[0].nombre : 'Comercio General'));
     this.formContrasenaSAR.set(c.contrasenaSAR || '');
-    this.showPassword.set(false);
+    this.showPassword.set(true);
     this.formEmailPrincipal.set(c.emailPrincipal || '');
     this.formEmailSecundario.set(c.emailSecundario || '');
     this.formTelefono.set(c.telefono || '');
@@ -201,8 +201,13 @@ export class ClientsComponent implements OnInit {
     if (!texto) return;
     navigator.clipboard.writeText(texto).then(() => {
       this.copiedField.set(label);
-      this.showToast(`¡${label} copiado al portapapeles!`);
-      setTimeout(() => this.copiedField.set(null), 2500);
+      const friendlyName = label.includes('RTN') ? 'RTN' : label.includes('SAR') ? 'Clave SAR' : label;
+      this.showToast(`¡${friendlyName} copiado al portapapeles!`);
+      setTimeout(() => {
+        if (this.copiedField() === label) {
+          this.copiedField.set(null);
+        }
+      }, 2000);
     });
   }
 
