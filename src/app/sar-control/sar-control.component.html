@@ -11,9 +11,9 @@
   <!-- HEADER -->
   <header class="page-header">
     <div class="header-left">
-      <div class="header-badge bg-orange-light text-orange">Recepción (10 al 30) &bull; Declaración SAR (1 al 10)</div>
+      <div class="header-badge bg-blue-light text-blue">CONTROL TRIBUTARIO • LIBROS ISV Y DECLARACIONES SAR</div>
       <h1 class="header-title">Control Fiscal & Liquidaciones SAR</h1>
-      <p class="header-subtitle">Acopio de facturas de compras/ventas (10 al 30) y presentación de declaraciones ante el SAR (1 al 10)</p>
+      <p class="header-subtitle">Monitoreo en tiempo real de facturas en Libros ISV y estado de declaración ante el SAR</p>
     </div>
     <div class="header-right">
       <!-- Selector Período -->
@@ -40,38 +40,38 @@
       </div>
       <div class="alert-content">
         <h4>¡Atención! Quedan {{ resumen()?.diasRestantesParaDia10 }} días para el límite del 10 del mes</h4>
-        <p>Aún tienes <strong>{{ resumen()?.facturasPendientesCount }} clientes</strong> pendientes de enviar facturas de compras y ventas. Utiliza los botones de recordatorio de WhatsApp para solicitar su documentación.</p>
+        <p>Aún tienes <strong>{{ resumen()?.facturasPendientesCount }} clientes</strong> sin facturas cargadas en sus libros de compras y ventas. Utiliza los botones de recordatorio de WhatsApp para solicitar su documentación.</p>
       </div>
     </div>
   }
 
   <!-- KPIS GRID (SEMÁFORO) -->
   <section class="kpis-grid">
-    <!-- 🔴 Pendientes de Facturas -->
+    <!-- 🔴 Sin Facturas -->
     <div class="kpi-card card-rojo">
       <div class="kpi-header">
-        <span class="kpi-label">Pendiente Facturas</span>
+        <span class="kpi-label">Sin Facturas</span>
         <div class="kpi-icon-box bg-red-light text-red">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         </div>
       </div>
       <div class="kpi-body">
         <h3 class="kpi-value text-red">{{ kpiPendientes() }}</h3>
-        <span class="kpi-subtext text-red">Clientes sin entregar</span>
+        <span class="kpi-subtext text-red">Sin facturas en libros</span>
       </div>
     </div>
 
-    <!-- 🟡 Facturas Recibidas / En Proceso -->
+    <!-- 🟡 Facturas en Libros / En Proceso -->
     <div class="kpi-card card-amarillo">
       <div class="kpi-header">
-        <span class="kpi-label">En Revisión / Proceso</span>
+        <span class="kpi-label">Facturas en Libros</span>
         <div class="kpi-icon-box bg-orange-light text-orange">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </div>
       </div>
       <div class="kpi-body">
         <h3 class="kpi-value text-orange">{{ kpiEnProceso() }}</h3>
-        <span class="kpi-subtext text-orange">Facturas listas para liquidar</span>
+        <span class="kpi-subtext text-orange">Listos para liquidar</span>
       </div>
     </div>
 
@@ -85,7 +85,7 @@
       </div>
       <div class="kpi-body">
         <h3 class="kpi-value text-green">{{ kpiLiquidados() }}</h3>
-        <span class="kpi-subtext text-green">Cumplimiento al 100%</span>
+        <span class="kpi-subtext text-green">Declaración completada</span>
       </div>
     </div>
   </section>
@@ -101,13 +101,13 @@
           Todos <span class="tab-badge">{{ kpiTotal() }}</span>
         </button>
         <button class="tab-btn tab-rojo" [class.active]="activeTab() === 'rojo'" (click)="activeTab.set('rojo')">
-          🔴 Pendientes <span class="tab-badge">{{ kpiPendientes() }}</span>
+          🔴 Sin Facturas <span class="tab-badge">{{ kpiPendientes() }}</span>
         </button>
         <button class="tab-btn tab-amarillo" [class.active]="activeTab() === 'amarillo'" (click)="activeTab.set('amarillo')">
-          🟡 En Proceso <span class="tab-badge">{{ kpiEnProceso() }}</span>
+          🟡 Facturas en Libros <span class="tab-badge">{{ kpiEnProceso() }}</span>
         </button>
         <button class="tab-btn tab-verde" [class.active]="activeTab() === 'verde'" (click)="activeTab.set('verde')">
-          🟢 Declarados <span class="tab-badge">{{ kpiLiquidados() }}</span>
+          🟢 Declarados SAR <span class="tab-badge">{{ kpiLiquidados() }}</span>
         </button>
       </div>
 
@@ -136,7 +136,7 @@
             <tr>
               <th>Contribuyente / RTN</th>
               <th>Semáforo SAR</th>
-              <th>Documentos Recibidos</th>
+              <th>Facturas en Libros ISV</th>
               <th>Declaración SAR</th>
               <th>Recordatorio</th>
               <th class="text-right">Acciones Rápidas</th>
@@ -158,21 +158,23 @@
                   @if (p.nivelSemaforo === 'Verde') {
                     <span class="semaforo-badge semaforo-verde">🟢 Declarado SAR</span>
                   } @else if (p.nivelSemaforo === 'Amarillo') {
-                    <span class="semaforo-badge semaforo-amarillo">🟡 Facturas Recibidas</span>
+                    <span class="semaforo-badge semaforo-amarillo">🟡 Facturas en Libros</span>
                   } @else {
                     <span class="semaforo-badge semaforo-rojo">🔴 Sin Facturas</span>
                   }
                 </td>
 
-                <!-- Documentos Recibidos -->
+                <!-- Documentos Recibidos / Facturas en Libros ISV -->
                 <td>
-                  @if (p.facturasRecibidas) {
+                  @if (p.facturasRecibidas || p.cantidadFacturasVenta > 0 || p.cantidadFacturasCompra > 0) {
                     <div class="docs-info">
                       <span class="docs-count">V: {{ p.cantidadFacturasVenta }} | C: {{ p.cantidadFacturasCompra }}</span>
-                      <span class="docs-date">{{ p.fechaRecepcionFacturas | date:'dd/MM/yyyy' }}</span>
+                      @if (p.fechaRecepcionFacturas) {
+                        <span class="docs-date">{{ p.fechaRecepcionFacturas | date:'dd/MM/yyyy' }}</span>
+                      }
                     </div>
                   } @else {
-                    <span class="text-muted text-xs">Pendiente de recibir</span>
+                    <span class="text-muted text-xs">Sin facturas registradas</span>
                   }
                 </td>
 
@@ -180,7 +182,7 @@
                 <td>
                   @if (p.liquidadoSAR) {
                     <div class="sar-info">
-                      <span class="sar-num">Dec: {{ p.numeroDeclaracionSAR }}</span>
+                      <span class="sar-num">Dec: {{ p.numeroDeclaracionSAR || 'Completada' }}</span>
                       @if (p.montoImpuestoISV) {
                         <span class="sar-isv">ISV: L. {{ p.montoImpuestoISV | number:'1.2-2' }}</span>
                       }
@@ -192,11 +194,13 @@
 
                 <!-- Recordatorio WhatsApp -->
                 <td>
-                  @if (!p.facturasRecibidas && p.clienteWhatsApp) {
+                  @if (!p.facturasRecibidas && !p.liquidadoSAR && p.clienteWhatsApp) {
                     <a [href]="getWhatsAppRecordatorio(p)" target="_blank" class="btn-whatsapp-recordatorio" title="Enviar recordatorio de facturas por WhatsApp">
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
                       <span>Avisar Día 10</span>
                     </a>
+                  } @else if (p.liquidadoSAR) {
+                    <span class="text-emerald text-xs font-semibold">✓ Declarado</span>
                   } @else if (p.facturasRecibidas) {
                     <span class="text-green text-xs font-semibold">✓ Al día</span>
                   } @else {
@@ -207,14 +211,10 @@
                 <!-- Acciones -->
                 <td class="text-right">
                   <div class="actions-group">
-                    <!-- Presentación de Facturas (Módulo Libros ISV) -->
-                    <button class="btn btn-sm btn-secondary" (click)="irAPresentacionFacturas(p)" title="Ir a Libros ISV y Presentación de facturas para este contribuyente">
-                      📥 Presentación de facturas
+                    <!-- Abrir Libros ISV y Declaración -->
+                    <button class="btn btn-sm btn-primary" (click)="irAPresentacionFacturas(p)" title="Abrir Libro de Compras, Ventas y Declaración SAR para este contribuyente">
+                      📑 Libros ISV & Declarar
                     </button>
-                    <!-- Registrar Liquidación / Declarar SAR -->
-                    @if (p.liquidadoSAR) {
-                      <span class="badge-al-dia text-emerald text-xs font-bold">✓ Declarado</span>
-                    }
                   </div>
                 </td>
               </tr>
@@ -226,97 +226,3 @@
   </div>
 </div>
 
-<!-- MODAL RECEPCIÓN FACTURAS -->
-@if (isRecepcionModalOpen()) {
-  <div class="modal-backdrop" (click)="closeModals()">
-    <div class="modal-card animate-fade-in" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <div class="modal-title-box">
-          <div class="modal-icon bg-blue-light text-blue">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-          </div>
-          <div>
-            <h3>Recepción de Documentos Fiscales</h3>
-            <p>{{ selectedPeriodo()?.clienteNombre }} • Período: {{ selectedPeriodo()?.mesNombre }}</p>
-          </div>
-        </div>
-        <button class="modal-close" (click)="closeModals()">✕</button>
-      </div>
-
-      <form (ngSubmit)="guardarRecepcion()" class="modal-form">
-        <div class="form-grid">
-          <div class="form-field">
-            <label>Cantidad Facturas de Venta</label>
-            <input type="number" [ngModel]="formCantVentas()" (ngModelChange)="formCantVentas.set($event)" name="formCantVentas" min="0" />
-          </div>
-
-          <div class="form-field">
-            <label>Cantidad Facturas de Compra</label>
-            <input type="number" [ngModel]="formCantCompras()" (ngModelChange)="formCantCompras.set($event)" name="formCantCompras" min="0" />
-          </div>
-
-          <div class="form-field full-width">
-            <label>Observaciones / Detalle Documentos</label>
-            <input type="text" [ngModel]="formNotasRecepcion()" (ngModelChange)="formNotasRecepcion.set($event)" name="formNotasRecepcion" placeholder="Ej: Entregó 15 facturas físicas y 4 digitales por WhatsApp" />
-          </div>
-
-          <div class="form-field checkbox-field">
-            <label class="switch-label">
-              <input type="checkbox" [checked]="formFacturasRecibidas()" (change)="formFacturasRecibidas.set(!formFacturasRecibidas())" />
-              <span>Marcar como "Facturas Recibidas"</span>
-            </label>
-          </div>
-        </div>
-
-        <div class="modal-actions">
-          <button type="button" class="btn btn-secondary" (click)="closeModals()">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Guardar Recepción</button>
-        </div>
-      </form>
-    </div>
-  </div>
-}
-
-<!-- MODAL DECLARACIÓN SAR -->
-@if (isLiquidacionModalOpen()) {
-  <div class="modal-backdrop" (click)="closeModals()">
-    <div class="modal-card animate-fade-in" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <div class="modal-title-box">
-          <div class="modal-icon bg-green-light text-green">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-          </div>
-          <div>
-            <h3>Registrar Declaración SAR</h3>
-            <p>{{ selectedPeriodo()?.clienteNombre }} • {{ selectedPeriodo()?.mesNombre }}</p>
-          </div>
-        </div>
-        <button class="modal-close" (click)="closeModals()">✕</button>
-      </div>
-
-      <form (ngSubmit)="guardarLiquidacion()" class="modal-form">
-        <div class="form-grid">
-          <div class="form-field full-width">
-            <label>Número de Declaración / Recibo SAR *</label>
-            <input type="text" [ngModel]="formNumeroDeclaracion()" (ngModelChange)="formNumeroDeclaracion.set($event)" name="formNumeroDeclaracion" placeholder="Ej: SAR-DEC-2026-98124" required />
-          </div>
-
-          <div class="form-field">
-            <label>Monto Impuesto ISV Liquidado (L.)</label>
-            <input type="number" [ngModel]="formMontoISV()" (ngModelChange)="formMontoISV.set($event)" name="formMontoISV" min="0" step="10" />
-          </div>
-
-          <div class="form-field">
-            <label>Monto Retenciones (L.)</label>
-            <input type="number" [ngModel]="formMontoRetenciones()" (ngModelChange)="formMontoRetenciones.set($event)" name="formMontoRetenciones" min="0" step="10" />
-          </div>
-        </div>
-
-        <div class="modal-actions">
-          <button type="button" class="btn btn-secondary" (click)="closeModals()">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Registrar Liquidación SAR</button>
-        </div>
-      </form>
-    </div>
-  </div>
-}

@@ -2,7 +2,7 @@ import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ApiSARService, PeriodoSARResponse, SARResumenMensual, MarcarRecepcion, RegistrarLiquidacionSAR } from '../services/api-sar.service';
+import { ApiSARService, PeriodoSARResponse, SARResumenMensual } from '../services/api-sar.service';
 
 @Component({
   selector: 'app-sar-control',
@@ -29,24 +29,6 @@ export class SARControlComponent implements OnInit {
   readonly activeTab = signal<'todos' | 'rojo' | 'amarillo' | 'verde'>('todos');
   readonly searchQuery = signal('');
 
-  // Modales
-  readonly isRecepcionModalOpen = signal(false);
-  readonly isLiquidacionModalOpen = signal(false);
-  readonly selectedPeriodo = signal<PeriodoSARResponse | null>(null);
-  readonly formError = signal<string | null>(null);
-
-  // Formulario Recepción
-  readonly formFacturasRecibidas = signal(true);
-  readonly formCantVentas = signal<number>(0);
-  readonly formCantCompras = signal<number>(0);
-  readonly formNotasRecepcion = signal('');
-
-  // Formulario Liquidación
-  readonly formNumeroDeclaracion = signal('');
-  readonly formMontoISV = signal<number>(0);
-  readonly formMontoRetenciones = signal<number>(0);
-  readonly formNotasLiquidacion = signal('');
-
   // Lista de Meses
   readonly meses = [
     { id: 1, name: 'Enero' },
@@ -67,7 +49,7 @@ export class SARControlComponent implements OnInit {
 
   // KPIs
   readonly kpiTotal = computed(() => this.periodos().length);
-  readonly kpiPendientes = computed(() => this.periodos().filter(p => !p.facturasRecibidas).length);
+  readonly kpiPendientes = computed(() => this.periodos().filter(p => !p.facturasRecibidas && !p.liquidadoSAR).length);
   readonly kpiEnProceso = computed(() => this.periodos().filter(p => p.facturasRecibidas && !p.liquidadoSAR).length);
   readonly kpiLiquidados = computed(() => this.periodos().filter(p => p.liquidadoSAR).length);
 
@@ -78,7 +60,7 @@ export class SARControlComponent implements OnInit {
 
     return this.periodos().filter(p => {
       let matchTab = true;
-      if (tab === 'rojo') matchTab = !p.facturasRecibidas;
+      if (tab === 'rojo') matchTab = !p.facturasRecibidas && !p.liquidadoSAR;
       else if (tab === 'amarillo') matchTab = p.facturasRecibidas && !p.liquidadoSAR;
       else if (tab === 'verde') matchTab = p.liquidadoSAR;
 
@@ -123,82 +105,6 @@ export class SARControlComponent implements OnInit {
         clienteId: periodo.clienteId,
         mes: this.selectedMes(),
         anio: this.selectedAnio()
-      }
-    });
-  }
-
-  openRecepcionModal(periodo: PeriodoSARResponse): void {
-    this.selectedPeriodo.set(periodo);
-    this.formFacturasRecibidas.set(true);
-    this.formCantVentas.set(periodo.cantidadFacturasVenta || 0);
-    this.formCantCompras.set(periodo.cantidadFacturasCompra || 0);
-    this.formNotasRecepcion.set(periodo.notasDocumentos || '');
-    this.formError.set(null);
-    this.isRecepcionModalOpen.set(true);
-  }
-
-  openLiquidacionModal(periodo: PeriodoSARResponse): void {
-    this.selectedPeriodo.set(periodo);
-    this.formNumeroDeclaracion.set(periodo.numeroDeclaracionSAR || '');
-    this.formMontoISV.set(periodo.montoImpuestoISV || 0);
-    this.formMontoRetenciones.set(periodo.montoRetenciones || 0);
-    this.formError.set(null);
-    this.isLiquidacionModalOpen.set(true);
-  }
-
-  closeModals(): void {
-    this.isRecepcionModalOpen.set(false);
-    this.isLiquidacionModalOpen.set(false);
-    this.formError.set(null);
-  }
-
-  guardarRecepcion(): void {
-    const periodo = this.selectedPeriodo();
-    if (!periodo) return;
-
-    const dto: MarcarRecepcion = {
-      facturasRecibidas: this.formFacturasRecibidas(),
-      cantidadFacturasVenta: Number(this.formCantVentas()) || 0,
-      cantidadFacturasCompra: Number(this.formCantCompras()) || 0,
-      notasDocumentos: this.formNotasRecepcion().trim() || undefined
-    };
-
-    this.sarService.marcarRecepcion(periodo.id, dto).subscribe({
-      next: () => {
-        this.showToast('Recepción de documentos guardada.');
-        this.closeModals();
-        this.cargarDatos();
-      },
-      error: (err) => {
-        this.formError.set(err.error?.mensaje || 'Error al guardar.');
-      }
-    });
-  }
-
-  guardarLiquidacion(): void {
-    const periodo = this.selectedPeriodo();
-    if (!periodo) return;
-
-    if (!this.formNumeroDeclaracion().trim()) {
-      this.formError.set('El número de declaración SAR es obligatorio.');
-      return;
-    }
-
-    const dto: RegistrarLiquidacionSAR = {
-      numeroDeclaracionSAR: this.formNumeroDeclaracion().trim(),
-      montoImpuestoISV: Number(this.formMontoISV()) || 0,
-      montoRetenciones: Number(this.formMontoRetenciones()) || 0,
-      notas: this.formNotasLiquidacion().trim() || undefined
-    };
-
-    this.sarService.registrarLiquidacion(periodo.id, dto).subscribe({
-      next: () => {
-        this.showToast('Liquidación SAR registrada exitosamente.');
-        this.closeModals();
-        this.cargarDatos();
-      },
-      error: (err) => {
-        this.formError.set(err.error?.mensaje || 'Error al guardar.');
       }
     });
   }
