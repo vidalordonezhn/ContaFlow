@@ -1,6 +1,6 @@
 .page-container {
   padding: 1.75rem 2rem;
-  max-width: 1560px;
+  max-width: 1680px;
   margin: 0 auto;
 }
 
@@ -59,31 +59,41 @@
 
   .header-nav-tabs {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.35rem;
     background-color: #ffffff;
-    padding: 0.375rem;
+    padding: 0.35rem;
     border-radius: 0.75rem;
     border: 1px solid #e2e8f0;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    flex-wrap: wrap;
 
     .nav-tab-btn {
       background: transparent;
       border: none;
-      padding: 0.625rem 1.25rem;
-      font-size: 0.875rem;
+      padding: 0.55rem 1rem;
+      font-size: 0.85rem;
       font-weight: 700;
       color: #64748b;
       border-radius: 0.5rem;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.45rem;
       transition: all 0.2s ease;
 
+      &:hover {
+        background-color: #f1f5f9;
+        color: #0f172a;
+      }
+
       &.active {
-        background-color: #2563eb;
+        background-color: #0f172a;
         color: #ffffff;
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
+
+        svg {
+          color: #38bdf8 !important;
+        }
       }
     }
   }
@@ -150,12 +160,12 @@
 
     .filter-action-btn {
       margin-left: auto;
+      flex-wrap: wrap;
     }
   }
 
   .sar-credentials-bar {
     margin-top: 1rem;
-    padding-top: 1rem;
     border-top: 1px dashed #e2e8f0;
     display: flex;
     align-items: center;
@@ -257,83 +267,23 @@
   }
 }
 
-/* ========================================================================= */
-/* HOJA DE TRABAJO PARTIDA POR PARTIDA (DETALLE DIARIO)                      */
-/* ========================================================================= */
-.hoja-trabajo-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.hoja-actions-toolbar {
-  display: flex;
-  justify-content: space-between;
+/* BUTTONS */
+.btn-upload-excel {
+  display: inline-flex;
   align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.6rem 1rem;
+  background: #0284c7;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 4px rgba(2, 132, 199, 0.2);
 
-  .toolbar-left, .toolbar-right {
-    display: flex;
-    gap: 0.75rem;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-
-  .btn-tool {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.55rem 1rem;
-    border-radius: 0.5rem;
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    border: none;
-
-    &.btn-add-row {
-      background: #0ea5e9;
-      color: #ffffff;
-      &:hover { background: #0284c7; }
-    }
-
-    &.btn-csv-template {
-      background: #ffffff;
-      color: #334155;
-      border: 1px solid #cbd5e1;
-      &:hover { background: #f8fafc; border-color: #94a3b8; }
-    }
-
-    &.btn-upload-csv {
-      background: #f1f5f9;
-      color: #334155;
-      border: 1px solid #cbd5e1;
-      &:hover { background: #e2e8f0; }
-    }
-
-    &.btn-pdf-tool {
-      background: #dc2626;
-      color: #ffffff;
-      box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
-      &:hover { background: #b91c1c; }
-    }
-
-    &.btn-excel-tool {
-      background: #15803d;
-      color: #ffffff;
-      box-shadow: 0 2px 4px rgba(21, 128, 61, 0.2);
-      &:hover { background: #166534; }
-    }
-
-    &.btn-save-hoja {
-      background: #2563eb;
-      color: #ffffff;
-      box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
-      &:hover:not(:disabled) { background: #1d4ed8; }
-      &:disabled { opacity: 0.6; cursor: not-allowed; }
-    }
-  }
+  &:hover { background: #0369a1; }
 }
 
 .btn-pdf-export {
@@ -351,9 +301,7 @@
   transition: all 0.15s ease;
   box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
 
-  &:hover {
-    background: #b91c1c;
-  }
+  &:hover { background: #b91c1c; }
 }
 
 .btn-excel-export {
@@ -371,60 +319,100 @@
   transition: all 0.15s ease;
   box-shadow: 0 2px 4px rgba(21, 128, 61, 0.2);
 
-  &:hover {
-    background: #166534;
-  }
+  &:hover { background: #166534; }
 }
 
-.hoja-oficial-sheet {
+.btn-save-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.1rem;
+  background: #2563eb;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.25);
+
+  &:hover:not(:disabled) { background: #1d4ed8; }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+}
+
+/* ========================================================================= */
+/* TABLAS DE LIBRO DE VENTAS Y COMPRAS                                      */
+/* ========================================================================= */
+.libro-section-wrapper {
   background: #ffffff;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #e2e8f0;
   border-radius: 0.75rem;
   padding: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
 
-  .hoja-header-block {
-    border-bottom: 2px solid #0f172a;
-    padding-bottom: 1rem;
-    margin-bottom: 1.25rem;
+.section-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  gap: 1rem;
 
-    .hoja-header-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 1rem;
+  .section-badge-pill {
+    font-size: 0.85rem;
+    font-weight: 800;
+    padding: 0.4rem 0.85rem;
+    border-radius: 0.5rem;
+    letter-spacing: 0.04em;
 
-      .header-field {
-        display: flex;
-        flex-direction: column;
-        gap: 0.2rem;
+    &.bg-blue-subtle {
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+    }
+    &.bg-emerald-subtle {
+      background: #ecfdf5;
+      color: #047857;
+      border: 1px solid #a7f3d0;
+    }
+  }
 
-        .field-title {
-          font-size: 0.75rem;
-          font-weight: 800;
-          color: #475569;
-          text-transform: uppercase;
-        }
+  .btn-add-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 0.9rem;
+    background: #0f172a;
+    color: #ffffff;
+    border-radius: 0.5rem;
+    font-size: 0.825rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
 
-        .field-value {
-          font-size: 0.95rem;
-          font-weight: 700;
-          color: #0f172a;
-          word-break: break-word;
+    &:hover { background: #1e293b; }
+  }
 
-          &.password-text {
-            font-family: monospace;
-            color: #2563eb;
-          }
-        }
-      }
+  .kpi-tag-lg {
+    font-size: 0.95rem;
+    font-weight: 600;
+    background: #f8fafc;
+    padding: 0.4rem 0.85rem;
+    border-radius: 0.5rem;
+    border: 1px solid #e2e8f0;
+
+    strong {
+      font-size: 1.05rem;
+      font-family: monospace;
     }
   }
 }
 
-/* TABLA OFICIAL */
-.table-responsive-hoja {
+.table-container {
   overflow-x: auto;
-  margin-bottom: 1.5rem;
   border-radius: 0.5rem;
   border: 1px solid #cbd5e1;
 }
@@ -436,34 +424,8 @@
   background: #ffffff;
 
   thead {
-    .thead-group th {
-      padding: 0.4rem 0.5rem;
-      font-size: 0.7rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      border: 1px solid #cbd5e1;
-      text-align: center;
-
-      &.th-group-main {
-        background: #f1f5f9;
-        color: #334155;
-      }
-      &.th-group-compras {
-        background: #ecfdf5;
-        color: #065f46;
-      }
-      &.th-group-ventas {
-        background: #eff6ff;
-        color: #1e40af;
-      }
-      &.th-group-actions {
-        background: #f8fafc;
-      }
-    }
-
-    .thead-cols th {
-      padding: 0.5rem 0.4rem;
+    tr.thead-cols th {
+      padding: 0.55rem 0.4rem;
       font-size: 0.75rem;
       font-weight: 700;
       border: 1px solid #cbd5e1;
@@ -474,10 +436,12 @@
 
       &.col-num { width: 45px; }
       &.col-fecha { width: 130px; }
-      &.col-prov { min-width: 160px; }
-      &.col-money { width: 110px; }
-      &.col-isv { width: 100px; }
-      &.col-fac { width: 120px; }
+      &.col-fac { width: 130px; }
+      &.col-prov { min-width: 180px; }
+      &.col-money { width: 115px; }
+      &.col-isv-ventas { width: 110px; background: #eff6ff; color: #1e40af; }
+      &.col-isv-compras { width: 110px; background: #ecfdf5; color: #065f46; }
+      &.col-total { width: 125px; background: #f1f5f9; }
       &.col-action { width: 50px; }
     }
   }
@@ -524,34 +488,37 @@
           background: #ffffff;
         }
 
-        &.input-date {
-          font-size: 0.75rem;
-        }
-
+        &.input-date { font-size: 0.75rem; }
+        &.input-fac { font-family: monospace; }
+        &.input-text { font-size: 0.8rem; }
         &.input-money {
           text-align: right;
           font-family: monospace;
           font-size: 0.8rem;
         }
 
-        &.highlight-input {
-          background: rgba(16, 185, 129, 0.04);
-        }
-
         &.highlight-input-ventas {
           background: rgba(37, 99, 235, 0.04);
+        }
+
+        &.highlight-input-compras {
+          background: rgba(16, 185, 129, 0.04);
         }
       }
 
       .cell-isv-val {
         text-align: right;
         padding-right: 0.5rem;
-        .isv-calculated {
-          font-family: monospace;
-          font-weight: 700;
-          font-size: 0.8rem;
-          color: #059669;
-        }
+        font-family: monospace;
+        font-size: 0.825rem;
+      }
+
+      .cell-total-val {
+        text-align: right;
+        padding-right: 0.5rem;
+        font-family: monospace;
+        font-size: 0.825rem;
+        color: #0f172a;
       }
 
       .cell-action {
@@ -597,239 +564,167 @@
   }
 }
 
-/* CUADRO DE RESUMEN OFICIAL (CALCULO DE IMPUESTO + HONORARIOS = TOTAL LPS) */
-.resumen-oficial-box-container {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 1rem;
+/* ========================================================================= */
+/* CUADRO RESUMEN DE CASILLAS PARA EL SAR (1-CLIC COPY)                      */
+/* ========================================================================= */
+.resumen-casillas-container {
+  border: 1px solid #cbd5e1;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
 
-  .resumen-oficial-table {
-    width: 380px;
-    border: 2px solid #0f172a;
-    border-radius: 0.5rem;
-    overflow: hidden;
-    background: #ffffff;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  .resumen-card-header {
+    padding: 0.875rem 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #cbd5e1;
+    flex-wrap: wrap;
+    gap: 0.5rem;
 
-    .resumen-row {
+    &.bg-blue-subtle { background: #eff6ff; }
+    &.bg-emerald-subtle { background: #ecfdf5; }
+
+    .header-left-title {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      padding: 0.5rem 0.875rem;
-      border-bottom: 1px solid #e2e8f0;
-      font-size: 0.85rem;
+      gap: 0.5rem;
 
-      .resumen-label {
-        font-weight: 600;
-        color: #334155;
-      }
-
-      .resumen-value {
-        font-family: monospace;
-        font-size: 0.9rem;
-      }
-
-      &.impuesto-pagar-row {
-        background: #fffbeb;
-        .resumen-label { font-weight: 700; color: #b45309; }
-        .resumen-value { color: #b45309; font-weight: 800; font-size: 1rem; }
-      }
-
-      &.saldo-favor-row {
-        background: #ecfdf5;
-        .resumen-label { font-weight: 700; color: #065f46; }
-        .resumen-value { color: #065f46; font-weight: 800; font-size: 1rem; }
-      }
-
-      &.servicios-row {
-        background: #f8fafc;
-        .resumen-label { font-weight: 700; color: #1e293b; }
-        .resumen-value-input {
-          display: flex;
-          align-items: center;
-          gap: 0.25rem;
-
-          .currency-prefix {
-            font-weight: 700;
-            color: #64748b;
-          }
-
-          .honorarios-input {
-            width: 100px;
-            padding: 0.25rem 0.4rem;
-            border: 1px solid #cbd5e1;
-            border-radius: 0.25rem;
-            text-align: right;
-            font-family: monospace;
-            font-weight: 700;
-            font-size: 0.9rem;
-            outline: none;
-
-            &:focus {
-              border-color: #2563eb;
-            }
-          }
-        }
-      }
-
-      &.total-final-row {
-        background: #0f172a;
+      .sar-badge-mini {
+        background: #1e40af;
         color: #ffffff;
-        border-bottom: none;
-        padding: 0.75rem 0.875rem;
+        font-size: 0.7rem;
+        font-weight: 800;
+        padding: 0.15rem 0.45rem;
+        border-radius: 0.25rem;
+      }
 
-        .resumen-label-grand {
-          font-size: 1rem;
-          font-weight: 800;
-          letter-spacing: 0.05em;
-        }
-
-        .resumen-value-grand {
-          font-size: 1.25rem;
-          font-weight: 800;
-          font-family: monospace;
-          color: #38bdf8;
-        }
+      h4 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 800;
+        color: #0f172a;
       }
     }
-  }
-}
 
-.print-signature-footer {
-  display: none;
-}
-
-/* ========================================================================= */
-/* MODALIDAD 2: DECLARACION SAR-210 MACRO                                    */
-/* ========================================================================= */
-.books-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
-
-  @media (max-width: 992px) {
-    grid-template-columns: 1fr;
+    .header-hint {
+      font-size: 0.775rem;
+      color: #64748b;
+      font-style: italic;
+    }
   }
 
-  .book-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.75rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-    display: flex;
-    flex-direction: column;
+  .casillas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    padding: 1.25rem;
 
-    .book-card-header {
-      padding: 1.25rem 1.5rem;
-      border-bottom: 1px solid #e2e8f0;
+    .casilla-box {
+      border: 1px solid #e2e8f0;
+      border-radius: 0.5rem;
+      padding: 0.875rem;
+      background: #f8fafc;
       display: flex;
-      align-items: center;
+      flex-direction: column;
       justify-content: space-between;
+      gap: 0.75rem;
+      transition: all 0.15s;
 
-      .book-header-title {
+      &:hover {
+        border-color: #94a3b8;
+        background: #ffffff;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      }
+
+      &.highlight-blue {
+        border-color: #93c5fd;
+        background: #eff6ff;
+      }
+
+      &.highlight-emerald {
+        border-color: #6ee7b7;
+        background: #ecfdf5;
+      }
+
+      .casilla-info {
         display: flex;
         flex-direction: column;
         gap: 0.25rem;
 
-        .book-badge {
-          font-size: 0.6875rem;
-          font-weight: 800;
+        .casilla-num {
+          font-size: 0.75rem;
+          font-weight: 700;
+          color: #64748b;
           text-transform: uppercase;
-          padding: 0.15rem 0.5rem;
-          border-radius: 0.25rem;
-          width: fit-content;
         }
 
-        h3 {
-          margin: 0;
+        .casilla-val {
           font-size: 1.15rem;
           font-weight: 800;
+          font-family: monospace;
+          color: #0f172a;
         }
       }
 
-      .kpi-tag {
-        font-size: 0.875rem;
-        padding: 0.35rem 0.75rem;
+      .btn-copy-casilla {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        width: 100%;
+        padding: 0.4rem;
+        border: 1px solid #cbd5e1;
         border-radius: 0.375rem;
-        background-color: #f8fafc;
-      }
-    }
+        background: #ffffff;
+        font-size: 0.775rem;
+        font-weight: 700;
+        color: #334155;
+        cursor: pointer;
+        transition: all 0.15s;
 
-    .book-card-body {
-      padding: 1.25rem 1.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      flex: 1;
-
-      .form-group-box {
-        display: flex;
-        flex-direction: column;
-        gap: 0.375rem;
-
-        .input-label {
-          font-size: 0.8rem;
-          font-weight: 600;
-          color: #334155;
+        &:hover {
+          background: #f1f5f9;
+          border-color: #94a3b8;
+          color: #0f172a;
         }
 
-        .input-calc-group {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-
-          .calc-badge {
-            font-size: 0.8rem;
-            font-weight: 700;
-            color: #2563eb;
-            background: #eff6ff;
-            padding: 0.35rem 0.6rem;
-            border-radius: 0.375rem;
-            white-space: nowrap;
-          }
+        &.btn-primary-copy {
+          background: #2563eb;
+          color: #ffffff;
+          border-color: #2563eb;
+          &:hover { background: #1d4ed8; }
         }
 
-        .form-control-custom {
-          flex: 1;
-          padding: 0.5rem 0.75rem;
-          border: 1px solid #cbd5e1;
-          border-radius: 0.375rem;
-          font-size: 0.875rem;
-          outline: none;
-
-          &:focus {
-            border-color: #2563eb;
-          }
+        &.btn-emerald-copy {
+          background: #059669;
+          color: #ffffff;
+          border-color: #059669;
+          &:hover { background: #047857; }
         }
-      }
 
-      .book-summary-footer {
-        margin-top: auto;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-
-        .summary-line {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          font-size: 0.875rem;
+        &.copied {
+          background: #10b981 !important;
+          color: #ffffff !important;
+          border-color: #10b981 !important;
         }
       }
     }
   }
 }
 
-.liquidation-card {
+/* ========================================================================= */
+/* LIQUIDACIÓN CONSOLIDADA OFICIAL                                           */
+/* ========================================================================= */
+.liquidacion-card-official {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #cbd5e1;
   border-radius: 0.75rem;
   padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  max-width: 900px;
+  margin: 0 auto;
 
   .liquidation-header {
     display: flex;
@@ -869,43 +764,104 @@
     }
   }
 
-  .liquidation-grid {
+  .liquidation-body-grid {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 0.85rem;
 
-    .liq-row {
+    .liq-row-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 0.875rem;
-      padding: 0.4rem 0;
-      border-bottom: 1px dashed #f1f5f9;
+      padding: 0.6rem 0.875rem;
+      border-radius: 0.5rem;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
 
-      .input-prefix-wrapper {
+      .row-label {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #334155;
+
+        .icon-circle {
+          width: 22px;
+          height: 22px;
+          border-radius: 50%;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.75rem;
+          font-weight: 800;
+
+          &.bg-blue-subtle { background: #dbeafe; color: #1e40af; }
+          &.bg-emerald-subtle { background: #d1fae5; color: #065f46; }
+          &.bg-gray-subtle { background: #e2e8f0; color: #475569; }
+          &.bg-primary-subtle { background: #e0e7ff; color: #4338ca; }
+        }
+      }
+
+      .row-val-wrap {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        .val-mono {
+          font-size: 1.05rem;
+          font-family: monospace;
+        }
+
+        .btn-copy-inline {
+          background: #ffffff;
+          border: 1px solid #cbd5e1;
+          border-radius: 0.25rem;
+          padding: 0.15rem 0.35rem;
+          font-size: 0.75rem;
+          cursor: pointer;
+          &:hover { background: #f1f5f9; }
+          &.copied { background: #10b981; color: #fff; }
+        }
+      }
+
+      .row-input-wrap {
         display: flex;
         align-items: center;
         gap: 0.25rem;
 
-        .prefix { font-weight: 700; color: #64748b; }
-        .form-control-inline {
-          width: 120px;
-          padding: 0.25rem 0.4rem;
+        .currency-label {
+          font-weight: 700;
+          color: #64748b;
+        }
+
+        .input-liq-field {
+          width: 130px;
+          padding: 0.35rem 0.5rem;
           border: 1px solid #cbd5e1;
-          border-radius: 0.25rem;
+          border-radius: 0.375rem;
           text-align: right;
           font-family: monospace;
           font-weight: 700;
+          font-size: 0.95rem;
+          outline: none;
+
+          &:focus { border-color: #2563eb; }
         }
+      }
+
+      &.honorarios-row {
+        background: #f0fdf4;
+        border-color: #bbf7d0;
       }
     }
 
     .liq-final-box {
-      margin-top: 1rem;
-      padding: 1.25rem;
-      border-radius: 0.5rem;
+      margin: 0.5rem 0;
+      padding: 1.5rem;
+      border-radius: 0.75rem;
       background: #f8fafc;
-      border: 1px solid #e2e8f0;
+      border: 2px solid #e2e8f0;
       text-align: center;
 
       &.has-tax {
@@ -917,64 +873,151 @@
         border-color: #bbf7d0;
       }
 
-      .result-title {
-        font-size: 0.85rem;
-        font-weight: 700;
-        color: #475569;
-        display: block;
-        margin-bottom: 0.25rem;
+      .final-result-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.35rem;
+
+        .result-title {
+          font-size: 0.9rem;
+          font-weight: 800;
+          color: #334155;
+          letter-spacing: 0.03em;
+        }
+
+        .result-amount {
+          font-size: 2.25rem;
+          font-weight: 900;
+          font-family: monospace;
+
+          &.danger-text { color: #dc2626; }
+          &.success-text { color: #16a34a; }
+        }
+
+        .result-hint {
+          font-size: 0.8rem;
+          color: #64748b;
+        }
+
+        .btn-copy-large {
+          margin-top: 0.5rem;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.4rem;
+          padding: 0.5rem 1.25rem;
+          border-radius: 0.5rem;
+          background: #0f172a;
+          color: #ffffff;
+          font-size: 0.85rem;
+          font-weight: 700;
+          border: none;
+          cursor: pointer;
+          transition: all 0.15s;
+
+          &:hover { background: #1e293b; }
+          &.copied { background: #10b981; }
+        }
+      }
+    }
+
+    .liq-total-grand-banner {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #ffffff;
+      padding: 1.25rem 1.5rem;
+      border-radius: 0.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.25);
+
+      .grand-left {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+
+        .grand-label {
+          font-size: 1.05rem;
+          font-weight: 800;
+          letter-spacing: 0.04em;
+        }
+
+        .grand-sub {
+          font-size: 0.8rem;
+          color: #94a3b8;
+        }
       }
 
-      .result-amount {
-        font-size: 1.75rem;
-        font-weight: 900;
-        font-family: monospace;
-        display: block;
+      .grand-right {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
 
-        &.danger-text { color: #dc2626; }
-        &.success-text { color: #16a34a; }
-      }
+        .grand-amount {
+          font-size: 1.75rem;
+          font-weight: 900;
+          font-family: monospace;
+          color: #38bdf8;
+        }
 
-      .result-hint {
-        font-size: 0.75rem;
-        color: #64748b;
-        margin-top: 0.25rem;
-        display: block;
+        .btn-copy-grand {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.35rem;
+          padding: 0.4rem 0.85rem;
+          background: rgba(255, 255, 255, 0.15);
+          color: #ffffff;
+          border: 1px solid rgba(255, 255, 255, 0.25);
+          border-radius: 0.375rem;
+          font-size: 0.8rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.15s;
+
+          &:hover { background: rgba(255, 255, 255, 0.25); }
+          &.copied { background: #10b981; border-color: #10b981; }
+        }
       }
     }
   }
 
-  .liq-actions-row {
+  .liquidation-footer {
     margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid #e2e8f0;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 1rem;
     flex-wrap: wrap;
+    gap: 1rem;
 
-    .liq-options {
+    .footer-checkbox-group {
       display: flex;
       align-items: center;
-      gap: 1rem;
+      gap: 1.25rem;
+      flex-wrap: wrap;
 
       .checkbox-label {
         display: flex;
         align-items: center;
         gap: 0.4rem;
-        font-size: 0.85rem;
+        font-size: 0.875rem;
         cursor: pointer;
       }
 
-      .sar-decl-num-input {
+      .sar-decl-input-wrap {
         display: flex;
         align-items: center;
         gap: 0.4rem;
-        font-size: 0.8rem;
+        font-size: 0.825rem;
 
-        .form-control-sm {
-          padding: 0.25rem 0.5rem;
+        .form-control-decl {
+          padding: 0.35rem 0.6rem;
           border: 1px solid #cbd5e1;
-          border-radius: 0.25rem;
+          border-radius: 0.375rem;
+          font-family: monospace;
         }
       }
     }
@@ -982,7 +1025,92 @@
 }
 
 /* ========================================================================= */
-/* MODALIDAD 3: CARGA MASIVA                                                 */
+/* VISTA DUAL COMPLETA                                                       */
+/* ========================================================================= */
+.vista-dual-wrapper {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.75rem;
+  padding: 1.75rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+
+  .dual-sheet-header {
+    border-bottom: 2px solid #0f172a;
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+
+    .sheet-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+
+      h2 { margin: 0; font-size: 1.4rem; font-weight: 800; }
+      p { margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #64748b; font-weight: 600; }
+    }
+  }
+
+  .dual-section-block {
+    .dual-block-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+
+      h3 { margin: 0; font-size: 1.05rem; font-weight: 800; }
+      .tag-badge {
+        font-size: 0.8rem;
+        font-weight: 700;
+        padding: 0.25rem 0.6rem;
+        border-radius: 0.375rem;
+      }
+    }
+  }
+
+  .resumen-mini-box {
+    width: 320px;
+    border: 2px solid #0f172a;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    background: #ffffff;
+
+    .resumen-mini-title {
+      background: #0f172a;
+      color: #ffffff;
+      padding: 0.4rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 800;
+      text-align: center;
+      letter-spacing: 0.05em;
+    }
+
+    .resumen-mini-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.4rem 0.75rem;
+      border-bottom: 1px solid #e2e8f0;
+      font-size: 0.8rem;
+
+      &.border-top { border-top: 1px solid #0f172a; }
+    }
+
+    .resumen-mini-grand {
+      background: #0f172a;
+      color: #38bdf8;
+      font-weight: 900;
+      font-family: monospace;
+      font-size: 1rem;
+      display: flex;
+      justify-content: space-between;
+      padding: 0.6rem 0.75rem;
+    }
+  }
+}
+
+/* ========================================================================= */
+/* CARGA MASIVA                                                              */
 /* ========================================================================= */
 .masivo-container {
   display: flex;
@@ -1002,44 +1130,8 @@
 
     .banner-content {
       max-width: 750px;
-
-      h3 {
-        margin: 0 0 0.5rem 0;
-        font-size: 1.35rem;
-      }
-
-      p {
-        color: #94a3b8;
-        font-size: 0.875rem;
-        line-height: 1.5;
-        margin-bottom: 1rem;
-      }
-
-      .banner-steps {
-        display: flex;
-        gap: 1.5rem;
-        flex-wrap: wrap;
-
-        .step-item {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          font-size: 0.8rem;
-          color: #cbd5e1;
-
-          .step-num {
-            background: #2563eb;
-            color: #ffffff;
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-          }
-        }
-      }
+      h3 { margin: 0 0 0.5rem 0; font-size: 1.35rem; }
+      p { color: #94a3b8; font-size: 0.875rem; line-height: 1.5; margin: 0; }
     }
   }
 
@@ -1067,95 +1159,6 @@
       color: #64748b;
       font-size: 0.85rem;
       margin: 0;
-    }
-  }
-}
-
-/* ========================================================================= */
-/* ESTILOS DE IMPRESIÓN OFICIAL (@media print)                              */
-/* ========================================================================= */
-@media print {
-  .no-print {
-    display: none !important;
-  }
-
-  body {
-    background: #ffffff !important;
-    font-size: 10pt !important;
-    color: #000000 !important;
-  }
-
-  .page-container {
-    padding: 0 !important;
-    max-width: 100% !important;
-  }
-
-  .hoja-oficial-sheet {
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-  }
-
-  .table-responsive-hoja {
-    border: 1px solid #000000 !important;
-  }
-
-  .table-hoja-oficial {
-    font-size: 8pt !important;
-
-    thead th {
-      border: 1px solid #000000 !important;
-      background: #f1f5f9 !important;
-      color: #000000 !important;
-    }
-
-    tbody td {
-      border: 1px solid #000000 !important;
-      padding: 2px 4px !important;
-    }
-
-    .table-input {
-      border: none !important;
-      font-size: 8pt !important;
-      padding: 0 !important;
-    }
-
-    tfoot td {
-      border: 1px solid #000000 !important;
-      background: #f1f5f9 !important;
-    }
-  }
-
-  .resumen-oficial-table {
-    border: 2px solid #000000 !important;
-    box-shadow: none !important;
-
-    .resumen-row {
-      border-bottom: 1px solid #000000 !important;
-
-      &.total-final-row {
-        background: #000000 !important;
-        color: #ffffff !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
-    }
-  }
-
-  .print-signature-footer {
-    display: flex !important;
-    justify-content: flex-end;
-    margin-top: 3rem;
-
-    .sig-box {
-      width: 250px;
-      text-align: center;
-      font-size: 9pt;
-
-      .sig-line {
-        border-top: 1px solid #000000;
-        margin-bottom: 0.5rem;
-      }
     }
   }
 }

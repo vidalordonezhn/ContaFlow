@@ -11,23 +11,31 @@
   <!-- HEADER -->
   <header class="page-header no-print">
     <div class="header-left">
-      <div class="header-badge">Tributación Hondureña SAR</div>
-      <h1 class="header-title">Libros de Compras y Ventas ISV</h1>
-      <p class="header-subtitle">Hoja de Trabajo Partida por Partida, Liquidación SAR-210 y Portal Tributario</p>
+      <div class="header-badge">Tributación Hondureña SAR • Declaración SAR-210</div>
+      <h1 class="header-title">Libros Oficiales de Ventas, Compras y Liquidación ISV</h1>
+      <p class="header-subtitle">Gestión separada por libros, casillas con copiado rápido en 1-clic y hoja consolidada</p>
     </div>
     <div class="header-right">
       <div class="header-nav-tabs">
-        <button class="nav-tab-btn" [class.active]="activeTab() === 'detalle'" (click)="activeTab.set('detalle')">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></svg>
-          <span>Hoja de Trabajo (Detalle Diario)</span>
+        <button class="nav-tab-btn" [class.active]="activeTab() === 'ventas'" (click)="activeTab.set('ventas')">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4 text-blue"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/></svg>
+          <span>🔵 Libro de Ventas</span>
         </button>
-        <button class="nav-tab-btn" [class.active]="activeTab() === 'declaracion'" (click)="activeTab.set('declaracion')">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          <span>Declaración SAR-210 (Macro)</span>
+        <button class="nav-tab-btn" [class.active]="activeTab() === 'compras'" (click)="activeTab.set('compras')">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4 text-emerald"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+          <span>🟢 Libro de Compras</span>
+        </button>
+        <button class="nav-tab-btn" [class.active]="activeTab() === 'liquidacion'" (click)="activeTab.set('liquidacion')">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4 text-amber"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span>📊 Liquidación Consolidada</span>
+        </button>
+        <button class="nav-tab-btn" [class.active]="activeTab() === 'vistaDual'" (click)="activeTab.set('vistaDual')">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><rect width="8" height="18" x="3" y="3" rx="1"/><rect width="8" height="18" x="13" y="3" rx="1"/></svg>
+          <span>📑 Vista Dual Completa</span>
         </button>
         <button class="nav-tab-btn" [class.active]="activeTab() === 'masivo'" (click)="activeTab.set('masivo')">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          <span>Carga Masiva Excel</span>
+          <span>⚡ Carga Masiva</span>
         </button>
       </div>
     </div>
@@ -45,7 +53,7 @@
     <div class="filter-controls-row">
       <!-- Selector de Cliente con Búsqueda Inteligente -->
       <div class="filter-group client-select-group">
-        <label>Contribuyente / Cliente (Búsqueda por RTN o Nombre) *</label>
+        <label>Contribuyente / Cliente (Búsqueda por RTN o Razón Social) *</label>
         <app-client-selector
           [clients]="clientes()"
           [selectedId]="selectedClienteId()"
@@ -75,16 +83,37 @@
         </select>
       </div>
 
-      <!-- Botones Exportar PDF y Excel -->
+      <!-- Botones de Acción Globales -->
       <div class="filter-action-btn flex items-center gap-2">
-        <button class="btn btn-pdf-export" (click)="descargarPdfOficial()" title="Descargar PDF Oficial con diseño contable y firmas">
+        <label class="btn btn-upload-excel" title="Cargar archivo Excel (.xlsx / EJEMPLO.xlsx)">
+          <input type="file" accept=".xlsx, .xls" (change)="onExcelSelected($event)" style="display: none;" />
+          @if (isImportingExcel()) {
+            <span class="spinner-sm"></span>
+            <span>Cargando...</span>
+          } @else {
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span>Cargar Excel (.xlsx)</span>
+          }
+        </label>
+
+        <button class="btn btn-pdf-export" (click)="descargarPdfOficial()" title="Descargar PDF Oficial Landscape con firmas">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
           <span>Descargar PDF</span>
         </button>
 
-        <button class="btn btn-excel-export" (click)="exportarExcelOficial()" title="Descargar Libro en Excel (.xlsx)">
+        <button class="btn btn-excel-export" (click)="exportarExcelOficial()" title="Exportar a Excel (.xlsx) con fórmulas intactas">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           <span>Exportar Excel</span>
+        </button>
+
+        <button class="btn btn-save-all" [disabled]="isSaving()" (click)="guardarTodo()" title="Guardar todo en Base de Datos">
+          @if (isSaving()) {
+            <span class="spinner-sm"></span>
+            <span>Guardando...</span>
+          } @else {
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            <span>Guardar Todo</span>
+          }
         </button>
       </div>
     </div>
@@ -103,11 +132,11 @@
           <button 
             type="button" 
             class="btn-copy-quick" 
-            [class.copied]="copiedField() === 'rtn'"
-            (click)="copiarTexto(cli.rtn, 'rtn')"
+            [class.copied]="copiedCasilla() === 'rtn'"
+            (click)="copiarCasilla(cli.rtn, 'rtn')"
             title="Copiar RTN al portapapeles"
           >
-            @if (copiedField() === 'rtn') {
+            @if (copiedCasilla() === 'rtn') {
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5 text-emerald"><polyline points="20 6 9 17 4 12"/></svg>
               <span>¡Copiado!</span>
             } @else {
@@ -118,7 +147,7 @@
         </div>
 
         <div class="cred-item">
-          <span class="cred-label">Contraseña Oficina Virtual:</span>
+          <span class="cred-label">Contraseña SAR:</span>
           @if (cli.contrasenaSAR) {
             <code class="cred-code password-mask">
               {{ mostrarSARPassword() ? cli.contrasenaSAR : '••••••••••••' }}
@@ -138,11 +167,11 @@
             <button 
               type="button" 
               class="btn-copy-quick" 
-              [class.copied]="copiedField() === 'pass'"
-              (click)="copiarTexto(cli.contrasenaSAR, 'pass')"
+              [class.copied]="copiedCasilla() === 'pass'"
+              (click)="copiarCasilla(cli.contrasenaSAR, 'pass')"
               title="Copiar contraseña para ingresar a la Oficina Virtual del SAR"
             >
-              @if (copiedField() === 'pass') {
+              @if (copiedCasilla() === 'pass') {
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5 text-emerald"><polyline points="20 6 9 17 4 12"/></svg>
                 <span>¡Copiada!</span>
               } @else {
@@ -164,576 +193,774 @@
   </div>
 
   <!-- ========================================================================= -->
-  <!-- MODALIDAD 1: HOJA DE TRABAJO PARTIDA POR PARTIDA (DETALLE OFICIAL DIARIO) -->
+  <!-- 1. PESTAÑA: LIBRO DE VENTAS DETALLADO (DÉBITO FISCAL) -->
   <!-- ========================================================================= -->
-  @if (activeTab() === 'detalle') {
-    <div class="hoja-trabajo-wrapper">
+  @if (activeTab() === 'ventas') {
+    <div class="libro-section-wrapper animate-slide-up">
       
-      <!-- TOOLBAR DE ACCIONES -->
-      <div class="hoja-actions-toolbar no-print">
-        <div class="toolbar-left">
-          <button type="button" class="btn-tool btn-add-row" (click)="agregarFila()">
+      <!-- Toolbar Ventas -->
+      <div class="section-toolbar no-print">
+        <div class="toolbar-left flex items-center gap-2">
+          <div class="section-badge-pill bg-blue-subtle text-blue">
+            <span>🔵 LIBRO DE VENTAS</span>
+          </div>
+          <button type="button" class="btn-tool btn-add-row" (click)="agregarFilaVenta()">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            <span>+ Agregar Fila</span>
+            <span>+ Agregar Venta</span>
           </button>
-
-          <button type="button" class="btn-tool btn-csv-template" (click)="descargarPlantillaDetalle()" title="Descargar plantilla CSV">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            <span>Descargar Plantilla CSV</span>
-          </button>
-
-          <label class="btn-tool btn-upload-csv" title="Cargar archivo CSV con las partidas del mes">
-            <input type="file" accept=".csv" (change)="onDetalleCsvSelected($event)" style="display: none;" />
-            @if (isImportingDetalle()) {
-              <span class="spinner-sm"></span>
-              <span>Importando...</span>
-            } @else {
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              <span>Cargar Plantilla CSV</span>
-            }
-          </label>
         </div>
 
-        <div class="toolbar-right">
-          <button 
-            type="button" 
-            class="btn-tool btn-pdf-tool" 
-            (click)="descargarPdfOficial()"
-            title="Generar y Descargar PDF Oficial"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-            <span>Descargar PDF</span>
-          </button>
-
-          <button 
-            type="button" 
-            class="btn-tool btn-excel-tool" 
-            (click)="exportarExcelOficial()"
-            title="Exportar a Libro Excel (.xlsx)"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            <span>Exportar Excel</span>
-          </button>
-
-          <button 
-            type="button" 
-            class="btn-tool btn-save-hoja" 
-            [disabled]="isSavingDetalle()"
-            (click)="guardarDetalle()"
-          >
-            @if (isSavingDetalle()) {
-              <span class="spinner-sm"></span>
-              <span>Guardando Hoja...</span>
-            } @else {
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-              <span>Guardar Hoja</span>
-            }
-          </button>
+        <div class="toolbar-right flex items-center gap-2">
+          <span class="kpi-tag-lg text-blue">
+            Débito Fiscal Ventas: <strong>L. {{ sumVentasDebito() | number:'1.2-2' }}</strong>
+          </span>
         </div>
       </div>
 
-      <!-- FORMATO IMPRIMIBLE / PANTALLA OFICIAL (SEGÚN IMAGEN DEL SAR) -->
-      <div class="hoja-oficial-sheet">
-        
-        <!-- ENCABEZADO OFICIAL IMPRESO -->
-        <div class="hoja-header-block">
-          <div class="hoja-header-grid">
-            <div class="header-field">
-              <span class="field-title">Contribuyente:</span>
-              <span class="field-value">{{ selectedCliente()?.nombreRazonSocial || '___________________________' }}</span>
+      <!-- Tabla Ventas -->
+      <div class="table-container">
+        <table class="table-hoja-oficial table-ventas">
+          <thead>
+            <tr class="thead-cols">
+              <th class="col-num">#</th>
+              <th class="col-fecha">Fecha</th>
+              <th class="col-fac">Factura N°</th>
+              <th class="col-money">Exonerado</th>
+              <th class="col-money">Exento</th>
+              <th class="col-money">Gravada 15%</th>
+              <th class="col-money">Gravada 18%</th>
+              <th class="col-money col-isv-ventas">ISV 15% (Auto)</th>
+              <th class="col-money col-isv-ventas">ISV 18% (Auto)</th>
+              <th class="col-money col-total">Total Fila</th>
+              <th class="col-action no-print">Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of ventasItems(); track $index) {
+              <tr class="row-partida">
+                <td class="cell-num">
+                  <span class="correlativo-badge">{{ item.correlativo }}</span>
+                </td>
+                <td class="cell-fecha">
+                  <input type="date" class="table-input input-date" [(ngModel)]="item.fecha" />
+                </td>
+                <td class="cell-fac">
+                  <input type="text" class="table-input input-fac" placeholder="000-001-01-..." [(ngModel)]="item.factura" />
+                </td>
+                <td class="cell-money">
+                  <input type="number" step="0.01" min="0" class="table-input input-money" placeholder="0.00" [(ngModel)]="item.exonerado" (ngModelChange)="recalcVentaTotal(item)" />
+                </td>
+                <td class="cell-money">
+                  <input type="number" step="0.01" min="0" class="table-input input-money" placeholder="0.00" [(ngModel)]="item.exento" (ngModelChange)="recalcVentaTotal(item)" />
+                </td>
+                <td class="cell-money">
+                  <input type="number" step="0.01" min="0" class="table-input input-money highlight-input-ventas" placeholder="0.00" [(ngModel)]="item.gravado15" (ngModelChange)="onVentaGravada15Change(item)" />
+                </td>
+                <td class="cell-money">
+                  <input type="number" step="0.01" min="0" class="table-input input-money highlight-input-ventas" placeholder="0.00" [(ngModel)]="item.gravado18" (ngModelChange)="onVentaGravada18Change(item)" />
+                </td>
+                <td class="cell-money cell-isv-val text-blue font-bold">
+                  L. {{ item.isv15 | number:'1.2-2' }}
+                </td>
+                <td class="cell-money cell-isv-val text-blue font-bold">
+                  L. {{ item.isv18 | number:'1.2-2' }}
+                </td>
+                <td class="cell-money cell-total-val font-bold">
+                  L. {{ item.total | number:'1.2-2' }}
+                </td>
+                <td class="cell-action no-print">
+                  <button type="button" class="btn-del-row" title="Eliminar factura de venta" (click)="eliminarFilaVenta($index)">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr class="row-totales">
+              <td colspan="3" class="text-right font-bold label-totales">TOTALES VENTAS:</td>
+              <td class="text-right font-bold">L. {{ sumVentasExonerado() | number:'1.2-2' }}</td>
+              <td class="text-right font-bold">L. {{ sumVentasExento() | number:'1.2-2' }}</td>
+              <td class="text-right font-bold">L. {{ sumVentasGravado15() | number:'1.2-2' }}</td>
+              <td class="text-right font-bold">L. {{ sumVentasGravado18() | number:'1.2-2' }}</td>
+              <td class="text-right font-bold text-blue">L. {{ sumVentasIsv15() | number:'1.2-2' }}</td>
+              <td class="text-right font-bold text-blue">L. {{ sumVentasIsv18() | number:'1.2-2' }}</td>
+              <td class="text-right font-bold text-primary">L. {{ sumVentasTotal() | number:'1.2-2' }}</td>
+              <td class="no-print"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <!-- CUADRO RESUMEN OFICIAL DE VENTAS PARA DECLARACIÓN SAR (CON BOTONES 📋 COPIAR CASILLA) -->
+      <div class="resumen-casillas-container mt-4">
+        <div class="resumen-card-header bg-blue-subtle">
+          <div class="header-left-title">
+            <span class="sar-badge-mini">SAR-210</span>
+            <h4>Resumen de Ventas para el Portal del SAR</h4>
+          </div>
+          <span class="header-hint">Presione el botón 📋 para copiar el valor exacto y pegarlo en la declaración</span>
+        </div>
+
+        <div class="casillas-grid">
+          <!-- Casilla Exonerado -->
+          <div class="casilla-box">
+            <div class="casilla-info">
+              <span class="casilla-num">Ventas Exoneradas</span>
+              <strong class="casilla-val">L. {{ sumVentasExonerado() | number:'1.2-2' }}</strong>
             </div>
-            <div class="header-field">
-              <span class="field-title">Password SAR:</span>
-              <span class="field-value password-text">{{ selectedCliente()?.contrasenaSAR || '___________________________' }}</span>
+            <button type="button" class="btn-copy-casilla" [class.copied]="copiedCasilla() === 'v_exon'" (click)="copiarCasilla(sumVentasExonerado(), 'v_exon')">
+              @if (copiedCasilla() === 'v_exon') {
+                <span>✓ ¡Copiado!</span>
+              } @else {
+                <span>📋 Copiar Casilla</span>
+              }
+            </button>
+          </div>
+
+          <!-- Casilla Exento -->
+          <div class="casilla-box">
+            <div class="casilla-info">
+              <span class="casilla-num">Ventas Exentas</span>
+              <strong class="casilla-val">L. {{ sumVentasExento() | number:'1.2-2' }}</strong>
             </div>
-            <div class="header-field">
-              <span class="field-title">RTN:</span>
-              <span class="field-value">{{ selectedCliente()?.rtn || '___________________________' }}</span>
+            <button type="button" class="btn-copy-casilla" [class.copied]="copiedCasilla() === 'v_exen'" (click)="copiarCasilla(sumVentasExento(), 'v_exen')">
+              @if (copiedCasilla() === 'v_exen') {
+                <span>✓ ¡Copiado!</span>
+              } @else {
+                <span>📋 Copiar Casilla</span>
+              }
+            </button>
+          </div>
+
+          <!-- Casilla Gravada 15% -->
+          <div class="casilla-box">
+            <div class="casilla-info">
+              <span class="casilla-num">Base Gravada 15%</span>
+              <strong class="casilla-val">L. {{ sumVentasGravado15() | number:'1.2-2' }}</strong>
             </div>
-            <div class="header-field">
-              <span class="field-title">Mes / Año:</span>
-              <span class="field-value">{{ selectedMesNombre() }} / {{ selectedAnio() }}</span>
+            <button type="button" class="btn-copy-casilla" [class.copied]="copiedCasilla() === 'v_g15'" (click)="copiarCasilla(sumVentasGravado15(), 'v_g15')">
+              @if (copiedCasilla() === 'v_g15') {
+                <span>✓ ¡Copiado!</span>
+              } @else {
+                <span>📋 Copiar Casilla</span>
+              }
+            </button>
+          </div>
+
+          <!-- Casilla Gravada 18% -->
+          <div class="casilla-box">
+            <div class="casilla-info">
+              <span class="casilla-num">Base Gravada 18%</span>
+              <strong class="casilla-val">L. {{ sumVentasGravado18() | number:'1.2-2' }}</strong>
             </div>
+            <button type="button" class="btn-copy-casilla" [class.copied]="copiedCasilla() === 'v_g18'" (click)="copiarCasilla(sumVentasGravado18(), 'v_g18')">
+              @if (copiedCasilla() === 'v_g18') {
+                <span>✓ ¡Copiado!</span>
+              } @else {
+                <span>📋 Copiar Casilla</span>
+              }
+            </button>
+          </div>
+
+          <!-- Casilla Débito Fiscal Total -->
+          <div class="casilla-box highlight-blue">
+            <div class="casilla-info">
+              <span class="casilla-num font-bold text-blue">Débito Fiscal (ISV 15% + 18%)</span>
+              <strong class="casilla-val text-blue font-bold text-lg">L. {{ sumVentasDebito() | number:'1.2-2' }}</strong>
+            </div>
+            <button type="button" class="btn-copy-casilla btn-primary-copy" [class.copied]="copiedCasilla() === 'v_debito'" (click)="copiarCasilla(sumVentasDebito(), 'v_debito')">
+              @if (copiedCasilla() === 'v_debito') {
+                <span>✓ ¡Copiado!</span>
+              } @else {
+                <span>📋 Copiar Débito</span>
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  }
+
+  <!-- ========================================================================= -->
+  <!-- 2. PESTAÑA: LIBRO DE COMPRAS DETALLADO (CRÉDITO FISCAL) -->
+  <!-- ========================================================================= -->
+  @if (activeTab() === 'compras') {
+    <div class="libro-section-wrapper animate-slide-up">
+      
+      <!-- Toolbar Compras -->
+      <div class="section-toolbar no-print">
+        <div class="toolbar-left flex items-center gap-2">
+          <div class="section-badge-pill bg-emerald-subtle text-emerald">
+            <span>🟢 LIBRO DE COMPRAS</span>
+          </div>
+          <button type="button" class="btn-tool btn-add-row" (click)="agregarFilaCompra()">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>+ Agregar Compra</span>
+          </button>
+        </div>
+
+        <div class="toolbar-right flex items-center gap-2">
+          <span class="kpi-tag-lg text-emerald">
+            Crédito Fiscal Compras: <strong>L. {{ sumComprasCredito() | number:'1.2-2' }}</strong>
+          </span>
+        </div>
+      </div>
+
+      <!-- Tabla Compras -->
+      <div class="table-container">
+        <table class="table-hoja-oficial table-compras">
+          <thead>
+            <tr class="thead-cols">
+              <th class="col-num">#</th>
+              <th class="col-fecha">Fecha</th>
+              <th class="col-fac">Factura N°</th>
+              <th class="col-prov">Proveedor / Razón Social</th>
+              <th class="col-money">Exonerado</th>
+              <th class="col-money">Exento</th>
+              <th class="col-money">Gravada 15%</th>
+              <th class="col-money">Gravada 18%</th>
+              <th class="col-money col-isv-compras">ISV 15% (Auto)</th>
+              <th class="col-money col-isv-compras">ISV 18% (Auto)</th>
+              <th class="col-money col-total">Total Fila</th>
+              <th class="col-action no-print">Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of comprasItems(); track $index) {
+              <tr class="row-partida">
+                <td class="cell-num">
+                  <span class="correlativo-badge">{{ item.correlativo }}</span>
+                </td>
+                <td class="cell-fecha">
+                  <input type="date" class="table-input input-date" [(ngModel)]="item.fecha" />
+                </td>
+                <td class="cell-fac">
+                  <input type="text" class="table-input input-fac" placeholder="000-001-01-..." [(ngModel)]="item.factura" />
+                </td>
+                <td class="cell-prov">
+                  <input type="text" class="table-input input-text" placeholder="Nombre Proveedor..." [(ngModel)]="item.proveedor" />
+                </td>
+                <td class="cell-money">
+                  <input type="number" step="0.01" min="0" class="table-input input-money" placeholder="0.00" [(ngModel)]="item.exonerado" (ngModelChange)="recalcCompraTotal(item)" />
+                </td>
+                <td class="cell-money">
+                  <input type="number" step="0.01" min="0" class="table-input input-money" placeholder="0.00" [(ngModel)]="item.exento" (ngModelChange)="recalcCompraTotal(item)" />
+                </td>
+                <td class="cell-money">
+                  <input type="number" step="0.01" min="0" class="table-input input-money highlight-input-compras" placeholder="0.00" [(ngModel)]="item.gravado15" (ngModelChange)="onCompraGravada15Change(item)" />
+                </td>
+                <td class="cell-money">
+                  <input type="number" step="0.01" min="0" class="table-input input-money highlight-input-compras" placeholder="0.00" [(ngModel)]="item.gravado18" (ngModelChange)="onCompraGravada18Change(item)" />
+                </td>
+                <td class="cell-money cell-isv-val text-emerald font-bold">
+                  L. {{ item.isv15 | number:'1.2-2' }}
+                </td>
+                <td class="cell-money cell-isv-val text-emerald font-bold">
+                  L. {{ item.isv18 | number:'1.2-2' }}
+                </td>
+                <td class="cell-money cell-total-val font-bold">
+                  L. {{ item.total | number:'1.2-2' }}
+                </td>
+                <td class="cell-action no-print">
+                  <button type="button" class="btn-del-row" title="Eliminar factura de compra" (click)="eliminarFilaCompra($index)">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr class="row-totales">
+              <td colspan="4" class="text-right font-bold label-totales">TOTALES COMPRAS:</td>
+              <td class="text-right font-bold">L. {{ sumComprasExonerado() | number:'1.2-2' }}</td>
+              <td class="text-right font-bold">L. {{ sumComprasExento() | number:'1.2-2' }}</td>
+              <td class="text-right font-bold">L. {{ sumComprasGravado15() | number:'1.2-2' }}</td>
+              <td class="text-right font-bold">L. {{ sumComprasGravado18() | number:'1.2-2' }}</td>
+              <td class="text-right font-bold text-emerald">L. {{ sumComprasIsv15() | number:'1.2-2' }}</td>
+              <td class="text-right font-bold text-emerald">L. {{ sumComprasIsv18() | number:'1.2-2' }}</td>
+              <td class="text-right font-bold text-primary">L. {{ sumComprasTotal() | number:'1.2-2' }}</td>
+              <td class="no-print"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <!-- CUADRO RESUMEN OFICIAL DE COMPRAS PARA DECLARACIÓN SAR (CON BOTONES 📋 COPIAR CASILLA) -->
+      <div class="resumen-casillas-container mt-4">
+        <div class="resumen-card-header bg-emerald-subtle">
+          <div class="header-left-title">
+            <span class="sar-badge-mini bg-emerald text-white">SAR-210</span>
+            <h4>Resumen de Compras para el Portal del SAR</h4>
+          </div>
+          <span class="header-hint">Presione el botón 📋 para copiar el valor exacto y pegarlo en la declaración</span>
+        </div>
+
+        <div class="casillas-grid">
+          <!-- Casilla Exonerado -->
+          <div class="casilla-box">
+            <div class="casilla-info">
+              <span class="casilla-num">Compras Exoneradas</span>
+              <strong class="casilla-val">L. {{ sumComprasExonerado() | number:'1.2-2' }}</strong>
+            </div>
+            <button type="button" class="btn-copy-casilla" [class.copied]="copiedCasilla() === 'c_exon'" (click)="copiarCasilla(sumComprasExonerado(), 'c_exon')">
+              @if (copiedCasilla() === 'c_exon') {
+                <span>✓ ¡Copiado!</span>
+              } @else {
+                <span>📋 Copiar Casilla</span>
+              }
+            </button>
+          </div>
+
+          <!-- Casilla Exento -->
+          <div class="casilla-box">
+            <div class="casilla-info">
+              <span class="casilla-num">Compras Exentas</span>
+              <strong class="casilla-val">L. {{ sumComprasExento() | number:'1.2-2' }}</strong>
+            </div>
+            <button type="button" class="btn-copy-casilla" [class.copied]="copiedCasilla() === 'c_exen'" (click)="copiarCasilla(sumComprasExento(), 'c_exen')">
+              @if (copiedCasilla() === 'c_exen') {
+                <span>✓ ¡Copiado!</span>
+              } @else {
+                <span>📋 Copiar Casilla</span>
+              }
+            </button>
+          </div>
+
+          <!-- Casilla Gravada 15% -->
+          <div class="casilla-box">
+            <div class="casilla-info">
+              <span class="casilla-num">Base Gravada 15%</span>
+              <strong class="casilla-val">L. {{ sumComprasGravado15() | number:'1.2-2' }}</strong>
+            </div>
+            <button type="button" class="btn-copy-casilla" [class.copied]="copiedCasilla() === 'c_g15'" (click)="copiarCasilla(sumComprasGravado15(), 'c_g15')">
+              @if (copiedCasilla() === 'c_g15') {
+                <span>✓ ¡Copiado!</span>
+              } @else {
+                <span>📋 Copiar Casilla</span>
+              }
+            </button>
+          </div>
+
+          <!-- Casilla Gravada 18% -->
+          <div class="casilla-box">
+            <div class="casilla-info">
+              <span class="casilla-num">Base Gravada 18%</span>
+              <strong class="casilla-val">L. {{ sumComprasGravado18() | number:'1.2-2' }}</strong>
+            </div>
+            <button type="button" class="btn-copy-casilla" [class.copied]="copiedCasilla() === 'c_g18'" (click)="copiarCasilla(sumComprasGravado18(), 'c_g18')">
+              @if (copiedCasilla() === 'c_g18') {
+                <span>✓ ¡Copiado!</span>
+              } @else {
+                <span>📋 Copiar Casilla</span>
+              }
+            </button>
+          </div>
+
+          <!-- Casilla Crédito Fiscal Total -->
+          <div class="casilla-box highlight-emerald">
+            <div class="casilla-info">
+              <span class="casilla-num font-bold text-emerald">Crédito Fiscal (ISV 15% + 18%)</span>
+              <strong class="casilla-val text-emerald font-bold text-lg">L. {{ sumComprasCredito() | number:'1.2-2' }}</strong>
+            </div>
+            <button type="button" class="btn-copy-casilla btn-emerald-copy" [class.copied]="copiedCasilla() === 'c_credito'" (click)="copiarCasilla(sumComprasCredito(), 'c_credito')">
+              @if (copiedCasilla() === 'c_credito') {
+                <span>✓ ¡Copiado!</span>
+              } @else {
+                <span>📋 Copiar Crédito</span>
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  }
+
+  <!-- ========================================================================= -->
+  <!-- 3. PESTAÑA: LIQUIDACIÓN CONSOLIDADA & DECLARACIÓN SAR-210 -->
+  <!-- ========================================================================= -->
+  @if (activeTab() === 'liquidacion') {
+    <div class="liquidacion-page-wrapper animate-slide-up">
+      
+      <div class="liquidacion-card-official">
+        <div class="liquidation-header">
+          <div class="liq-title-box">
+            <div class="sar-logo-badge">SAR-210</div>
+            <div>
+              <h3>Liquidación Oficial Consolidada del Impuesto Sobre Ventas</h3>
+              <p>Cálculo matemático exacto conforme a la plantilla oficial `EJEMPLO.xlsx`</p>
+            </div>
+          </div>
+          <div class="liq-status-badge" [class.bg-danger]="liveImpuestoPagar() > 0" [class.bg-success]="liveSaldoFavor() > 0">
+            {{ liveImpuestoPagar() > 0 ? 'IMPUESTO A PAGAR' : (liveSaldoFavor() > 0 ? 'SALDO A FAVOR' : 'SALDO CERO') }}
           </div>
         </div>
 
-        <!-- TABLA COMPLETA PARTIDA POR PARTIDA -->
-        <div class="table-responsive-hoja">
+        <div class="liquidation-body-grid">
+          
+          <div class="liq-row-item">
+            <div class="row-label">
+              <span class="icon-circle bg-blue-subtle text-blue">1</span>
+              <span>Débito Fiscal Ventas (ISV 15% + ISV 18%):</span>
+            </div>
+            <div class="row-val-wrap">
+              <strong class="val-mono text-blue">L. {{ sumVentasDebito() | number:'1.2-2' }}</strong>
+              <button type="button" class="btn-copy-inline" [class.copied]="copiedCasilla() === 'liq_deb'" (click)="copiarCasilla(sumVentasDebito(), 'liq_deb')">📋</button>
+            </div>
+          </div>
+
+          <div class="liq-row-item">
+            <div class="row-label">
+              <span class="icon-circle bg-emerald-subtle text-emerald">2</span>
+              <span>(-) Crédito Fiscal Compras (ISV 15% + ISV 18%):</span>
+            </div>
+            <div class="row-val-wrap">
+              <strong class="val-mono text-emerald">L. {{ sumComprasCredito() | number:'1.2-2' }}</strong>
+              <button type="button" class="btn-copy-inline" [class.copied]="copiedCasilla() === 'liq_cred'" (click)="copiarCasilla(sumComprasCredito(), 'liq_cred')">📋</button>
+            </div>
+          </div>
+
+          <div class="liq-row-item">
+            <div class="row-label">
+              <span class="icon-circle bg-gray-subtle">3</span>
+              <span>(-) Saldo a Favor del Período Anterior:</span>
+            </div>
+            <div class="row-input-wrap">
+              <span class="currency-label">L.</span>
+              <input type="number" step="0.01" min="0" class="input-liq-field" [ngModel]="saldoAnterior()" (ngModelChange)="saldoAnterior.set($event)" placeholder="0.00" />
+            </div>
+          </div>
+
+          <div class="liq-row-item">
+            <div class="row-label">
+              <span class="icon-circle bg-gray-subtle">4</span>
+              <span>(-) Retenciones ISV 15% Sufridas:</span>
+            </div>
+            <div class="row-input-wrap">
+              <span class="currency-label">L.</span>
+              <input type="number" step="0.01" min="0" class="input-liq-field" [ngModel]="retenciones15()" (ngModelChange)="retenciones15.set($event)" placeholder="0.00" />
+            </div>
+          </div>
+
+          <div class="liq-row-item">
+            <div class="row-label">
+              <span class="icon-circle bg-gray-subtle">5</span>
+              <span>(-) Retenciones ISV 18% Sufridas:</span>
+            </div>
+            <div class="row-input-wrap">
+              <span class="currency-label">L.</span>
+              <input type="number" step="0.01" min="0" class="input-liq-field" [ngModel]="retenciones18()" (ngModelChange)="retenciones18.set($event)" placeholder="0.00" />
+            </div>
+          </div>
+
+          <!-- RESULTADO LIQUIDACIÓN -->
+          <div class="liq-final-box" [class.has-tax]="liveImpuestoPagar() > 0" [class.has-credit]="liveSaldoFavor() > 0">
+            @if (liveImpuestoPagar() > 0) {
+              <div class="final-result-item">
+                <span class="result-title">(=) LIQUIDACIÓN FINAL A PAGAR AL SAR (Lempiras)</span>
+                <span class="result-amount danger-text">L. {{ liveImpuestoPagar() | number:'1.2-2' }}</span>
+                <span class="result-hint">Monto final para el Recibo Oficial de Pago SAR-210</span>
+                <button type="button" class="btn-copy-large" [class.copied]="copiedCasilla() === 'final_sar'" (click)="copiarCasilla(liveImpuestoPagar(), 'final_sar')">
+                  @if (copiedCasilla() === 'final_sar') {
+                    <span>✓ ¡Monto Copiado!</span>
+                  } @else {
+                    <span>📋 Copiar Monto a Pagar SAR</span>
+                  }
+                </button>
+              </div>
+            } @else if (liveSaldoFavor() > 0) {
+              <div class="final-result-item">
+                <span class="result-title">(=) SALDO A FAVOR DEL CONTRIBUYENTE (Para el próximo mes)</span>
+                <span class="result-amount success-text">L. {{ liveSaldoFavor() | number:'1.2-2' }}</span>
+                <span class="result-hint">Se trasladará automáticamente al período fiscal siguiente.</span>
+                <button type="button" class="btn-copy-large" [class.copied]="copiedCasilla() === 'final_sar'" (click)="copiarCasilla(liveSaldoFavor(), 'final_sar')">
+                  @if (copiedCasilla() === 'final_sar') {
+                    <span>✓ ¡Saldo Copiado!</span>
+                  } @else {
+                    <span>📋 Copiar Saldo a Favor</span>
+                  }
+                </button>
+              </div>
+            } @else {
+              <div class="final-result-item">
+                <span class="result-title">DECLARACIÓN SIN MOVIMIENTO O SALDO CERO</span>
+                <span class="result-amount">L. 0.00</span>
+              </div>
+            }
+          </div>
+
+          <!-- HONORARIOS PROFESIONALES -->
+          <div class="liq-row-item honorarios-row">
+            <div class="row-label">
+              <span class="icon-circle bg-primary-subtle text-primary">+</span>
+              <span class="font-bold">(+) Servicios Profesionales (Honorarios Contables):</span>
+            </div>
+            <div class="row-input-wrap">
+              <span class="currency-label">L.</span>
+              <input type="number" step="0.01" min="0" class="input-liq-field font-bold" [ngModel]="serviciosProfesionales()" (ngModelChange)="serviciosProfesionales.set($event)" placeholder="0.00" />
+            </div>
+          </div>
+
+          <!-- TOTAL LPS -->
+          <div class="liq-total-grand-banner">
+            <div class="grand-left">
+              <span class="grand-label">TOTAL LPS A LIQUIDAR (ISV + Honorarios):</span>
+              <span class="grand-sub">Liquidación tributaria completa del cliente</span>
+            </div>
+            <div class="grand-right">
+              <span class="grand-amount">L. {{ liveTotalLps() | number:'1.2-2' }}</span>
+              <button type="button" class="btn-copy-grand" [class.copied]="copiedCasilla() === 'total_lps'" (click)="copiarCasilla(liveTotalLps(), 'total_lps')">
+                @if (copiedCasilla() === 'total_lps') {
+                  <span>✓ Copiado</span>
+                } @else {
+                  <span>📋 Copiar Total</span>
+                }
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- OPCIONES DE ESTADO Y GUARDADO -->
+        <div class="liquidation-footer">
+          <div class="footer-checkbox-group">
+            <label class="checkbox-label">
+              <input type="checkbox" [ngModel]="marcarLiquidado()" (ngModelChange)="marcarLiquidado.set($event)" />
+              <span>Marcar como <strong>Presentada y Liquidada ante el SAR</strong></span>
+            </label>
+            @if (marcarLiquidado()) {
+              <div class="sar-decl-input-wrap">
+                <label>N° Declaración SAR:</label>
+                <input type="text" [ngModel]="numeroDeclaracion()" (ngModelChange)="numeroDeclaracion.set($event)" placeholder="Ej. 210-987654321" class="form-control-decl" />
+              </div>
+            }
+          </div>
+
+          <div class="footer-actions">
+            <button type="button" class="btn btn-save-all" [disabled]="isSaving()" (click)="guardarTodo()">
+              @if (isSaving()) {
+                <span class="spinner-sm"></span>
+                <span>Guardando...</span>
+              } @else {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                <span>Guardar Liquidación Oficial</span>
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  }
+
+  <!-- ========================================================================= -->
+  <!-- 4. PESTAÑA: VISTA DUAL COMPLETA (AMBAS HOJAS EN SECUENCIA) -->
+  <!-- ========================================================================= -->
+  @if (activeTab() === 'vistaDual') {
+    <div class="vista-dual-wrapper animate-slide-up">
+      
+      <!-- ENCABEZADO DUAL -->
+      <div class="dual-sheet-header">
+        <div class="sheet-title-row">
+          <div>
+            <h2>{{ selectedCliente()?.nombreRazonSocial || 'EMPRESA CONTRIBUYENTE' }}</h2>
+            <p>RTN: {{ selectedCliente()?.rtn }} • PERÍODO: {{ selectedMesNombre().toUpperCase() }} {{ selectedAnio() }}</p>
+          </div>
+          <div class="sheet-actions no-print flex gap-2">
+            <button class="btn btn-pdf-export" (click)="descargarPdfOficial()">📄 Descargar PDF</button>
+            <button class="btn btn-excel-export" (click)="exportarExcelOficial()">📊 Exportar Excel</button>
+            <button class="btn btn-save-all" [disabled]="isSaving()" (click)="guardarTodo()">💾 Guardar Todo</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECCIÓN 1: LIBRO DE VENTAS -->
+      <div class="dual-section-block">
+        <div class="dual-block-title text-blue">
+          <h3>1. LIBRO DE VENTAS DETALLADO</h3>
+          <span class="tag-badge bg-blue-subtle text-blue">Débito Fiscal: L. {{ sumVentasDebito() | number:'1.2-2' }}</span>
+        </div>
+        <div class="table-container">
           <table class="table-hoja-oficial">
             <thead>
-              <tr class="thead-group">
-                <th colspan="3" class="th-group-main">DETALLE GENERAL</th>
-                <th colspan="3" class="th-group-compras">COMPRAS</th>
-                <th colspan="4" class="th-group-ventas">VENTAS</th>
-                <th class="th-group-actions no-print"></th>
-              </tr>
               <tr class="thead-cols">
-                <th class="col-num">#</th>
-                <th class="col-fecha">Fecha</th>
-                <th class="col-prov">Proveedor / Concepto</th>
-                <th class="col-money">Compras Exentas</th>
-                <th class="col-money">Compras Gravadas</th>
-                <th class="col-money col-isv">Impto 15%</th>
-                <th class="col-fac">Factura N°</th>
-                <th class="col-money">Ventas Exentas</th>
-                <th class="col-money">Ventas Gravadas</th>
-                <th class="col-money col-isv">Impto 15%</th>
-                <th class="col-action no-print">Acción</th>
+                <th>#</th>
+                <th>Fecha</th>
+                <th>Factura N°</th>
+                <th>Exonerado</th>
+                <th>Exento</th>
+                <th>Gravado 15%</th>
+                <th>Gravado 18%</th>
+                <th class="col-isv-ventas">ISV 15%</th>
+                <th class="col-isv-ventas">ISV 18%</th>
+                <th>Total Fila</th>
               </tr>
             </thead>
             <tbody>
-              @for (item of detalleItems(); track $index) {
-                <tr class="row-partida">
-                  <!-- # Correlativo -->
-                  <td class="cell-num">
-                    <span class="correlativo-badge">{{ item.correlativo }}</span>
-                  </td>
-
-                  <!-- Fecha -->
-                  <td class="cell-fecha">
-                    <input 
-                      type="date" 
-                      class="table-input input-date" 
-                      [(ngModel)]="item.fecha" 
-                      (ngModelChange)="notificarCambioDetalle()"
-                    />
-                  </td>
-
-                  <!-- Proveedor / Concepto -->
-                  <td class="cell-prov">
-                    <input 
-                      type="text" 
-                      class="table-input input-text" 
-                      placeholder="Proveedor / Detalle..." 
-                      [(ngModel)]="item.proveedor" 
-                      (ngModelChange)="notificarCambioDetalle()"
-                    />
-                  </td>
-
-                  <!-- Compras Exentas -->
-                  <td class="cell-money">
-                    <input 
-                      type="number" 
-                      step="0.01" 
-                      min="0" 
-                      class="table-input input-money" 
-                      placeholder="0.00" 
-                      [(ngModel)]="item.comprasExentas" 
-                      (ngModelChange)="notificarCambioDetalle()"
-                    />
-                  </td>
-
-                  <!-- Compras Gravadas -->
-                  <td class="cell-money">
-                    <input 
-                      type="number" 
-                      step="0.01" 
-                      min="0" 
-                      class="table-input input-money highlight-input" 
-                      placeholder="0.00" 
-                      [(ngModel)]="item.comprasGravadas" 
-                      (ngModelChange)="onComprasGravadasChange(item)"
-                    />
-                  </td>
-
-                  <!-- ISV Compras 15% (Auto) -->
-                  <td class="cell-money cell-isv-val">
-                    <span class="isv-calculated">L. {{ item.isvCompras15 | number:'1.2-2' }}</span>
-                  </td>
-
-                  <!-- Factura N° -->
-                  <td class="cell-fac">
-                    <input 
-                      type="text" 
-                      class="table-input input-fac" 
-                      placeholder="000-001-01-..." 
-                      [(ngModel)]="item.facturaNumero" 
-                      (ngModelChange)="notificarCambioDetalle()"
-                    />
-                  </td>
-
-                  <!-- Ventas Exentas -->
-                  <td class="cell-money">
-                    <input 
-                      type="number" 
-                      step="0.01" 
-                      min="0" 
-                      class="table-input input-money" 
-                      placeholder="0.00" 
-                      [(ngModel)]="item.ventasExentas" 
-                      (ngModelChange)="notificarCambioDetalle()"
-                    />
-                  </td>
-
-                  <!-- Ventas Gravadas -->
-                  <td class="cell-money">
-                    <input 
-                      type="number" 
-                      step="0.01" 
-                      min="0" 
-                      class="table-input input-money highlight-input-ventas" 
-                      placeholder="0.00" 
-                      [(ngModel)]="item.ventasGravadas" 
-                      (ngModelChange)="onVentasGravadasChange(item)"
-                    />
-                  </td>
-
-                  <!-- ISV Ventas 15% (Auto) -->
-                  <td class="cell-money cell-isv-val">
-                    <span class="isv-calculated text-blue font-bold">L. {{ item.isvVentas15 | number:'1.2-2' }}</span>
-                  </td>
-
-                  <!-- Acción Eliminar -->
-                  <td class="cell-action no-print">
-                    <button 
-                      type="button" 
-                      class="btn-del-row" 
-                      title="Eliminar partida" 
-                      (click)="eliminarFila($index)"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                    </button>
-                  </td>
+              @for (v of ventasItems(); track $index) {
+                <tr>
+                  <td class="text-center">{{ v.correlativo }}</td>
+                  <td class="text-center">{{ v.fecha }}</td>
+                  <td class="text-center font-mono">{{ v.factura }}</td>
+                  <td class="text-right">L. {{ v.exonerado | number:'1.2-2' }}</td>
+                  <td class="text-right">L. {{ v.exento | number:'1.2-2' }}</td>
+                  <td class="text-right">L. {{ v.gravado15 | number:'1.2-2' }}</td>
+                  <td class="text-right">L. {{ v.gravado18 | number:'1.2-2' }}</td>
+                  <td class="text-right text-blue font-bold">L. {{ v.isv15 | number:'1.2-2' }}</td>
+                  <td class="text-right text-blue font-bold">L. {{ v.isv18 | number:'1.2-2' }}</td>
+                  <td class="text-right font-bold">L. {{ v.total | number:'1.2-2' }}</td>
                 </tr>
               }
             </tbody>
-
-            <!-- FILA DE TOTALES -->
             <tfoot>
               <tr class="row-totales">
-                <td colspan="3" class="text-right font-bold label-totales">TOTALES:</td>
-                <td class="text-right font-bold">L. {{ sumComprasExentas() | number:'1.2-2' }}</td>
-                <td class="text-right font-bold">L. {{ sumComprasGravadas() | number:'1.2-2' }}</td>
-                <td class="text-right font-bold text-emerald">L. {{ sumIsvCompras() | number:'1.2-2' }}</td>
-                <td></td>
-                <td class="text-right font-bold">L. {{ sumVentasExentas() | number:'1.2-2' }}</td>
-                <td class="text-right font-bold">L. {{ sumVentasGravadas() | number:'1.2-2' }}</td>
-                <td class="text-right font-bold text-blue">L. {{ sumIsvVentas() | number:'1.2-2' }}</td>
-                <td class="no-print"></td>
+                <td colspan="3" class="text-right font-bold">TOTALES VENTAS:</td>
+                <td class="text-right font-bold">L. {{ sumVentasExonerado() | number:'1.2-2' }}</td>
+                <td class="text-right font-bold">L. {{ sumVentasExento() | number:'1.2-2' }}</td>
+                <td class="text-right font-bold">L. {{ sumVentasGravado15() | number:'1.2-2' }}</td>
+                <td class="text-right font-bold">L. {{ sumVentasGravado18() | number:'1.2-2' }}</td>
+                <td class="text-right font-bold text-blue">L. {{ sumVentasIsv15() | number:'1.2-2' }}</td>
+                <td class="text-right font-bold text-blue">L. {{ sumVentasIsv18() | number:'1.2-2' }}</td>
+                <td class="text-right font-bold text-primary">L. {{ sumVentasTotal() | number:'1.2-2' }}</td>
               </tr>
             </tfoot>
           </table>
         </div>
-
-        <!-- CUADRO DE RESUMEN FINAL Y LIQUIDACIÓN (COPIA FIEL DE LA IMAGEN OFICIAL) -->
-        <div class="resumen-oficial-box-container">
-          <div class="resumen-oficial-table">
-            
-            <div class="resumen-row">
-              <span class="resumen-label">Impuesto Compras:</span>
-              <span class="resumen-value text-emerald font-semibold">L. {{ sumIsvCompras() | number:'1.2-2' }}</span>
-            </div>
-
-            <div class="resumen-row">
-              <span class="resumen-label">Impuesto Ventas:</span>
-              <span class="resumen-value text-blue font-semibold">L. {{ sumIsvVentas() | number:'1.2-2' }}</span>
-            </div>
-
-            @if (liveSaldoAFavorDetalle() > 0) {
-              <div class="resumen-row saldo-favor-row">
-                <span class="resumen-label">Saldo a Favor Contribuyente:</span>
-                <span class="resumen-value text-emerald font-bold">L. {{ liveSaldoAFavorDetalle() | number:'1.2-2' }}</span>
-              </div>
-            } @else {
-              <div class="resumen-row impuesto-pagar-row">
-                <span class="resumen-label">Impuesto a Pagar Lps:</span>
-                <span class="resumen-value font-bold">L. {{ liveImpuestoAPagarDetalle() | number:'1.2-2' }}</span>
-              </div>
-            }
-
-            <div class="resumen-row servicios-row">
-              <span class="resumen-label">(+) Servicios Prof. (Honorarios):</span>
-              <div class="resumen-value-input">
-                <span class="currency-prefix">L.</span>
-                <input 
-                  type="number" 
-                  step="0.01" 
-                  min="0" 
-                  class="honorarios-input" 
-                  [ngModel]="serviciosProfesionales()" 
-                  (ngModelChange)="serviciosProfesionales.set($event)"
-                />
-              </div>
-            </div>
-
-            <div class="resumen-row total-final-row">
-              <span class="resumen-label-grand">TOTAL LPS:</span>
-              <span class="resumen-value-grand">L. {{ liveTotalLpsDetalle() | number:'1.2-2' }}</span>
-            </div>
-
-          </div>
-        </div>
-
-        <!-- FIRMA EN IMPRESIÓN -->
-        <div class="print-signature-footer">
-          <div class="sig-box">
-            <div class="sig-line"></div>
-            <span>Firma Contador Titular / Despacho</span>
-          </div>
-        </div>
-
       </div>
+
+      <!-- SECCIÓN 2: LIBRO DE COMPRAS -->
+      <div class="dual-section-block mt-4">
+        <div class="dual-block-title text-emerald">
+          <h3>2. LIBRO DE COMPRAS DETALLADO</h3>
+          <span class="tag-badge bg-emerald-subtle text-emerald">Crédito Fiscal: L. {{ sumComprasCredito() | number:'1.2-2' }}</span>
+        </div>
+        <div class="table-container">
+          <table class="table-hoja-oficial">
+            <thead>
+              <tr class="thead-cols">
+                <th>#</th>
+                <th>Fecha</th>
+                <th>Factura N°</th>
+                <th>Proveedor</th>
+                <th>Exonerado</th>
+                <th>Exento</th>
+                <th>Gravado 15%</th>
+                <th>Gravado 18%</th>
+                <th class="col-isv-compras">ISV 15%</th>
+                <th class="col-isv-compras">ISV 18%</th>
+                <th>Total Fila</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (c of comprasItems(); track $index) {
+                <tr>
+                  <td class="text-center">{{ c.correlativo }}</td>
+                  <td class="text-center">{{ c.fecha }}</td>
+                  <td class="text-center font-mono">{{ c.factura }}</td>
+                  <td>{{ c.proveedor }}</td>
+                  <td class="text-right">L. {{ c.exonerado | number:'1.2-2' }}</td>
+                  <td class="text-right">L. {{ c.exento | number:'1.2-2' }}</td>
+                  <td class="text-right">L. {{ c.gravado15 | number:'1.2-2' }}</td>
+                  <td class="text-right">L. {{ c.gravado18 | number:'1.2-2' }}</td>
+                  <td class="text-right text-emerald font-bold">L. {{ c.isv15 | number:'1.2-2' }}</td>
+                  <td class="text-right text-emerald font-bold">L. {{ c.isv18 | number:'1.2-2' }}</td>
+                  <td class="text-right font-bold">L. {{ c.total | number:'1.2-2' }}</td>
+                </tr>
+              }
+            </tbody>
+            <tfoot>
+              <tr class="row-totales">
+                <td colspan="4" class="text-right font-bold">TOTALES COMPRAS:</td>
+                <td class="text-right font-bold">L. {{ sumComprasExonerado() | number:'1.2-2' }}</td>
+                <td class="text-right font-bold">L. {{ sumComprasExento() | number:'1.2-2' }}</td>
+                <td class="text-right font-bold">L. {{ sumComprasGravado15() | number:'1.2-2' }}</td>
+                <td class="text-right font-bold">L. {{ sumComprasGravado18() | number:'1.2-2' }}</td>
+                <td class="text-right font-bold text-emerald">L. {{ sumComprasIsv15() | number:'1.2-2' }}</td>
+                <td class="text-right font-bold text-emerald">L. {{ sumComprasIsv18() | number:'1.2-2' }}</td>
+                <td class="text-right font-bold text-primary">L. {{ sumComprasTotal() | number:'1.2-2' }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- SECCIÓN 3: CUADRO DE LIQUIDACIÓN SAR -->
+      <div class="dual-section-block mt-4 flex justify-end">
+        <div class="resumen-mini-box">
+          <div class="resumen-mini-title">LIQUIDACIÓN SAR-210</div>
+          <div class="resumen-mini-row">
+            <span>Débito Ventas:</span>
+            <strong class="text-blue">L. {{ sumVentasDebito() | number:'1.2-2' }}</strong>
+          </div>
+          <div class="resumen-mini-row">
+            <span>(-) Crédito Compras:</span>
+            <strong class="text-emerald">L. {{ sumComprasCredito() | number:'1.2-2' }}</strong>
+          </div>
+          <div class="resumen-mini-row">
+            <span>(-) Saldo Anterior:</span>
+            <strong>L. {{ saldoAnterior() | number:'1.2-2' }}</strong>
+          </div>
+          <div class="resumen-mini-row">
+            <span>(-) Retenciones:</span>
+            <strong>L. {{ totalRetenciones() | number:'1.2-2' }}</strong>
+          </div>
+          <div class="resumen-mini-row border-top">
+            <span>Liquidación SAR:</span>
+            @if (liveImpuestoPagar() > 0) {
+              <strong class="text-danger">L. {{ liveImpuestoPagar() | number:'1.2-2' }}</strong>
+            } @else {
+              <strong class="text-emerald">L. {{ liveSaldoFavor() | number:'1.2-2' }} (A Favor)</strong>
+            }
+          </div>
+          <div class="resumen-mini-row">
+            <span>(+) Honorarios:</span>
+            <strong>L. {{ serviciosProfesionales() | number:'1.2-2' }}</strong>
+          </div>
+          <div class="resumen-mini-grand">
+            <span>TOTAL LPS:</span>
+            <span>L. {{ liveTotalLps() | number:'1.2-2' }}</span>
+          </div>
+        </div>
+      </div>
+
     </div>
   }
 
   <!-- ========================================================================= -->
-  <!-- MODALIDAD 2: DECLARACIÓN SAR-210 (MACRO Y FORMULARIO GLOBAL) -->
+  <!-- 5. PESTAÑA: CARGA MASIVA DE PERÍODOS -->
   <!-- ========================================================================= -->
-  @if (activeTab() === 'declaracion') {
-    <div class="books-grid">
-      
-      <!-- COLUMNA 1: LIBRO DE VENTAS (DÉBITO FISCAL) -->
-      <div class="book-card sales-card">
-        <div class="book-card-header">
-          <div class="book-header-title">
-            <span class="book-badge bg-blue-subtle text-blue">Libro de Ventas</span>
-            <h3>Débito Fiscal (ISV Facturado)</h3>
-          </div>
-          <div class="kpi-tag text-blue font-bold">
-            Total Débito: L. {{ liveTotalDebito() | number:'1.2-2' }}
-          </div>
-        </div>
-
-        <div class="book-card-body">
-          <div class="form-group-box">
-            <label class="input-label">Ventas Gravadas al 15% (Lempiras)</label>
-            <div class="input-calc-group">
-              <input type="number" step="0.01" [ngModel]="formVentas15()" (ngModelChange)="formVentas15.set($event)" class="form-control-custom font-mono" placeholder="0.00">
-              <div class="calc-badge">ISV 15%: L. {{ liveDebito15() | number:'1.2-2' }}</div>
-            </div>
-          </div>
-
-          <div class="form-group-box">
-            <label class="input-label">Ventas Gravadas al 18% (Alcohol, Tabaco, Boletos)</label>
-            <div class="input-calc-group">
-              <input type="number" step="0.01" [ngModel]="formVentas18()" (ngModelChange)="formVentas18.set($event)" class="form-control-custom font-mono" placeholder="0.00">
-              <div class="calc-badge">ISV 18%: L. {{ liveDebito18() | number:'1.2-2' }}</div>
-            </div>
-          </div>
-
-          <div class="form-group-box">
-            <label class="input-label">Ventas Exentas / No Gravadas (Canasta Básica, Exonerados)</label>
-            <input type="number" step="0.01" [ngModel]="formVentasExentas()" (ngModelChange)="formVentasExentas.set($event)" class="form-control-custom font-mono" placeholder="0.00">
-          </div>
-
-          <div class="book-summary-footer bg-blue-50">
-            <div class="summary-line">
-              <span>Total Ventas Netas:</span>
-              <strong>L. {{ liveTotalVentas() | number:'1.2-2' }}</strong>
-            </div>
-            <div class="summary-line text-blue">
-              <span>Total Débito Fiscal a Pagar:</span>
-              <strong class="font-bold text-lg">L. {{ liveTotalDebito() | number:'1.2-2' }}</strong>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- COLUMNA 2: LIBRO DE COMPRAS (CRÉDITO FISCAL) -->
-      <div class="book-card purchases-card">
-        <div class="book-card-header">
-          <div class="book-header-title">
-            <span class="book-badge bg-emerald-subtle text-emerald">Libro de Compras</span>
-            <h3>Crédito Fiscal (ISV Soportado)</h3>
-          </div>
-          <div class="kpi-tag text-emerald font-bold">
-            Total Crédito: L. {{ liveTotalCredito() | number:'1.2-2' }}
-          </div>
-        </div>
-
-        <div class="book-card-body">
-          <div class="form-group-box">
-            <label class="input-label">Compras Locales Gravadas al 15%</label>
-            <div class="input-calc-group">
-              <input type="number" step="0.01" [ngModel]="formCompras15()" (ngModelChange)="formCompras15.set($event)" class="form-control-custom font-mono" placeholder="0.00">
-              <div class="calc-badge text-emerald">ISV 15%: L. {{ ((formCompras15() || 0) * 0.15) | number:'1.2-2' }}</div>
-            </div>
-          </div>
-
-          <div class="form-group-box">
-            <label class="input-label">Importaciones Gravadas al 15% (Pólizas SAR / Aduanas)</label>
-            <div class="input-calc-group">
-              <input type="number" step="0.01" [ngModel]="formImportaciones15()" (ngModelChange)="formImportaciones15.set($event)" class="form-control-custom font-mono" placeholder="0.00">
-              <div class="calc-badge text-emerald">ISV 15%: L. {{ ((formImportaciones15() || 0) * 0.15) | number:'1.2-2' }}</div>
-            </div>
-          </div>
-
-          <div class="form-group-box">
-            <label class="input-label">Compras Gravadas al 18%</label>
-            <div class="input-calc-group">
-              <input type="number" step="0.01" [ngModel]="formCompras18()" (ngModelChange)="formCompras18.set($event)" class="form-control-custom font-mono" placeholder="0.00">
-              <div class="calc-badge text-emerald">ISV 18%: L. {{ liveCredito18() | number:'1.2-2' }}</div>
-            </div>
-          </div>
-
-          <div class="form-group-box">
-            <label class="input-label">Compras Exentas y del Régimen Simplificado</label>
-            <input type="number" step="0.01" [ngModel]="formComprasExentas()" (ngModelChange)="formComprasExentas.set($event)" class="form-control-custom font-mono" placeholder="0.00">
-          </div>
-
-          <div class="book-summary-footer bg-emerald-50">
-            <div class="summary-line">
-              <span>Total Compras Netas:</span>
-              <strong>L. {{ liveTotalCompras() | number:'1.2-2' }}</strong>
-            </div>
-            <div class="summary-line text-emerald">
-              <span>Total Crédito Fiscal Deducible:</span>
-              <strong class="font-bold text-lg">L. {{ liveTotalCredito() | number:'1.2-2' }}</strong>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- TARJETA DE LIQUIDACIÓN SAR-210 -->
-    <div class="liquidation-card">
-      <div class="liquidation-header">
-        <div class="liq-title-box">
-          <div class="sar-logo-badge">SAR-210</div>
-          <div>
-            <h3>Resultado de la Declaración Jurada Mensual (ISV)</h3>
-            <p>Renglones oficiales conforme al formulario preimpreso e impreso digital del SAR</p>
-          </div>
-        </div>
-        <div class="liq-status-badge" [class.bg-danger]="liveImpuestoPagar() > 0" [class.bg-success]="liveSaldoFavor() > 0">
-          {{ liveImpuestoPagar() > 0 ? 'IMPUESTO A PAGAR' : (liveSaldoFavor() > 0 ? 'SALDO A FAVOR' : 'SIN SALDO') }}
-        </div>
-      </div>
-
-      <div class="liquidation-grid">
-        <div class="liq-row">
-          <span>(+) Total Débito Fiscal del Mes (Ventas):</span>
-          <strong class="font-mono">L. {{ liveTotalDebito() | number:'1.2-2' }}</strong>
-        </div>
-        <div class="liq-row">
-          <span>(-) Total Crédito Fiscal del Mes (Compras & Importaciones):</span>
-          <strong class="font-mono text-emerald">L. {{ liveTotalCredito() | number:'1.2-2' }}</strong>
-        </div>
-        <div class="liq-row">
-          <span>(-) Saldo a Favor del Contribuyente Período Anterior:</span>
-          <div class="input-prefix-wrapper">
-            <span class="prefix">L.</span>
-            <input type="number" step="0.01" [ngModel]="formSaldoAnterior()" (ngModelChange)="formSaldoAnterior.set($event)" class="form-control-inline" placeholder="0.00">
-          </div>
-        </div>
-        <div class="liq-row">
-          <span>(-) Retenciones de ISV que le fueron practicadas (1% o 15% Agentes):</span>
-          <div class="input-prefix-wrapper">
-            <span class="prefix">L.</span>
-            <input type="number" step="0.01" [ngModel]="formRetenciones()" (ngModelChange)="formRetenciones.set($event)" class="form-control-inline" placeholder="0.00">
-          </div>
-        </div>
-
-        <div class="liq-final-box" [class.has-tax]="liveImpuestoPagar() > 0" [class.has-credit]="liveSaldoFavor() > 0">
-          @if (liveImpuestoPagar() > 0) {
-            <div class="final-result-item">
-              <span class="result-title">TOTAL IMPUESTO A PAGAR AL SAR (Lempiras)</span>
-              <span class="result-amount danger-text">L. {{ liveImpuestoPagar() | number:'1.2-2' }}</span>
-              <span class="result-hint">Monto final a consignar en el recibo de pago SAR-210</span>
-            </div>
-          } @else if (liveSaldoFavor() > 0) {
-            <div class="final-result-item">
-              <span class="result-title">SALDO A FAVOR DEL CONTRIBUYENTE (Para el próximo mes)</span>
-              <span class="result-amount success-text">L. {{ liveSaldoFavor() | number:'1.2-2' }}</span>
-              <span class="result-hint">Este valor se trasladará como crédito al siguiente período fiscal.</span>
-            </div>
-          } @else {
-            <div class="final-result-item">
-              <span class="result-title">DECLARACIÓN SIN MOVIMIENTO O SALDO CERO</span>
-              <span class="result-amount">L. 0.00</span>
-            </div>
-          }
-        </div>
-      </div>
-
-      <!-- ACCIONES DE GUARDADO -->
-      <div class="liq-actions-row">
-        <div class="liq-options">
-          <label class="checkbox-label">
-            <input type="checkbox" [ngModel]="formMarcarLiquidado()" (ngModelChange)="formMarcarLiquidado.set($event)">
-            <span>Marcar como <strong>Presentada y Liquidada ante el SAR</strong></span>
-          </label>
-          @if (formMarcarLiquidado()) {
-            <div class="sar-decl-num-input">
-              <label>N° Declaración SAR:</label>
-              <input type="text" [ngModel]="formNumeroDeclaracion()" (ngModelChange)="formNumeroDeclaracion.set($event)" placeholder="Ej. 210-987654321" class="form-control-sm">
-            </div>
-          }
-        </div>
-
-        <div class="liq-buttons">
-          <button class="btn btn-primary btn-lg" [disabled]="isSaving()" (click)="guardarIndividual()">
-            @if (isSaving()) {
-              <span class="spinner-sm"></span>
-              <span>Guardando...</span>
-            } @else {
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-              <span>Guardar Liquidación SAR</span>
-            }
-          </button>
-        </div>
-      </div>
-    </div>
-  }
-
-  <!-- ========================================== -->
-  <!-- MODALIDAD 3: CARGA MASIVA DE CONTRIBUYENTES -->
-  <!-- ========================================== -->
   @if (activeTab() === 'masivo') {
-    <div class="masivo-container">
+    <div class="masivo-container animate-slide-up">
       
-      <!-- TARJETA INFORMATIVA Y DESCARGA DE PLANTILLA -->
       <div class="masivo-banner-card">
         <div class="banner-content">
           <h3>Carga Masiva de Libros de Compras y Ventas</h3>
           <p>
-            Permite procesar en segundos las cifras fiscales de decenas de clientes mediante un archivo Excel (.xlsx / .csv).
-            Ideal para despachos que administran múltiples declaraciones mensuales del SAR.
+            Permite procesar en segundos las cifras fiscales de múltiples clientes mediante un archivo Excel o CSV.
           </p>
-          <div class="banner-steps">
-            <div class="step-item">
-              <span class="step-num">1</span>
-              <span>Descargue la plantilla oficial formateada con las columnas del SAR.</span>
-            </div>
-            <div class="step-item">
-              <span class="step-num">2</span>
-              <span>Complete las cifras de ventas, compras y retenciones de cada RTN.</span>
-            </div>
-            <div class="step-item">
-              <span class="step-num">3</span>
-              <span>Arrastre el archivo para validar y guardar automáticamente todos los períodos.</span>
-            </div>
-          </div>
         </div>
-
         <div class="banner-action">
           <button class="btn btn-primary-outline" (click)="descargarPlantilla()">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            <span>Descargar Plantilla CSV Oficial</span>
+            <span>Descargar Plantilla CSV</span>
           </button>
         </div>
       </div>
 
-      <!-- DROPZONE / ÁREA DE SUBIDA -->
-      <div 
-        class="dropzone-area" 
-        (drop)="onFileDrop($event)" 
-        (dragover)="onDragOver($event)"
-      >
+      <div class="dropzone-area" (drop)="onFileDrop($event)" (dragover)="onDragOver($event)">
         <div class="dropzone-icon">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-12 h-12 text-primary"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg>
         </div>
         <h4 class="dropzone-title">Arrastre aquí su archivo de libros contables o haga clic para seleccionar</h4>
-        <p class="dropzone-desc">Formatos soportados: CSV delimitado por comas (.csv) y Excel (.xlsx)</p>
-        
+        <p class="dropzone-desc">Formatos soportados: CSV delimitado por comas (.csv)</p>
         <label class="btn btn-primary mt-3 cursor-pointer">
-          <input type="file" accept=".csv, .xlsx, .xls" (change)="onFileSelected($event)" style="display: none;">
-          <span>Explorar Archivos en su Equipo</span>
+          <input type="file" accept=".csv" (change)="onFileSelected($event)" style="display: none;" />
+          <span>Explorar Archivo CSV</span>
         </label>
       </div>
 
-      <!-- PREVISUALIZACIÓN DE FILAS EXTRAÍDAS -->
       @if (parsedRows().length > 0) {
         <div class="preview-card mt-4">
           <div class="preview-header">
@@ -748,43 +975,9 @@
               }
             </button>
           </div>
-
-          <div class="table-responsive">
-            <table class="table-custom">
-              <thead>
-                <tr>
-                  <th>RTN</th>
-                  <th>Período</th>
-                  <th>Ventas 15%</th>
-                  <th>ISV Débito</th>
-                  <th>Compras 15%</th>
-                  <th>ISV Crédito</th>
-                  <th>Saldo Anterior</th>
-                  <th>ISV a Pagar Est.</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (row of parsedRows(); track $index) {
-                  <tr>
-                    <td class="font-mono font-bold">{{ row.rtn }}</td>
-                    <td>{{ row.mes }}/{{ row.anio }}</td>
-                    <td>L. {{ row.ventasGravadas15 | number:'1.2-2' }}</td>
-                    <td class="text-blue font-bold">L. {{ (row.ventasGravadas15 * 0.15) | number:'1.2-2' }}</td>
-                    <td>L. {{ row.comprasGravadas15 | number:'1.2-2' }}</td>
-                    <td class="text-emerald font-bold">L. {{ (row.comprasGravadas15 * 0.15) | number:'1.2-2' }}</td>
-                    <td>L. {{ row.saldoAFavorPeriodoAnterior | number:'1.2-2' }}</td>
-                    <td class="font-bold">
-                      L. {{ ((row.ventasGravadas15 * 0.15) - (row.comprasGravadas15 * 0.15) - row.saldoAFavorPeriodoAnterior - row.retencionesISVRecibidas > 0 ? (row.ventasGravadas15 * 0.15) - (row.comprasGravadas15 * 0.15) - row.saldoAFavorPeriodoAnterior - row.retencionesISVRecibidas : 0) | number:'1.2-2' }}
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
         </div>
       }
 
-      <!-- RESULTADO DE IMPORTACIÓN -->
       @if (importResult(); as res) {
         <div class="import-result-card mt-4">
           <div class="result-badge-row">
@@ -793,14 +986,8 @@
               <span class="badge-danger">Con advertencias / errores: {{ res.totalErrores }}</span>
             }
           </div>
-          <div class="log-messages mt-3">
-            @for (msg of res.mensajes; track $index) {
-              <div class="log-item">{{ msg }}</div>
-            }
-          </div>
         </div>
       }
-
     </div>
   }
 

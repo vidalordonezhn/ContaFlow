@@ -147,6 +147,114 @@ export interface LibroIsvImportResponse {
   mensajes: string[];
 }
 
+// === MODELOS OFICIALES PARA FORMATO DUAL EJEMPLO.XLSX ===
+
+export interface LibroVentaItem {
+  id?: number;
+  correlativo: number;
+  fecha?: string; // yyyy-MM-dd
+  factura?: string;
+  exonerado: number;
+  exento: number;
+  gravado15: number;
+  gravado18: number;
+  isv15: number;
+  isv18: number;
+  total: number;
+  notas?: string;
+}
+
+export interface LibroCompraItem {
+  id?: number;
+  correlativo: number;
+  fecha?: string; // yyyy-MM-dd
+  factura?: string;
+  proveedor?: string;
+  exonerado: number;
+  exento: number;
+  gravado15: number;
+  gravado18: number;
+  isv15: number;
+  isv18: number;
+  total: number;
+  notas?: string;
+}
+
+export interface ResumenVentasCasillas {
+  totalExonerado: number;
+  totalExento: number;
+  totalGravado15: number;
+  totalGravado18: number;
+  totalIsv15: number;
+  totalIsv18: number;
+  totalDebitoFiscal: number;
+  totalGeneral: number;
+}
+
+export interface ResumenComprasCasillas {
+  totalExonerado: number;
+  totalExento: number;
+  totalGravado15: number;
+  totalGravado18: number;
+  totalIsv15: number;
+  totalIsv18: number;
+  totalCreditoFiscal: number;
+  totalGeneral: number;
+}
+
+export interface LiquidacionConsolidada {
+  debitoFiscalVentas: number;
+  creditoFiscalCompras: number;
+  diferenciaIsv: number;
+  saldoAFavorPeriodoAnterior: number;
+  retenciones15: number;
+  retenciones18: number;
+  totalRetenciones: number;
+  liquidacionFinalPagar: number;
+  saldoAFavorContribuyente: number;
+  serviciosProfesionales: number;
+  totalPagarLps: number;
+}
+
+export interface LibroCompletoMensual {
+  periodoFiscalId: number;
+  clienteId: number;
+  clienteNombre: string;
+  clienteRtn: string;
+  clienteContrasenaSAR?: string;
+  cuotaHonorarios: number;
+  mes: number;
+  anio: number;
+  mesNombre: string;
+
+  ventasItems: LibroVentaItem[];
+  comprasItems: LibroCompraItem[];
+
+  resumenVentas: ResumenVentasCasillas;
+  resumenCompras: ResumenComprasCasillas;
+  liquidacion: LiquidacionConsolidada;
+
+  liquidadoSAR: boolean;
+  fechaLiquidacion?: string;
+  numeroDeclaracionSAR?: string;
+  estado: string;
+}
+
+export interface GuardarLibroCompletoRequest {
+  clienteId: number;
+  mes: number;
+  anio: number;
+  saldoAFavorPeriodoAnterior: number;
+  retenciones15: number;
+  retenciones18: number;
+  serviciosProfesionales?: number;
+  marcarComoLiquidado: boolean;
+  numeroDeclaracionSAR?: string;
+
+  ventasItems: LibroVentaItem[];
+  comprasItems: LibroCompraItem[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -181,6 +289,15 @@ export class ApiLibrosIsvService {
       mes,
       csvContent
     });
+  }
+
+  // === MÉTODOS LIBRO COMPLETO DUAL (EJEMPLO.XLSX) ===
+  getLibroCompleto(clienteId: number, anio: number, mes: number): Observable<LibroCompletoMensual> {
+    return this.http.get<LibroCompletoMensual>(`${environment.apiUrl}/api/librosisv/libro-completo/${clienteId}/${anio}/${mes}`);
+  }
+
+  guardarLibroCompleto(req: GuardarLibroCompletoRequest): Observable<LibroCompletoMensual> {
+    return this.http.post<LibroCompletoMensual>(`${environment.apiUrl}/api/librosisv/libro-completo/guardar`, req);
   }
 
   descargarPlantillaUrl(): string {

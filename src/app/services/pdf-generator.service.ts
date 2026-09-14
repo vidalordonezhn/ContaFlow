@@ -4,8 +4,26 @@ import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { ApiConfiguracionService, ConfiguracionDespacho } from './api-configuracion.service';
 import { ClienteResponse, ExpedienteFiscal } from './api-clients.service';
-import { LibroPartidaItem } from './api-libros-isv.service';
+import { LibroPartidaItem, LibroVentaItem, LibroCompraItem, ResumenVentasCasillas, ResumenComprasCasillas, LiquidacionConsolidada } from './api-libros-isv.service';
 import { ReporteFinancieroResponse } from './api-reportes.service';
+
+export interface LibroCompletoExportData {
+  cliente: {
+    nombreRazonSocial: string;
+    rtn: string;
+    contrasenaSAR?: string;
+    rubro?: string;
+    cuotaMensual?: number;
+  };
+  mesNombre: string;
+  mes: number;
+  anio: number;
+  ventas: LibroVentaItem[];
+  compras: LibroCompraItem[];
+  resumenVentas: ResumenVentasCasillas;
+  resumenCompras: ResumenComprasCasillas;
+  liquidacion: LiquidacionConsolidada;
+}
 
 export interface LibroDetalleResumenPdf {
   cliente: ClienteResponse;
@@ -613,5 +631,461 @@ export class PdfGeneratorService {
     const filename = `Expediente_Fiscal_${exp.cliente.rtn}.pdf`;
     doc.save(filename);
     return doc;
+  }
+
+  // =========================================================================
+  // 5. LIBRO DUAL OFICIAL COMPLETO (VENTAS, COMPRAS Y RESUMEN SAR - EJEMPLO.XLSX)
+  // =========================================================================
+  generarLibroDualPdf(data: LibroCompletoExportData, autoDownload: boolean = true): jsPDF {
+    const doc = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: 'letter'
+    });
+
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const cfg = this.despachoConfig;
+
+    // --- ENCABEZADO DEL DESPACHO ---
+    doc.setFillColor(15, 23, 42);
+    doc.rect(14, 8, pageWidth - 28, 1.2, 'F');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.setTextColor(15, 23, 42);
+    doc.text(cfg?.nombreDespacho || 'DESPACHO CONTABLE Y FISCAL', 14, 15);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139);
+    doc.text(`${cfg?.nombreContadorTitular || 'Contador Titular'} • ${cfg?.colegiacionCAH || 'CAH'} • RTN: ${cfg?.rtnDespacho || '08011980123456'}`, 14, 19.5);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10.5);
+    doc.setTextColor(37, 99, 235);
+    doc.text('LIBROS OFICIALES DE VENTAS, COMPRAS Y LIQUIDACIÓN ISV', pageWidth - 14, 15, { align: 'right' });
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    doc.setTextColor(15, 23, 42);
+    doc.text(`PERÍODO FISCAL: ${data.mesNombre.toUpperCase()} ${data.anio}`, pageWidth - 14, 20, { align: 'right' });
+
+    // --- FICHA DEL CONTRIBUYENTE ---
+    doc.setFillColor(248, 250, 252);
+    doc.setDrawColor(203, 213, 225);
+    doc.roundedRect(14, 23, pageWidth - 28, 13, 1.5, 1.5, 'FD');
+
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(71, 85, 105);
+    doc.text('CONTRIBUYENTE:', 17, 28);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(15, 23, 42);
+    doc.text(data.cliente.nombreRazonSocial, 44, 28);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(71, 85, 105);
+    doc.text('RTN SAR:', 17, 33);
+    doc.setFont('courier', 'bold');
+    doc.setTextColor(15, 23, 42);
+    doc.text(data.cliente.rtn, 44, 33);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(71, 85, 105);
+    doc.text('PASSWORD SAR:', 150, 28);
+    doc.setFont('courier', 'bold');
+    doc.setTextColor(37, 99, 235);
+    doc.text(data.cliente.contrasenaSAR || 'NO REGISTRADA', 182, 28);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(71, 85, 105);
+    doc.text('GIRO / RUBRO:', 150, 33);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(15, 23, 42);
+    doc.text(data.cliente.rubro || 'Comercio General', 182, 33);
+
+    // --- 1. TABLA LIBRO DE VENTAS ---
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(30, 64, 175);
+    doc.text('1. LIBRO DE VENTAS DETALLADO (DÉBITO FISCAL)', 14, 40);
+
+    const ventasHeaders: any[] = [
+      [
+        { content: '#', styles: { halign: 'center' } },
+        { content: 'Fecha', styles: { halign: 'center' } },
+        { content: 'Factura N°', styles: { halign: 'center' } },
+        { content: 'Exonerado', styles: { halign: 'right' } },
+        { content: 'Exento', styles: { halign: 'right' } },
+        { content: 'Gravado 15%', styles: { halign: 'right' } },
+        { content: 'Gravado 18%', styles: { halign: 'right' } },
+        { content: 'ISV 15%', styles: { halign: 'right', textColor: [37, 99, 235] as [number, number, number] } },
+        { content: 'ISV 18%', styles: { halign: 'right', textColor: [37, 99, 235] as [number, number, number] } },
+        { content: 'Total Fila', styles: { halign: 'right', fontStyle: 'bold' } }
+      ]
+    ];
+
+    const ventasRows = data.ventas.map((v, idx) => [
+      v.correlativo || (idx + 1),
+      v.fecha || '—',
+      v.factura || '—',
+      v.exonerado ? this.formatLps(v.exonerado) : '0.00',
+      v.exento ? this.formatLps(v.exento) : '0.00',
+      v.gravado15 ? this.formatLps(v.gravado15) : '0.00',
+      v.gravado18 ? this.formatLps(v.gravado18) : '0.00',
+      v.isv15 ? this.formatLps(v.isv15) : '0.00',
+      v.isv18 ? this.formatLps(v.isv18) : '0.00',
+      this.formatLps(v.total)
+    ]);
+
+    const rv = data.resumenVentas;
+    const ventasFooters: any[] = [
+      [
+        { content: 'TOTALES VENTAS:', colSpan: 3, styles: { halign: 'right', fontStyle: 'bold', fillColor: [239, 246, 255] as [number, number, number] } },
+        { content: this.formatLps(rv.totalExonerado), styles: { halign: 'right', fontStyle: 'bold', fillColor: [239, 246, 255] as [number, number, number] } },
+        { content: this.formatLps(rv.totalExento), styles: { halign: 'right', fontStyle: 'bold', fillColor: [239, 246, 255] as [number, number, number] } },
+        { content: this.formatLps(rv.totalGravado15), styles: { halign: 'right', fontStyle: 'bold', fillColor: [239, 246, 255] as [number, number, number] } },
+        { content: this.formatLps(rv.totalGravado18), styles: { halign: 'right', fontStyle: 'bold', fillColor: [239, 246, 255] as [number, number, number] } },
+        { content: this.formatLps(rv.totalIsv15), styles: { halign: 'right', fontStyle: 'bold', fillColor: [219, 234, 254] as [number, number, number], textColor: [30, 64, 175] as [number, number, number] } },
+        { content: this.formatLps(rv.totalIsv18), styles: { halign: 'right', fontStyle: 'bold', fillColor: [219, 234, 254] as [number, number, number], textColor: [30, 64, 175] as [number, number, number] } },
+        { content: this.formatLps(rv.totalGeneral), styles: { halign: 'right', fontStyle: 'bold', fillColor: [239, 246, 255] as [number, number, number] } }
+      ]
+    ];
+
+    autoTable(doc, {
+      startY: 43,
+      head: ventasHeaders,
+      body: ventasRows.length > 0 ? ventasRows : [['—', 'Sin registros de venta', '', '0.00', '0.00', '0.00', '0.00', '0.00', '0.00', '0.00']],
+      foot: ventasFooters,
+      theme: 'grid',
+      styles: { fontSize: 7, cellPadding: 1.5, lineColor: [203, 213, 225], lineWidth: 0.15 },
+      headStyles: { fillColor: [239, 246, 255], textColor: [30, 64, 175], fontStyle: 'bold' },
+      columnStyles: {
+        0: { cellWidth: 8, halign: 'center' },
+        1: { cellWidth: 20, halign: 'center' },
+        2: { cellWidth: 26, halign: 'center' },
+        3: { cellWidth: 24, halign: 'right' },
+        4: { cellWidth: 24, halign: 'right' },
+        5: { cellWidth: 26, halign: 'right' },
+        6: { cellWidth: 26, halign: 'right' },
+        7: { cellWidth: 24, halign: 'right' },
+        8: { cellWidth: 24, halign: 'right' },
+        9: { cellWidth: 28, halign: 'right' }
+      },
+      margin: { left: 14, right: 14 }
+    });
+
+    let currentY = (doc as any).lastAutoTable?.finalY || 80;
+
+    // --- 2. TABLA LIBRO DE COMPRAS ---
+    if (currentY + 35 > pageHeight) {
+      doc.addPage();
+      currentY = 15;
+    } else {
+      currentY += 5;
+    }
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(6, 95, 70);
+    doc.text('2. LIBRO DE COMPRAS DETALLADO (CRÉDITO FISCAL)', 14, currentY);
+
+    const comprasHeaders: any[] = [
+      [
+        { content: '#', styles: { halign: 'center' } },
+        { content: 'Fecha', styles: { halign: 'center' } },
+        { content: 'Factura N°', styles: { halign: 'center' } },
+        { content: 'Proveedor', styles: { halign: 'left' } },
+        { content: 'Exonerado', styles: { halign: 'right' } },
+        { content: 'Exento', styles: { halign: 'right' } },
+        { content: 'Gravado 15%', styles: { halign: 'right' } },
+        { content: 'Gravado 18%', styles: { halign: 'right' } },
+        { content: 'ISV 15%', styles: { halign: 'right', textColor: [5, 150, 105] as [number, number, number] } },
+        { content: 'ISV 18%', styles: { halign: 'right', textColor: [5, 150, 105] as [number, number, number] } },
+        { content: 'Total Fila', styles: { halign: 'right', fontStyle: 'bold' } }
+      ]
+    ];
+
+    const comprasRows = data.compras.map((c, idx) => [
+      c.correlativo || (idx + 1),
+      c.fecha || '—',
+      c.factura || '—',
+      c.proveedor || 'Sin proveedor',
+      c.exonerado ? this.formatLps(c.exonerado) : '0.00',
+      c.exento ? this.formatLps(c.exento) : '0.00',
+      c.gravado15 ? this.formatLps(c.gravado15) : '0.00',
+      c.gravado18 ? this.formatLps(c.gravado18) : '0.00',
+      c.isv15 ? this.formatLps(c.isv15) : '0.00',
+      c.isv18 ? this.formatLps(c.isv18) : '0.00',
+      this.formatLps(c.total)
+    ]);
+
+    const rc = data.resumenCompras;
+    const comprasFooters: any[] = [
+      [
+        { content: 'TOTALES COMPRAS:', colSpan: 4, styles: { halign: 'right', fontStyle: 'bold', fillColor: [236, 253, 245] as [number, number, number] } },
+        { content: this.formatLps(rc.totalExonerado), styles: { halign: 'right', fontStyle: 'bold', fillColor: [236, 253, 245] as [number, number, number] } },
+        { content: this.formatLps(rc.totalExento), styles: { halign: 'right', fontStyle: 'bold', fillColor: [236, 253, 245] as [number, number, number] } },
+        { content: this.formatLps(rc.totalGravado15), styles: { halign: 'right', fontStyle: 'bold', fillColor: [236, 253, 245] as [number, number, number] } },
+        { content: this.formatLps(rc.totalGravado18), styles: { halign: 'right', fontStyle: 'bold', fillColor: [236, 253, 245] as [number, number, number] } },
+        { content: this.formatLps(rc.totalIsv15), styles: { halign: 'right', fontStyle: 'bold', fillColor: [209, 250, 229] as [number, number, number], textColor: [6, 95, 70] as [number, number, number] } },
+        { content: this.formatLps(rc.totalIsv18), styles: { halign: 'right', fontStyle: 'bold', fillColor: [209, 250, 229] as [number, number, number], textColor: [6, 95, 70] as [number, number, number] } },
+        { content: this.formatLps(rc.totalGeneral), styles: { halign: 'right', fontStyle: 'bold', fillColor: [236, 253, 245] as [number, number, number] } }
+      ]
+    ];
+
+    autoTable(doc, {
+      startY: currentY + 3,
+      head: comprasHeaders,
+      body: comprasRows.length > 0 ? comprasRows : [['—', 'Sin registros de compra', '', '', '0.00', '0.00', '0.00', '0.00', '0.00', '0.00', '0.00']],
+      foot: comprasFooters,
+      theme: 'grid',
+      styles: { fontSize: 7, cellPadding: 1.5, lineColor: [203, 213, 225], lineWidth: 0.15 },
+      headStyles: { fillColor: [236, 253, 245], textColor: [6, 95, 70], fontStyle: 'bold' },
+      columnStyles: {
+        0: { cellWidth: 8, halign: 'center' },
+        1: { cellWidth: 18, halign: 'center' },
+        2: { cellWidth: 22, halign: 'center' },
+        3: { cellWidth: 'auto', halign: 'left' },
+        4: { cellWidth: 22, halign: 'right' },
+        5: { cellWidth: 22, halign: 'right' },
+        6: { cellWidth: 24, halign: 'right' },
+        7: { cellWidth: 24, halign: 'right' },
+        8: { cellWidth: 22, halign: 'right' },
+        9: { cellWidth: 22, halign: 'right' },
+        10: { cellWidth: 26, halign: 'right' }
+      },
+      margin: { left: 14, right: 14 }
+    });
+
+    currentY = (doc as any).lastAutoTable?.finalY || 130;
+
+    // --- 3. CUADRO OFICIAL DE LIQUIDACIÓN SAR ---
+    if (currentY + 45 > pageHeight) {
+      doc.addPage();
+      currentY = 15;
+    } else {
+      currentY += 6;
+    }
+
+    const liqWidth = 118;
+    const liqX = pageWidth - 14 - liqWidth;
+    const liq = data.liquidacion;
+
+    doc.setFillColor(255, 255, 255);
+    doc.setDrawColor(15, 23, 42);
+    doc.setLineWidth(0.35);
+    doc.roundedRect(liqX, currentY, liqWidth, 38, 1.5, 1.5, 'FD');
+
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(51, 65, 85);
+    doc.text('Débito Fiscal Ventas (ISV 15% + 18%):', liqX + 3, currentY + 5);
+    doc.setFont('courier', 'bold');
+    doc.setTextColor(30, 64, 175);
+    doc.text(this.formatLps(liq.debitoFiscalVentas), liqX + liqWidth - 3, currentY + 5, { align: 'right' });
+
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(51, 65, 85);
+    doc.text('(-) Crédito Fiscal Compras (ISV 15% + 18%):', liqX + 3, currentY + 10);
+    doc.setFont('courier', 'bold');
+    doc.setTextColor(6, 95, 70);
+    doc.text(this.formatLps(liq.creditoFiscalCompras), liqX + liqWidth - 3, currentY + 10, { align: 'right' });
+
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(51, 65, 85);
+    doc.text('(-) Saldo Anterior a Favor:', liqX + 3, currentY + 15);
+    doc.setFont('courier', 'bold');
+    doc.setTextColor(15, 23, 42);
+    doc.text(this.formatLps(liq.saldoAFavorPeriodoAnterior), liqX + liqWidth - 3, currentY + 15, { align: 'right' });
+
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(51, 65, 85);
+    doc.text('(-) Retenciones ISV (15% + 18%):', liqX + 3, currentY + 20);
+    doc.setFont('courier', 'bold');
+    doc.setTextColor(15, 23, 42);
+    doc.text(this.formatLps(liq.totalRetenciones), liqX + liqWidth - 3, currentY + 20, { align: 'right' });
+
+    if (liq.saldoAFavorContribuyente > 0) {
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(5, 150, 105);
+      doc.text('(=) Saldo a Favor Contribuyente SAR:', liqX + 3, currentY + 25);
+      doc.setFont('courier', 'bold');
+      doc.text(this.formatLps(liq.saldoAFavorContribuyente), liqX + liqWidth - 3, currentY + 25, { align: 'right' });
+    } else {
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(180, 83, 9);
+      doc.text('(=) Liquidación Final a Pagar SAR:', liqX + 3, currentY + 25);
+      doc.setFont('courier', 'bold');
+      doc.text(this.formatLps(liq.liquidacionFinalPagar), liqX + liqWidth - 3, currentY + 25, { align: 'right' });
+    }
+
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(51, 65, 85);
+    doc.text('(+) Honorarios Profesionales Contables:', liqX + 3, currentY + 30);
+    doc.setFont('courier', 'bold');
+    doc.setTextColor(15, 23, 42);
+    doc.text(this.formatLps(liq.serviciosProfesionales), liqX + liqWidth - 3, currentY + 30, { align: 'right' });
+
+    // Franja TOTAL LPS
+    doc.setFillColor(15, 23, 42);
+    doc.rect(liqX, currentY + 32.5, liqWidth, 5.5, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    doc.setTextColor(255, 255, 255);
+    doc.text('TOTAL LPS:', liqX + 3, currentY + 36.5);
+    doc.setFont('courier', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(56, 189, 248);
+    doc.text(this.formatLps(liq.totalPagarLps), liqX + liqWidth - 3, currentY + 36.5, { align: 'right' });
+
+    // Firma Contador
+    const sigX = 25;
+    const sigY = currentY + 26;
+    doc.setDrawColor(100, 116, 139);
+    doc.setLineWidth(0.3);
+    doc.line(sigX, sigY, sigX + 65, sigY);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.5);
+    doc.setTextColor(15, 23, 42);
+    doc.text(cfg?.nombreContadorTitular || 'Firma Contador Titular', sigX + 32.5, sigY + 4, { align: 'center' });
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.5);
+    doc.setTextColor(100, 116, 139);
+    doc.text(cfg?.colegiacionCAH || 'Colegiación Profesional', sigX + 32.5, sigY + 7.5, { align: 'center' });
+
+    // Numeración de páginas
+    const totalPages = doc.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      doc.setFontSize(6.5);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(148, 163, 184);
+      doc.text(
+        `ContaFlow • Libro Dual ISV Generado el ${new Date().toLocaleDateString('es-HN')} • Página ${i} de ${totalPages}`,
+        pageWidth / 2,
+        pageHeight - 5,
+        { align: 'center' }
+      );
+    }
+
+    if (autoDownload) {
+      const filename = `Libro_Ventas_Compras_${data.cliente.rtn}_${data.mesNombre}_${data.anio}.pdf`;
+      doc.save(filename);
+    }
+
+    return doc;
+  }
+
+  exportarLibroDualExcel(data: LibroCompletoExportData): void {
+    const wsData: any[][] = [
+      [this.despachoConfig?.nombreDespacho || 'DESPACHO CONTABLE Y FISCAL'],
+      ['LIBRO OFICIAL DE VENTAS, COMPRAS Y LIQUIDACIÓN ISV'],
+      [`Contribuyente: ${data.cliente.nombreRazonSocial}`, '', `RTN: ${data.cliente.rtn}`, '', `Período: ${data.mesNombre} ${data.anio}`],
+      [`Password SAR: ${data.cliente.contrasenaSAR || 'N/A'}`, '', `Giro: ${data.cliente.rubro || 'Comercio'}`],
+      [],
+      ['--- LIBRO DE VENTAS ---'],
+      ['#', 'Fecha', 'Factura', 'Exonerado', 'Exento', 'Gravado 15%', 'Gravado 18%', 'ISV 15%', 'ISV 18%', 'Total']
+    ];
+
+    data.ventas.forEach((v, idx) => {
+      wsData.push([
+        v.correlativo || (idx + 1),
+        v.fecha || '',
+        v.factura || '',
+        Number(v.exonerado) || 0,
+        Number(v.exento) || 0,
+        Number(v.gravado15) || 0,
+        Number(v.gravado18) || 0,
+        Number(v.isv15) || 0,
+        Number(v.isv18) || 0,
+        Number(v.total) || 0
+      ]);
+    });
+
+    const rv = data.resumenVentas;
+    wsData.push([
+      'TOTALES VENTAS',
+      '',
+      '',
+      rv.totalExonerado,
+      rv.totalExento,
+      rv.totalGravado15,
+      rv.totalGravado18,
+      rv.totalIsv15,
+      rv.totalIsv18,
+      rv.totalGeneral
+    ]);
+
+    wsData.push([]);
+    wsData.push(['--- LIBRO DE COMPRAS ---']);
+    wsData.push(['#', 'Fecha', 'Factura', 'Proveedor', 'Exonerado', 'Exento', 'Gravado 15%', 'Gravado 18%', 'ISV 15%', 'ISV 18%', 'Total']);
+
+    data.compras.forEach((c, idx) => {
+      wsData.push([
+        c.correlativo || (idx + 1),
+        c.fecha || '',
+        c.factura || '',
+        c.proveedor || '',
+        Number(c.exonerado) || 0,
+        Number(c.exento) || 0,
+        Number(c.gravado15) || 0,
+        Number(c.gravado18) || 0,
+        Number(c.isv15) || 0,
+        Number(c.isv18) || 0,
+        Number(c.total) || 0
+      ]);
+    });
+
+    const rc = data.resumenCompras;
+    wsData.push([
+      'TOTALES COMPRAS',
+      '',
+      '',
+      '',
+      rc.totalExonerado,
+      rc.totalExento,
+      rc.totalGravado15,
+      rc.totalGravado18,
+      rc.totalIsv15,
+      rc.totalIsv18,
+      rc.totalGeneral
+    ]);
+
+    const liq = data.liquidacion;
+    wsData.push([]);
+    wsData.push(['', '', '', '', 'RESUMEN OFICIAL DE LIQUIDACIÓN SAR', 'MONTO (LPS)']);
+    wsData.push(['', '', '', '', 'Débito Fiscal Ventas (ISV 15% + 18%):', liq.debitoFiscalVentas]);
+    wsData.push(['', '', '', '', '(-) Crédito Fiscal Compras (ISV 15% + 18%):', liq.creditoFiscalCompras]);
+    wsData.push(['', '', '', '', '(-) Saldo Anterior a Favor:', liq.saldoAFavorPeriodoAnterior]);
+    wsData.push(['', '', '', '', '(-) Retenciones ISV (15% + 18%):', liq.totalRetenciones]);
+    if (liq.saldoAFavorContribuyente > 0) {
+      wsData.push(['', '', '', '', '(=) Saldo a Favor Contribuyente:', liq.saldoAFavorContribuyente]);
+    } else {
+      wsData.push(['', '', '', '', '(=) Liquidación Final a Pagar SAR:', liq.liquidacionFinalPagar]);
+    }
+    wsData.push(['', '', '', '', '(+) Honorarios Profesionales:', liq.serviciosProfesionales]);
+    wsData.push(['', '', '', '', 'TOTAL LPS A LIQUIDAR:', liq.totalPagarLps]);
+
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    ws['!cols'] = [
+      { wch: 6 },
+      { wch: 12 },
+      { wch: 18 },
+      { wch: 28 },
+      { wch: 16 },
+      { wch: 16 },
+      { wch: 16 },
+      { wch: 16 },
+      { wch: 16 },
+      { wch: 16 },
+      { wch: 18 }
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, `ISV_${data.mesNombre}_${data.anio}`);
+    XLSX.writeFile(wb, `Libro_Ventas_Compras_${data.cliente.rtn}_${data.mesNombre}_${data.anio}.xlsx`);
   }
 }
