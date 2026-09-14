@@ -198,20 +198,13 @@ export class LibrosIsvComponent implements OnInit {
     this.clientsService.getClientes().subscribe({
       next: (data) => {
         this.clientes.set(data || []);
-        if (data && data.length > 0) {
-          const cid = this.selectedClienteId();
-          if (cid) {
-            const found = data.find(c => Number(c.id) === Number(cid));
-            if (found) {
-              this.serviciosProfesionales.set(found.cuotaMensual || 0);
-            }
-            this.cargarDatosPeriodo();
-          } else {
-            const primerCliente = data.find(c => c.activo) || data[0];
-            this.selectedClienteId.set(Number(primerCliente.id));
-            this.serviciosProfesionales.set(primerCliente.cuotaMensual || 0);
-            this.cargarDatosPeriodo();
+        const cid = this.selectedClienteId();
+        if (cid && data && data.length > 0) {
+          const found = data.find(c => Number(c.id) === Number(cid));
+          if (found) {
+            this.serviciosProfesionales.set(found.cuotaMensual || 0);
           }
+          this.cargarDatosPeriodo();
         }
       },
       error: (err) => {
@@ -228,10 +221,13 @@ export class LibrosIsvComponent implements OnInit {
   }
 
   onClientAutocompleteCleared(): void {
-    if (this.clientes().length > 0) {
-      this.selectedClienteId.set(Number(this.clientes()[0].id));
-      this.cargarDatosPeriodo();
-    }
+    this.selectedClienteId.set(null);
+    this.ventasItems.set([this.crearVentaVacia(1)]);
+    this.comprasItems.set([this.crearCompraVacia(1)]);
+    this.saldoAnterior.set(0);
+    this.retenciones15.set(0);
+    this.retenciones18.set(0);
+    this.serviciosProfesionales.set(0);
   }
 
   cargarDatosPeriodo(): void {
