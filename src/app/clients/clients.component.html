@@ -752,9 +752,10 @@
           <!-- Estado (Solo edición) -->
           @if (isEditing()) {
             <div class="form-field checkbox-field full-width">
-              <label class="switch-label">
+              <label class="toggle-switch">
                 <input type="checkbox" [checked]="formActivo()" (change)="formActivo.set(!formActivo())" />
-                <span>Cliente Activo en Cartera</span>
+                <span class="slider"></span>
+                <span class="toggle-label">Cliente Activo en Cartera</span>
               </label>
             </div>
           }
