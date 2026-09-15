@@ -27,65 +27,6 @@
     </div>
   </header>
 
-  <!-- KPIS / STATS -->
-  <section class="kpis-grid">
-    <!-- Total Clientes -->
-    <div class="kpi-card" [class.active-kpi]="activeTab() === 'todos'" (click)="activeTab.set('todos')">
-      <div class="kpi-header">
-        <span class="kpi-label">Total Clientes</span>
-        <div class="kpi-icon-box bg-blue-light text-blue">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        </div>
-      </div>
-      <div class="kpi-body">
-        <h3 class="kpi-value text-blue">{{ kpiTotal() }}</h3>
-        <span class="kpi-subtext text-blue">En cartera de clientes</span>
-      </div>
-    </div>
-
-    <!-- Sociedades (Jurídicas) -->
-    <div class="kpi-card" [class.active-kpi]="activeTab() === 'juridicas'" (click)="activeTab.set('juridicas')">
-      <div class="kpi-header">
-        <span class="kpi-label">Personas Jurídicas</span>
-        <div class="kpi-icon-box bg-purple-light text-purple">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>
-        </div>
-      </div>
-      <div class="kpi-body">
-        <h3 class="kpi-value text-purple">{{ kpiJuridicas() }}</h3>
-        <span class="kpi-subtext text-purple">Sociedades S.A. / S. de R.L.</span>
-      </div>
-    </div>
-
-    <!-- Personas Naturales -->
-    <div class="kpi-card" [class.active-kpi]="activeTab() === 'naturales'" (click)="activeTab.set('naturales')">
-      <div class="kpi-header">
-        <span class="kpi-label">Personas Naturales</span>
-        <div class="kpi-icon-box bg-green-light text-green">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        </div>
-      </div>
-      <div class="kpi-body">
-        <h3 class="kpi-value text-green">{{ kpiNaturales() }}</h3>
-        <span class="kpi-subtext text-green">Comerciantes / Profesionales</span>
-      </div>
-    </div>
-
-    <!-- Honorarios Mensuales Estimados -->
-    <div class="kpi-card">
-      <div class="kpi-header">
-        <span class="kpi-label">Honorarios Mensuales</span>
-        <div class="kpi-icon-box bg-orange-light text-orange">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-        </div>
-      </div>
-      <div class="kpi-body">
-        <h3 class="kpi-value text-orange">L. {{ kpiCuotaTotal() | number:'1.2-2' }}</h3>
-        <span class="kpi-subtext text-orange">Facturación recurrente activa</span>
-      </div>
-    </div>
-  </section>
-
   <!-- MAIN TABLE CONTAINER CARD -->
   <div class="table-container-card">
     
@@ -205,9 +146,21 @@
 
                     @if (c.contrasenaSAR) {
                       <div class="credential-item sar-pass-item">
-                        <span class="sar-pass-badge" title="Clave Oficina Virtual SAR">
-                          🔑 SAR: ••••••••
+                        <span class="sar-pass-badge" title="Contraseña Oficina Virtual SAR">
+                          🔑 SAR: {{ isPasswordHidden(c.id) ? '••••••••' : c.contrasenaSAR }}
                         </span>
+                        <button 
+                          type="button" 
+                          class="btn-eye-toggle" 
+                          (click)="togglePasswordVisibility(c.id)" 
+                          [title]="isPasswordHidden(c.id) ? 'Mostrar contraseña SAR' : 'Ocultar contraseña SAR'"
+                        >
+                          @if (isPasswordHidden(c.id)) {
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>
+                          } @else {
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                          }
+                        </button>
                         <button 
                           class="btn-copy-chip btn-copy-sar" 
                           [class.btn-copied]="copiedField() === 'SAR-' + c.id" 

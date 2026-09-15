@@ -76,6 +76,9 @@ export class ClientsComponent implements OnInit {
   // Copiado rápido
   readonly copiedField = signal<string | null>(null);
 
+  // Visibilidad de contraseñas SAR en tabla (visibles por defecto, ID en Set indica oculto)
+  readonly hiddenPasswords = signal<Set<number>>(new Set());
+
   // KPIs Computados
   readonly kpiTotal = computed(() => this.clientes().length);
   readonly kpiActivos = computed(() => this.clientes().filter(c => c.activo).length);
@@ -209,6 +212,22 @@ export class ClientsComponent implements OnInit {
         }
       }, 2000);
     });
+  }
+
+  togglePasswordVisibility(clienteId: number): void {
+    this.hiddenPasswords.update(set => {
+      const newSet = new Set(set);
+      if (newSet.has(clienteId)) {
+        newSet.delete(clienteId);
+      } else {
+        newSet.add(clienteId);
+      }
+      return newSet;
+    });
+  }
+
+  isPasswordHidden(clienteId: number): boolean {
+    return this.hiddenPasswords().has(clienteId);
   }
 
   // Modal Nuevo Rubro
