@@ -6,6 +6,7 @@ import { ApiClientsService, ClienteResponse, ClienteCreate, ClienteUpdate, Exped
 import { ApiRubrosService, RubroResponse } from '../services/api-rubros.service';
 import { ApiGeoService, DepartamentoResponse, MunicipioResponse } from '../services/api-geo.service';
 import { PdfGeneratorService } from '../services/pdf-generator.service';
+import { TabsService } from '../services/tabs.service';
 
 @Component({
   selector: 'app-clients',
@@ -19,6 +20,7 @@ export class ClientsComponent implements OnInit {
   private readonly rubrosService = inject(ApiRubrosService);
   readonly geoService = inject(ApiGeoService);
   private readonly pdfService = inject(PdfGeneratorService);
+  private readonly tabsService = inject(TabsService);
 
   readonly clientes = signal<ClienteResponse[]>([]);
   readonly rubros = signal<RubroResponse[]>([]);
@@ -473,8 +475,34 @@ export class ClientsComponent implements OnInit {
     if (!tel) return '#';
     const cleanPhone = tel.replace(/[^0-9]/g, '');
     const fullPhone = cleanPhone.startsWith('504') ? cleanPhone : `504${cleanPhone}`;
-    const msg = encodeURIComponent(`Estimado(a) ${exp.cliente.nombreRazonSocial}, le compartimos un resumen de su Expediente Fiscal: Declaraciones SAR presentadas: ${exp.totalDeclaracionesPresentadas}. Quedamos a sus órdenes.`);
-    return `https://wa.me/${fullPhone}?text=${msg}`;
+    
+    let mensaje = `Estimado(a) *${exp.cliente.nombreRazonSocial}*, le saluda su despacho contable.\n\n`;
+    mensaje += `📊 *ESTADO DE CUMPLIMIENTO FISCAL SAR*:\n`;
+    mensaje += `• Declaraciones SAR Presentadas: ${exp.totalDeclaracionesPresentadas}\n`;
+    mensaje += `• ISV Mensual: ${exp.detalleISV}\n`;
+    mensaje += `• Pagos a Cuenta: ${exp.detallePagosACuenta}\n\n`;
+    
+    if (exp.estadoCobranza === 'Pendiente') {
+      mensaje += `💼 *ESTADO DE CUENTA HONORARIOS*:\n`;
+      mensaje += `• ${exp.mensajeCobranza}\n\n`;
+      mensaje += `Le agradecemos gestionar su pago a la brevedad. Quedamos a sus órdenes para cualquier consulta.`;
+    } else if (exp.estadoCobranza === 'SaldoAFavor' || exp.estadoCobranza === 'AlDia') {
+      mensaje += `💼 *ESTADO DE CUENTA HONORARIOS*:\n`;
+      mensaje += `• ✅ ${exp.mensajeCobranza}\n\n`;
+      mensaje += `¡Muchas gracias por mantener sus cuentas e impuestos al día!`;
+    } else {
+      mensaje += `Quedamos a su entera disposición. ¡Feliz día!`;
+    }
+
+    return `https://wa.me/${fullPhone}?text=${encodeURIComponent(mensaje)}`;
+  }
+
+  irAGenerarRecibo(): void {
+    this.closeExpediente();
+    const modulo = this.tabsService.catalogoModulos.find(m => m.id === 'recibos');
+    if (modulo) {
+      this.tabsService.openModulo(modulo);
+    }
   }
 
   descargarExpedientePdf(): void {

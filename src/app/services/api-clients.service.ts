@@ -132,6 +132,18 @@ export interface ExpedienteFiscal {
   totalDeclaracionesPresentadas: number;
   totalImpuestoLiquidadoSAR: number;
   totalHonorariosPagados: number;
+  totalHonorariosEsperados: number;
+  saldoHonorarios: number;
+  estadoCobranza: 'AlDia' | 'SaldoAFavor' | 'Pendiente' | 'PorGestion';
+  mensajeCobranza: string;
+  mesesDeuda: number;
+  semaforoISV: 'AlDia' | 'EnProceso' | 'Pendiente';
+  detalleISV: string;
+  semaforoPagosACuenta: 'AlDia' | 'ProximoVencimiento' | 'Pendiente';
+  detallePagosACuenta: string;
+  semaforoCAI: 'Vigente' | 'ProximoAVencer' | 'Vencido' | 'SinCAI';
+  detalleCAI: string;
+  diasVencimientoCAI?: number;
 }
 
 export interface ClienteImportItem {
