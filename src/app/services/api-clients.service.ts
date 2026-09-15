@@ -15,6 +15,13 @@ export interface ClienteResponse {
   telefono?: string;
   telefonoWhatsApp?: string;
   direccion?: string;
+  dni?: string;
+  representanteLegalNombre?: string;
+  representanteLegalRtn?: string;
+  departamentoId?: number;
+  departamentoNombre?: string;
+  municipioId?: number;
+  municipioNombre?: string;
   cuotaMensual: number;
   diaCobro: number;
   contrasenaSAR?: string;
@@ -33,13 +40,20 @@ export interface ClienteCreate {
   tipoPersona: string;
   rubro?: string;
   contrasenaSAR?: string;
+  dni?: string;
+  representanteLegalNombre?: string;
+  representanteLegalRtn?: string;
+  departamentoId?: number;
+  departamentoNombre?: string;
+  municipioId?: number;
+  municipioNombre?: string;
   emailPrincipal?: string;
   emailSecundario?: string;
   telefono?: string;
   telefonoWhatsApp?: string;
   direccion?: string;
-  cuotaMensual: number;
-  diaCobro: number;
+  cuotaMensual?: number;
+  diaCobro?: number;
   notas?: string;
 }
 
@@ -50,13 +64,20 @@ export interface ClienteUpdate {
   tipoPersona: string;
   rubro?: string;
   contrasenaSAR?: string;
+  dni?: string;
+  representanteLegalNombre?: string;
+  representanteLegalRtn?: string;
+  departamentoId?: number;
+  departamentoNombre?: string;
+  municipioId?: number;
+  municipioNombre?: string;
   emailPrincipal?: string;
   emailSecundario?: string;
   telefono?: string;
   telefonoWhatsApp?: string;
   direccion?: string;
-  cuotaMensual: number;
-  diaCobro: number;
+  cuotaMensual?: number;
+  diaCobro?: number;
   activo: boolean;
   notas?: string;
 }
@@ -120,6 +141,11 @@ export interface ClienteImportItem {
   tipoPersona?: string;
   rubro?: string;
   contrasenaSAR?: string;
+  dni?: string;
+  representanteLegalNombre?: string;
+  representanteLegalRtn?: string;
+  departamentoNombre?: string;
+  municipioNombre?: string;
   emailPrincipal?: string;
   emailSecundario?: string;
   telefono?: string;

@@ -97,8 +97,7 @@
             <tr>
               <th>Cliente / Razón Social</th>
               <th>RTN & Clave SAR</th>
-              <th>Rubro / Giro</th>
-              <th>Honorarios (Cuota)</th>
+              <th>Ubicación & Rubro</th>
               <th>Contacto Rápido</th>
               <th>Estado</th>
               <th class="text-right">Acciones</th>
@@ -114,9 +113,19 @@
                       {{ c.nombreRazonSocial.substring(0, 1).toUpperCase() }}
                     </div>
                     <div class="client-info">
-                      <span class="client-fullname">{{ c.nombreRazonSocial }}</span>
+                      <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="client-fullname">{{ c.nombreRazonSocial }}</span>
+                        <span class="tipo-person-chip" [class.chip-juridica]="c.tipoPersona === 'Juridica'" [class.chip-natural]="c.tipoPersona === 'Natural'">
+                          {{ c.tipoPersona === 'Juridica' ? 'Sociedad' : 'Natural' }}
+                        </span>
+                      </div>
                       @if (c.nombreComercial) {
                         <span class="client-tradename">"{{ c.nombreComercial }}"</span>
+                      }
+                      @if (c.representanteLegalNombre) {
+                        <span class="client-rep-badge" title="Representante Legal">
+                          👤 Rep: {{ c.representanteLegalNombre }}
+                        </span>
                       }
                     </div>
                   </div>
@@ -143,6 +152,14 @@
                         }
                       </button>
                     </div>
+
+                    @if (c.dni) {
+                      <div class="credential-item">
+                        <span class="dni-badge" title="Número de Identidad Nacional (DNI)">
+                          🪪 DNI: {{ c.dni }}
+                        </span>
+                      </div>
+                    }
 
                     @if (c.contrasenaSAR) {
                       <div class="credential-item sar-pass-item">
@@ -178,20 +195,14 @@
                   </div>
                 </td>
 
-                <!-- Rubro -->
+                <!-- Ubicación & Rubro -->
                 <td>
-                  <span class="rubro-tag">{{ c.rubro || 'General' }}</span>
-                </td>
-
-                <!-- Cuota Mensual & Dia de Cobro -->
-                <td>
-                  <div class="fee-info">
-                    @if (c.cuotaMensual && c.cuotaMensual > 0) {
-                      <span class="fee-amount">L. {{ c.cuotaMensual | number:'1.2-2' }}</span>
-                      <span class="fee-day">Cobro día {{ c.diaCobro }}</span>
-                    } @else {
-                      <span class="fee-amount text-muted">Por Evento</span>
-                      <span class="fee-day text-xs">Sin cuota fija</span>
+                  <div class="geo-rubro-stack">
+                    <span class="rubro-tag">{{ c.rubro || 'General' }}</span>
+                    @if (c.municipioNombre || c.departamentoNombre) {
+                      <span class="geo-tag" title="Ubicación Geográfica">
+                        📍 {{ c.municipioNombre || 'Municipio' }}{{ c.departamentoNombre ? ', ' + c.departamentoNombre : '' }}
+                      </span>
                     }
                   </div>
                 </td>
@@ -546,7 +557,7 @@
             <input type="text" [ngModel]="formNombreRazonSocial()" (ngModelChange)="formNombreRazonSocial.set($event)" name="formNombreRazonSocial" placeholder="Ej: Inversiones Los Andes S. de R.L." required />
           </div>
 
-          <!-- RTN (Siempre visible en creación y edición) con Copiado Rápido -->
+          <!-- RTN con auto-detección -->
           <div class="form-field">
             <div class="field-label-with-action">
               <label>RTN Fiscal (14 dígitos) *</label>
@@ -566,8 +577,29 @@
               }
             </div>
             <div class="input-with-icon">
-              <input type="text" [ngModel]="formRtn()" (ngModelChange)="formRtn.set($event)" name="formRtn" placeholder="08011990123456" required maxlength="16" />
+              <input 
+                type="text" 
+                [ngModel]="formRtn()" 
+                (ngModelChange)="onRtnOrDniChange($event, 'rtn')" 
+                name="formRtn" 
+                placeholder="08011990123456" 
+                required 
+                maxlength="16" 
+              />
             </div>
+          </div>
+
+          <!-- DNI / Identidad Nacional -->
+          <div class="form-field">
+            <label>DNI / Identidad (13 dígitos)</label>
+            <input 
+              type="text" 
+              [ngModel]="formDni()" 
+              (ngModelChange)="onRtnOrDniChange($event, 'dni')" 
+              name="formDni" 
+              placeholder="0801199012345" 
+              maxlength="15" 
+            />
           </div>
 
           <!-- Contraseña SAR con Ver/Ocultar y Copiado Rápido -->
@@ -606,16 +638,10 @@
                 @if (showPassword()) {
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                 } @else {
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>
                 }
               </button>
             </div>
-          </div>
-
-          <!-- Nombre Comercial -->
-          <div class="form-field">
-            <label>Nombre Comercial / Fantasía</label>
-            <input type="text" [ngModel]="formNombreComercial()" (ngModelChange)="formNombreComercial.set($event)" name="formNombreComercial" placeholder="Ej: Restaurante El Buen Sabor" />
           </div>
 
           <!-- Tipo Persona -->
@@ -627,6 +653,37 @@
             </select>
           </div>
 
+          <!-- Representante Legal (Nombre) - Si es Persona Jurídica -->
+          @if (formTipoPersona() === 'Juridica') {
+            <div class="form-field">
+              <label>Representante Legal (Nombre Completo)</label>
+              <input 
+                type="text" 
+                [ngModel]="formRepresentanteLegalNombre()" 
+                (ngModelChange)="formRepresentanteLegalNombre.set($event)" 
+                name="formRepresentanteLegalNombre" 
+                placeholder="Nombre del apoderado o gerente" 
+              />
+            </div>
+
+            <div class="form-field">
+              <label>RTN / DNI del Representante Legal</label>
+              <input 
+                type="text" 
+                [ngModel]="formRepresentanteLegalRtn()" 
+                (ngModelChange)="formRepresentanteLegalRtn.set($event)" 
+                name="formRepresentanteLegalRtn" 
+                placeholder="RTN o DNI del representante" 
+              />
+            </div>
+          }
+
+          <!-- Nombre Comercial -->
+          <div class="form-field">
+            <label>Nombre Comercial / Fantasía</label>
+            <input type="text" [ngModel]="formNombreComercial()" (ngModelChange)="formNombreComercial.set($event)" name="formNombreComercial" placeholder="Ej: Restaurante El Buen Sabor" />
+          </div>
+
           <!-- Rubro Dinámico con botón de Agregar Rápido -->
           <div class="form-field">
             <div class="field-label-with-action">
@@ -636,6 +693,28 @@
             <select [ngModel]="formRubro()" (ngModelChange)="formRubro.set($event)" name="formRubro">
               @for (r of rubros(); track r.id) {
                 <option [value]="r.nombre">{{ r.nombre }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Departamento de Honduras -->
+          <div class="form-field">
+            <label>Departamento (Honduras)</label>
+            <select [ngModel]="formDepartamentoId()" (ngModelChange)="onDepartamentoChange($event)" name="formDepartamentoId">
+              <option [ngValue]="null">-- Seleccionar Departamento --</option>
+              @for (dep of departamentos(); track dep.id) {
+                <option [ngValue]="dep.id">{{ dep.codigo }} - {{ dep.nombre }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Municipio de Honduras -->
+          <div class="form-field">
+            <label>Municipio</label>
+            <select [ngModel]="formMunicipioId()" (ngModelChange)="formMunicipioId.set($event)" name="formMunicipioId" [disabled]="!formDepartamentoId()">
+              <option [ngValue]="null">-- Seleccionar Municipio --</option>
+              @for (mun of availableMunicipios(); track mun.id) {
+                <option [ngValue]="mun.id">{{ mun.codigo }} - {{ mun.nombre }}</option>
               }
             </select>
           </div>
@@ -666,8 +745,8 @@
 
           <!-- Dirección -->
           <div class="form-field full-width">
-            <label>Dirección Física</label>
-            <input type="text" [ngModel]="formDireccion()" (ngModelChange)="formDireccion.set($event)" name="formDireccion" placeholder="Col. Palmira, Tegucigalpa, F.M." />
+            <label>Dirección Física Completa</label>
+            <input type="text" [ngModel]="formDireccion()" (ngModelChange)="formDireccion.set($event)" name="formDireccion" placeholder="Col. Palmira, Boulevard Morazán..." />
           </div>
 
           <!-- Estado (Solo edición) -->

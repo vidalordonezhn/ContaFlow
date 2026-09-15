@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import * as XLSX from 'xlsx';
 import { ApiClientsService, ClienteResponse, ClienteCreate, ClienteUpdate, ExpedienteFiscal, ClienteImportItem, ClienteImportResponse } from '../services/api-clients.service';
 import { ApiRubrosService, RubroResponse } from '../services/api-rubros.service';
+import { ApiGeoService, DepartamentoResponse, MunicipioResponse } from '../services/api-geo.service';
 import { PdfGeneratorService } from '../services/pdf-generator.service';
 
 @Component({
@@ -16,10 +17,12 @@ import { PdfGeneratorService } from '../services/pdf-generator.service';
 export class ClientsComponent implements OnInit {
   private readonly clientsService = inject(ApiClientsService);
   private readonly rubrosService = inject(ApiRubrosService);
+  readonly geoService = inject(ApiGeoService);
   private readonly pdfService = inject(PdfGeneratorService);
 
   readonly clientes = signal<ClienteResponse[]>([]);
   readonly rubros = signal<RubroResponse[]>([]);
+  readonly departamentos = this.geoService.departamentos;
   readonly isLoading = signal(true);
   readonly errorMsg = signal<string | null>(null);
   readonly successMsg = signal<string | null>(null);
@@ -63,6 +66,11 @@ export class ClientsComponent implements OnInit {
   readonly formRubro = signal('Comercio General');
   readonly formContrasenaSAR = signal('');
   readonly showPassword = signal(true);
+  readonly formDni = signal('');
+  readonly formRepresentanteLegalNombre = signal('');
+  readonly formRepresentanteLegalRtn = signal('');
+  readonly formDepartamentoId = signal<number | null>(null);
+  readonly formMunicipioId = signal<number | null>(null);
   readonly formEmailPrincipal = signal('');
   readonly formEmailSecundario = signal('');
   readonly formTelefono = signal('');
@@ -78,6 +86,14 @@ export class ClientsComponent implements OnInit {
 
   // Visibilidad de contraseñas SAR en tabla (visibles por defecto, ID en Set indica oculto)
   readonly hiddenPasswords = signal<Set<number>>(new Set());
+
+  // Municipios disponibles para el departamento seleccionado
+  readonly availableMunicipios = computed<MunicipioResponse[]>(() => {
+    const depId = this.formDepartamentoId();
+    if (!depId) return [];
+    const dep = this.departamentos().find(d => d.id === Number(depId));
+    return dep ? dep.municipios : [];
+  });
 
   // KPIs Computados
   readonly kpiTotal = computed(() => this.clientes().length);
@@ -121,6 +137,7 @@ export class ClientsComponent implements OnInit {
   ngOnInit(): void {
     this.cargarClientes();
     this.cargarRubros();
+    this.geoService.cargarDepartamentos().subscribe();
   }
 
   cargarClientes(): void {
@@ -159,6 +176,11 @@ export class ClientsComponent implements OnInit {
     this.formRubro.set(this.rubros().length > 0 ? this.rubros()[0].nombre : 'Comercio General');
     this.formContrasenaSAR.set('');
     this.showPassword.set(false);
+    this.formDni.set('');
+    this.formRepresentanteLegalNombre.set('');
+    this.formRepresentanteLegalRtn.set('');
+    this.formDepartamentoId.set(null);
+    this.formMunicipioId.set(null);
     this.formEmailPrincipal.set('');
     this.formEmailSecundario.set('');
     this.formTelefono.set('');
@@ -182,6 +204,11 @@ export class ClientsComponent implements OnInit {
     this.formRubro.set(c.rubro || (this.rubros().length > 0 ? this.rubros()[0].nombre : 'Comercio General'));
     this.formContrasenaSAR.set(c.contrasenaSAR || '');
     this.showPassword.set(true);
+    this.formDni.set(c.dni || '');
+    this.formRepresentanteLegalNombre.set(c.representanteLegalNombre || '');
+    this.formRepresentanteLegalRtn.set(c.representanteLegalRtn || '');
+    this.formDepartamentoId.set(c.departamentoId || null);
+    this.formMunicipioId.set(c.municipioId || null);
     this.formEmailPrincipal.set(c.emailPrincipal || '');
     this.formEmailSecundario.set(c.emailSecundario || '');
     this.formTelefono.set(c.telefono || '');
@@ -193,6 +220,42 @@ export class ClientsComponent implements OnInit {
     this.formNotas.set(c.notas || '');
     this.formError.set(null);
     this.isModalOpen.set(true);
+  }
+
+  onRtnOrDniChange(val: string, source: 'rtn' | 'dni'): void {
+    if (source === 'rtn') {
+      this.formRtn.set(val);
+      const clean = val.replace(/[^0-9]/g, '');
+      // Si es persona natural con 14 dígitos en RTN, auto-completar DNI
+      if (this.formTipoPersona() === 'Natural' && clean.length === 14 && !this.formDni()) {
+        this.formDni.set(clean.substring(0, 13));
+      }
+    } else {
+      this.formDni.set(val);
+    }
+
+    // Auto-detectar Departamento y Municipio a partir de los 4 dígitos
+    const detect = this.geoService.detectarUbicacionPorRtnODni(val);
+    if (detect && detect.departamentoId) {
+      this.formDepartamentoId.set(detect.departamentoId);
+      if (detect.municipioId) {
+        this.formMunicipioId.set(detect.municipioId);
+      }
+    }
+  }
+
+  onDepartamentoChange(depId: any): void {
+    const numId = depId ? Number(depId) : null;
+    this.formDepartamentoId.set(numId);
+
+    // Si el municipio actual no pertenece al nuevo departamento, limpiarlo
+    const currentMunId = this.formMunicipioId();
+    if (currentMunId) {
+      const muns = this.availableMunicipios();
+      if (!muns.some(m => m.id === currentMunId)) {
+        this.formMunicipioId.set(null);
+      }
+    }
   }
 
   closeModal(): void {
@@ -279,6 +342,9 @@ export class ClientsComponent implements OnInit {
       return;
     }
 
+    const dep = this.departamentos().find(d => d.id === Number(this.formDepartamentoId()));
+    const mun = dep?.municipios.find(m => m.id === Number(this.formMunicipioId()));
+
     if (!this.isEditing()) {
       const createDto: ClienteCreate = {
         rtn: this.formRtn().trim(),
@@ -287,6 +353,13 @@ export class ClientsComponent implements OnInit {
         tipoPersona: this.formTipoPersona(),
         rubro: this.formRubro(),
         contrasenaSAR: this.formContrasenaSAR().trim() || undefined,
+        dni: this.formDni().trim() || undefined,
+        representanteLegalNombre: this.formRepresentanteLegalNombre().trim() || undefined,
+        representanteLegalRtn: this.formRepresentanteLegalRtn().trim() || undefined,
+        departamentoId: this.formDepartamentoId() ? Number(this.formDepartamentoId()) : undefined,
+        departamentoNombre: dep?.nombre,
+        municipioId: this.formMunicipioId() ? Number(this.formMunicipioId()) : undefined,
+        municipioNombre: mun?.nombre,
         emailPrincipal: this.formEmailPrincipal().trim() || undefined,
         emailSecundario: this.formEmailSecundario().trim() || undefined,
         telefono: this.formTelefono().trim() || undefined,
@@ -315,6 +388,13 @@ export class ClientsComponent implements OnInit {
         tipoPersona: this.formTipoPersona(),
         rubro: this.formRubro(),
         contrasenaSAR: this.formContrasenaSAR().trim() || undefined,
+        dni: this.formDni().trim() || undefined,
+        representanteLegalNombre: this.formRepresentanteLegalNombre().trim() || undefined,
+        representanteLegalRtn: this.formRepresentanteLegalRtn().trim() || undefined,
+        departamentoId: this.formDepartamentoId() ? Number(this.formDepartamentoId()) : undefined,
+        departamentoNombre: dep?.nombre,
+        municipioId: this.formMunicipioId() ? Number(this.formMunicipioId()) : undefined,
+        municipioNombre: mun?.nombre,
         emailPrincipal: this.formEmailPrincipal().trim() || undefined,
         emailSecundario: this.formEmailSecundario().trim() || undefined,
         telefono: this.formTelefono().trim() || undefined,
@@ -433,17 +513,18 @@ export class ClientsComponent implements OnInit {
     window.location.href = this.clientsService.descargarPlantillaUrl();
   }
 
-  onFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      this.procesarArchivo(input.files[0]);
+  onFileSelected(event: any): void {
+    const file = event.target.files?.[0];
+    if (file) {
+      this.procesarArchivo(file);
     }
   }
 
   onFileDrop(event: DragEvent): void {
     event.preventDefault();
-    if (event.dataTransfer && event.dataTransfer.files.length > 0) {
-      this.procesarArchivo(event.dataTransfer.files[0]);
+    const file = event.dataTransfer?.files?.[0];
+    if (file) {
+      this.procesarArchivo(file);
     }
   }
 
@@ -488,17 +569,22 @@ export class ClientsComponent implements OnInit {
           return headers.findIndex((h: string) => keywords.some(k => h.includes(k)));
         };
 
-        const idxRtn = getColIndex(['rtn', 'identidad', 'cif', 'id']);
+        const idxRtn = getColIndex(['rtn', 'cif', 'id']);
         const idxNombre = getColIndex(['razon', 'nombre', 'cliente', 'empresa']);
         const idxComercial = getColIndex(['comercial', 'rotulo', 'negocio', 'local']);
         const idxTipo = getColIndex(['tipo', 'persona']);
         const idxRubro = getColIndex(['rubro', 'giro', 'actividad', 'categoria']);
         const idxSar = getColIndex(['sar', 'clave', 'pass', 'contrasena', 'contraseña']);
+        const idxDni = getColIndex(['dni', 'identidad', 'cedula']);
+        const idxRepNombre = getColIndex(['representante', 'apoderado', 'gerente']);
+        const idxRepRtn = getColIndex(['rtnrepresentante', 'rtnapoderado', 'rtnrep']);
+        const idxDep = getColIndex(['departamento', 'depto', 'dep']);
+        const idxMun = getColIndex(['municipio', 'ciudad', 'poblacion']);
         const idxEmail = getColIndex(['email', 'correo']);
         const idxEmailSec = getColIndex(['emailsec', 'secundario', 'correo2']);
         const idxTel = getColIndex(['tel', 'telefono', 'fijo']);
         const idxWa = getColIndex(['whatsapp', 'wa', 'cel', 'celular', 'movil']);
-        const idxDir = getColIndex(['dir', 'direccion', 'ciudad', 'domicilio']);
+        const idxDir = getColIndex(['dir', 'direccion', 'domicilio']);
         const idxCuota = getColIndex(['cuota', 'honorario', 'monto', 'tarifa', 'pago', 'precio']);
         const idxDia = getColIndex(['dia', 'cobro', 'corte']);
         const idxNotas = getColIndex(['nota', 'obs', 'comentario']);
@@ -515,6 +601,28 @@ export class ClientsComponent implements OnInit {
 
           if (!cleanRtn && !rawNombre) continue;
 
+          const isNatural = idxTipo >= 0 
+            ? String(row[idxTipo] || '').toLowerCase().includes('natural') 
+            : (cleanRtn.startsWith('0801') && cleanRtn.length === 13);
+          const tipoPersona = isNatural ? 'Natural' : 'Juridica';
+
+          // DNI: Si viene en columna o se extrae de RTN si es Natural
+          let dniVal: string | undefined = idxDni >= 0 ? String(row[idxDni] || '').trim() : undefined;
+          if (!dniVal && isNatural && cleanRtn.length === 14) {
+            dniVal = cleanRtn.substring(0, 13);
+          }
+
+          // Auto-detección de Geo si no viene explícita
+          let depVal = idxDep >= 0 ? String(row[idxDep] || '').trim() : undefined;
+          let munVal = idxMun >= 0 ? String(row[idxMun] || '').trim() : undefined;
+          if (!depVal || !munVal) {
+            const detect = this.geoService.detectarUbicacionPorRtnODni(cleanRtn);
+            if (detect) {
+              if (!depVal && detect.departamentoNombre) depVal = detect.departamentoNombre;
+              if (!munVal && detect.municipioNombre) munVal = detect.municipioNombre;
+            }
+          }
+
           const cuotaVal = idxCuota >= 0 ? parseFloat(String(row[idxCuota]).replace(/[^0-9.]/g, '')) || 0 : 0;
           const diaVal = idxDia >= 0 ? parseInt(String(row[idxDia]).replace(/[^0-9]/g, '')) || 5 : 5;
 
@@ -522,9 +630,14 @@ export class ClientsComponent implements OnInit {
             rtn: cleanRtn,
             nombreRazonSocial: rawNombre.trim(),
             nombreComercial: idxComercial >= 0 ? String(row[idxComercial] || '').trim() : undefined,
-            tipoPersona: idxTipo >= 0 ? (String(row[idxTipo] || '').toLowerCase().includes('natural') ? 'Natural' : 'Juridica') : (cleanRtn.startsWith('0801') && cleanRtn.length === 13 ? 'Natural' : 'Juridica'),
+            tipoPersona: tipoPersona,
             rubro: idxRubro >= 0 && row[idxRubro] ? String(row[idxRubro]).trim() : 'Comercio General',
             contrasenaSAR: idxSar >= 0 ? String(row[idxSar] || '').trim() : undefined,
+            dni: dniVal || undefined,
+            representanteLegalNombre: idxRepNombre >= 0 ? String(row[idxRepNombre] || '').trim() : undefined,
+            representanteLegalRtn: idxRepRtn >= 0 ? String(row[idxRepRtn] || '').trim() : undefined,
+            departamentoNombre: depVal || undefined,
+            municipioNombre: munVal || undefined,
             emailPrincipal: idxEmail >= 0 ? String(row[idxEmail] || '').trim() : undefined,
             emailSecundario: idxEmailSec >= 0 ? String(row[idxEmailSec] || '').trim() : undefined,
             telefono: idxTel >= 0 ? String(row[idxTel] || '').trim() : undefined,
