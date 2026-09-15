@@ -542,26 +542,28 @@
   position: fixed;
   inset: 0;
   background-color: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(5px);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.5rem;
-  z-index: 100;
+  padding: 3.5rem 1.5rem 2.5rem 1.5rem;
+  z-index: 1000;
+  overflow-y: auto;
 }
 
 .modal-card {
   width: 100%;
-  max-width: 760px;
+  max-width: 780px;
   background-color: #ffffff;
-  border-radius: var(--radius-2xl, 16px);
-  box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(15, 23, 42, 0.08);
+  border-radius: var(--radius-2xl, 18px);
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.35), 0 0 0 1px rgba(15, 23, 42, 0.1);
   border: 1px solid var(--border-color);
-  max-height: 90vh;
+  max-height: calc(100vh - 7rem);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   padding: 0;
+  margin: auto;
 
   .modal-header {
     display: flex;
