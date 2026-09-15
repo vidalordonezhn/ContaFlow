@@ -207,6 +207,8 @@ export interface LiquidacionConsolidada {
   creditoFiscalCompras: number;
   diferenciaIsv: number;
   saldoAFavorPeriodoAnterior: number;
+  saldoArrastrableMesAnterior?: number;
+  mesAnteriorNombre?: string;
   retenciones15: number;
   retenciones18: number;
   totalRetenciones: number;

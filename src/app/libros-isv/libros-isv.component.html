@@ -603,6 +603,15 @@
               <div class="row-label">
                 <span class="icon-circle bg-gray-subtle">3</span>
                 <span>(-) Saldo Período Anterior:</span>
+                @if (saldoArrastrableMesAnterior() > 0 && saldoAnterior() !== saldoArrastrableMesAnterior()) {
+                  <button type="button" class="btn-import-saldo-ant animate-pulse-subtle" (click)="aplicarSaldoMesAnterior()" [title]="'Traer crédito fiscal de ' + mesAnteriorNombre()">
+                    ⚡ Traer L. {{ saldoArrastrableMesAnterior() | number:'1.2-2' }} de {{ mesAnteriorNombre() }}
+                  </button>
+                } @else if (saldoArrastrableMesAnterior() > 0 && saldoAnterior() === saldoArrastrableMesAnterior()) {
+                  <span class="badge-saldo-ok" [title]="'Crédito a favor arrastrado de ' + mesAnteriorNombre()">
+                    ✓ Arrastrado de {{ mesAnteriorNombre() }}
+                  </span>
+                }
               </div>
               <div class="row-input-wrap">
                 <span class="currency-label">L.</span>

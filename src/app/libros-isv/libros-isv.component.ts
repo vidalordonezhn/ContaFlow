@@ -142,6 +142,8 @@ export class LibrosIsvComponent implements OnInit {
   // ESTADO LIQUIDACIÓN CONSOLIDADA SAR
   // ==========================================
   readonly saldoAnterior = signal<number>(0);
+  readonly saldoArrastrableMesAnterior = signal<number>(0);
+  readonly mesAnteriorNombre = signal<string>('');
   readonly retenciones15 = signal<number>(0);
   readonly retenciones18 = signal<number>(0);
   readonly totalRetenciones = computed(() =>
@@ -244,9 +246,18 @@ export class LibrosIsvComponent implements OnInit {
     this.ventasItems.set([this.crearVentaVacia(1)]);
     this.comprasItems.set([this.crearCompraVacia(1)]);
     this.saldoAnterior.set(0);
+    this.saldoArrastrableMesAnterior.set(0);
+    this.mesAnteriorNombre.set('');
     this.retenciones15.set(0);
     this.retenciones18.set(0);
     this.serviciosProfesionales.set(0);
+  }
+
+  aplicarSaldoMesAnterior(): void {
+    const arr = this.saldoArrastrableMesAnterior();
+    if (arr > 0) {
+      this.saldoAnterior.set(arr);
+    }
   }
 
   cargarDatosPeriodo(): void {
@@ -274,6 +285,8 @@ export class LibrosIsvComponent implements OnInit {
 
         // Liquidación
         if (data.liquidacion) {
+          this.saldoArrastrableMesAnterior.set(data.liquidacion.saldoArrastrableMesAnterior || 0);
+          this.mesAnteriorNombre.set(data.liquidacion.mesAnteriorNombre || 'Mes Anterior');
           this.saldoAnterior.set(data.liquidacion.saldoAFavorPeriodoAnterior || 0);
           this.retenciones15.set(data.liquidacion.retenciones15 || 0);
           this.retenciones18.set(data.liquidacion.retenciones18 || 0);
@@ -287,6 +300,7 @@ export class LibrosIsvComponent implements OnInit {
       error: () => {
         this.ventasItems.set([this.crearVentaVacia(1)]);
         this.comprasItems.set([this.crearCompraVacia(1)]);
+        this.saldoArrastrableMesAnterior.set(0);
         this.isLoading.set(false);
       }
     });
